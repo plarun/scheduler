@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package data;
+
+option go_package = "./;data";
+
+// Message to represent JIL data for job
+message JilData {
+	string JobName = 1;
+	string JobType = 2;
+	string BoxName = 3;
+	string Command = 4;
+	repeated string Conditions = 5;
+	string StdOut = 6;
+	string StdErr = 7;
+	string DateCondition = 8;
+	string AlarmIfFail = 9;
+	string MaxRunAlarm = 10;
+	string Machine = 11;
+	string RunDays = 12;
+	string StartTimes = 13;
+}
+
+// Type to represent JIL action
+enum JilAction {
+	INSERT = 0;
+	UPDATE = 1;
+	DELETE = 2;
+}
+
+// Message to represent a JIL
+message Jil {
+	JilAction Action = 1;
+	JilData Data = 2;
+	int32 AttributeFlag = 3;
+}
+
+// Request message to submit JIL data
+message SubmitJilReq {
+	repeated Jil Jil = 1;
+}
+
+// Response message for submitted JIL data
+message SubmitJilRes {
+	int32 Created = 1;
+	int32 Updated = 2;
+	int32 Deleted = 3;
+}
+
+// Service to handle create/update/delete job - submit jil operations
+service SubmitJil {
+	rpc Submit(SubmitJilReq) returns (SubmitJilRes) {}
+}

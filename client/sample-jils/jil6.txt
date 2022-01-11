@@ -1,0 +1,6 @@
+/* insert job1 */
+insert: 
+command: test_command
+machine: test_machine
+start_times: 05:00
+run_days: mo,tu,th,fr,sa

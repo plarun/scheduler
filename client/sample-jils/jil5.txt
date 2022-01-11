@@ -1,0 +1,7 @@
+/* insert job1 */
+insert: test_jobname
+command: test_command
+machine: test_machine
+/* unwanted comment */
+start_times: 05:00
+run_days: mo,tu,th,fr,sa

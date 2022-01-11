@@ -1,0 +1,7 @@
+/* update job1 */
+update: job1
+command: updated_test_command1
+
+/* update job2 */
+update: job2
+conditions: job1

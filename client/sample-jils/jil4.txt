@@ -1,0 +1,16 @@
+/* insert job1 */
+insert: test_jobname
+command: test_command
+machine: test_machine
+
+start_time: 05:00
+run_days: mo,tu,th,fr,sa
+
+/* insert job2 */
+insert: test_jobname2
+command: test_command2
+machine: test_machine2
+
+
+start_times: 05:00
+run_days: mo,tu,th,fr,sa

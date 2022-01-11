@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package data;
+
+import "google/protobuf/timestamp.proto";
+import "status.proto";
+
+option go_package = "./;data";
+
+// Message to represent job with its current status
+message JobWithStatus {
+	string JobName = 1;
+	Status StatusType = 2;
+}
+
+// Request message to get preceded and succeeded jobs of job
+message GetJobDependsReq {
+	string JobName = 1;
+}
+
+// Response message of preceded and succeeded jobs of job
+message GetJobDependsRes {
+	string JobName = 1;
+	repeated JobWithStatus PrecededJobs = 2;
+	repeated JobWithStatus SucceededJobs = 3;
+}
+
+// Request message to get next runtime of job
+message GetNextRunReq {
+	string JobName = 1;
+}
+
+// Response message of next runtime of job
+message GetNextRunRes {
+	string JobName = 1;
+	google.protobuf.Timestamp NextRun = 2;
+}
+
+// Services to handle job dependencies
+service JobDepends {
+	rpc GetJobDepends(GetJobDependsReq) returns (GetJobDependsRes) {}
+	rpc GetNextRun(GetNextRunReq) returns (GetNextRunRes) {}
+}

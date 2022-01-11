@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package data;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./;data";
+
+// Message to represent job with its start time
+message JobContainer {
+	string JobName = 1;
+	repeated string ConditionJobs = 4;
+	google.protobuf.Timestamp startTime = 6;
+}
+
+// Request message to get list of jobs having start time in given period
+message NextJobsReq {
+	int32 DurationInSecond = 1;
+}
+
+// Response message with list of jobs
+message NextJobsRes {
+	repeated JobContainer Data = 1;
+}
+
+// Service to handle get jobs for next run
+service NextJobs {
+	rpc Next(NextJobsReq) returns (NextJobsRes) {}
+}

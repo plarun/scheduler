@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package data;
+
+import "google/protobuf/timestamp.proto";
+import "jil.proto";
+
+option go_package = "./;data";
+
+// Type to represent job status
+enum Status {
+	INACTIVE = 0;
+	ACTIVE = 1;
+	STARTED = 2;
+	RUNNING = 3;
+	SUCCESS = 4;
+	FAILURE = 5;
+	ONICE = 6;
+	ONHOLD = 7;
+	TERMINATED = 8;
+}
+
+// Message to represent run status of job
+message RunStatus {
+	google.protobuf.Timestamp StartTime = 1;
+	google.protobuf.Timestamp EndTime = 2;
+	Status StatusType = 3;
+}
+
+// Request message to get run status of job
+message GetJobRunStatusReq {
+	string JobName = 1;
+	int32 Level = 2;
+}
+
+// Response message for job run status
+message GetJobRunStatusRes {
+	string JobName = 1;
+	RunStatus BoxLatestRun = 2;
+	int32 Level = 3;
+	repeated GetJobRunStatusRes ChildJobsRunStatus = 4;
+}
+
+// Request message to get run history of job
+message GetJobRunHistoryReq {
+	string JobName = 1;
+}
+
+// Response message for job run history
+message GetJobRunHistoryRes {
+	string JobName = 1;
+	repeated RunStatus BoxLatestRun = 2;
+	int32 Level = 3;
+	repeated GetJobRunStatusRes ChildJobsRunStatus = 4;
+}
+
+// Message to represent slice of jil data
+message JilDataContainer {
+	repeated JilData DataList = 1;
+}
+
+// Request message to get jil
+message GetJilReq {
+	string JobName = 1;
+}
+
+// Response message of jil
+message GetJilRes {
+	string JobName = 1;
+	int32 Level = 2;
+	JilData Data = 3;
+	JilDataContainer ChildData = 4;
+}
+
+// Service to handle status of jobs
+service JobStatus {
+	rpc GetJobRunStatus(GetJobRunStatusReq) returns (GetJobRunStatusRes) {}
+	rpc GetJobRunHistory(GetJobRunHistoryReq) returns (GetJobRunHistoryRes) {}
+	rpc GetJil(GetJilReq) returns (GetJilRes) {}
+}

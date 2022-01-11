@@ -1,0 +1,15 @@
+/* insert job4 */
+insert: job4
+command: test_command4
+machine: test_machine
+start_times: 06:00
+run_days: su
+
+
+
+/* insert job5 */
+insert: job5
+command: test_command5
+machine: test_machine
+start_times: 04:00
+run_days: mo,tu

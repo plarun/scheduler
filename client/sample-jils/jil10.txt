@@ -1,0 +1,24 @@
+/* insert job6 */
+insert: job6
+command: test_command6
+machine: test_machine
+start_times: 03:00
+run_days: mo,tu,th,fr,sa
+
+/* insert job7 */
+insert: job7
+command: test_command7
+machine: test_machine
+start_times: 10:00
+run_days: mo,tu,th,fr,sa
+
+/* update job3 */
+update: job3
+run_days: mo,tu,th,fr,sa
+
+/* update job4 */
+update: job4
+run_days: mo,tu,th,fr,sa
+
+/* delete job5 */
+delete: job5

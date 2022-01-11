@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package data;
+
+option go_package = "./;data";
+
+// Type to represent different events
+enum Event {
+	FORCE_START = 0;
+	START = 1;
+	KILL = 2;
+	ON_HOLD = 3;
+	OFF_HOLD = 4;
+	ON_ICE = 5;
+	OFF_ICE = 6;
+	MARK_AS_SUCCESS = 7;
+	MARK_AS_FAILURE = 8;
+}
+
+// Request message to send one of the events of type Event
+message SendEventReq {
+	string JobName = 1;
+	Event EventType = 2;
+}
+
+// Response message for event sent
+message SendEventRes {
+	string JobName = 1;
+	bool EventChanged = 2;
+}
+
+// Service to handle send event actions
+service SendEvent {
+	rpc SendForceStartEvent(SendEventReq) returns (SendEventRes) {}
+	rpc SendStartEvent(SendEventReq) returns (SendEventRes) {}
+	rpc SendKillEvent(SendEventReq) returns (SendEventRes) {}
+	rpc SendOnHoldEvent(SendEventReq) returns (SendEventRes) {}
+	rpc SendOffHoldEvent(SendEventReq) returns (SendEventRes) {}
+	rpc SendOnIceEvent(SendEventReq) returns (SendEventRes) {}
+	rpc SendOffIceEvent(SendEventReq) returns (SendEventRes) {}
+	rpc SendMarkAsSuccessEvent(SendEventReq) returns (SendEventRes) {}
+	rpc SendMarkAsFailureEvent(SendEventReq) returns (SendEventRes) {}
+}

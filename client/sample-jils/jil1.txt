@@ -1,0 +1,28 @@
+/* insert job1 */
+insert: job1
+command: test_command1
+std_out_log: test_std_out1
+std_err_log: test_std_err1
+machine: test_machine
+start_times: 05:00
+run_days: mo,tu,th,fr,sa
+
+/* insert job2 */
+insert: job2
+command: test_command2
+conditions: job1
+std_out_log: test_std_out2
+std_err_log: test_std_err2
+machine: test_machine
+start_times: 05:00
+run_days: mo,tu,we,th,fr,sa
+
+/* insert job3 */
+insert: job3
+command: test_command3
+conditions: job1 & job2
+std_out_log: test_std_out3
+std_err_log: test_std_err3
+machine: test_machine
+start_times: 05:30
+run_days: mo,tu,we,th,fr,sa
