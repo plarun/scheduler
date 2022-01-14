@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"sort"
 
@@ -13,7 +12,7 @@ import (
 
 // Server for job data implements all rpc methods of JobDataServicesServer from grpc
 type JilServer struct {
-	DB *sql.DB
+	Database *query.Database
 	pb.UnimplementedSubmitJilServer
 }
 
@@ -42,7 +41,7 @@ func (server JilServer) Submit(ctx context.Context, req *pb.SubmitJilReq) (*pb.S
 
 	// database transaction helps to execute list of queries
 	// after all queries are success then commits otherwise rollbacks
-	res, err := query.TransactionJobQuery(ctx, server.DB, &processQueue)
+	res, err := server.Database.TransactionJobQuery(ctx, &processQueue)
 	if err != nil {
 		return res, err
 	}
@@ -57,7 +56,7 @@ func (server JilServer) validateJils(jils []*pb.Jil) error {
 
 	for _, jil := range jils {
 		jobName := jil.Data.JobName
-		jobAvailable := query.CheckJob(server.DB, jobName)
+		jobAvailable := query.DB.CheckJob(jobName)
 
 		if jil.GetAction() == pb.JilAction_INSERT && jobAvailable {
 			return fmt.Errorf("job definition for %s is already available", jobName)
@@ -71,7 +70,7 @@ func (server JilServer) validateJils(jils []*pb.Jil) error {
 		if (jil.GetAction() != pb.JilAction_DELETE) && (jil.AttributeFlag&model.CONDITIONS != 0) {
 			for _, conditionJob := range jil.Data.Conditions {
 				// condition job is not available in DB and not going to be inserted before this definition
-				if !query.CheckJob(server.DB, conditionJob) && jobsToProcess[jobName] != pb.JilAction_INSERT {
+				if !server.Database.CheckJob(conditionJob) && jobsToProcess[jobName] != pb.JilAction_INSERT {
 					return fmt.Errorf("condition job %s is not exist", conditionJob)
 				}
 			}

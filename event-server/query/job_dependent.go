@@ -7,32 +7,50 @@ import (
 )
 
 // InsertJobDependent creates job dependent relation between a job and list of jobs
-func InsertJobDependent(dbTxn *sql.Tx, jobSeqId int64, dependentJobSeqIds []int64) error {
-	fmt.Println(jobSeqId, dependentJobSeqIds)
+func (database *Database) InsertJobDependent(dbTxn *sql.Tx, jobSeqId int64, dependentJobSeqIds []int64) error {
+	database.lock.Lock()
 	for _, dependentJobSeqId := range dependentJobSeqIds {
-		_, err := dbTxn.Exec("insert into job_dependent (job_id, dependent_job_id, dependent_flag) values (?, ?, ?)", jobSeqId, dependentJobSeqId, "SU")
+		_, err := dbTxn.Exec(
+			`insert into job_dependent (job_id, dependent_job_id, dependent_flag) 
+			values (?, ?, ?)`,
+			jobSeqId,
+			dependentJobSeqId,
+			"SU")
 		if err != nil {
 			return fmt.Errorf("insertJobDependent: %v", err)
 		}
 	}
+	database.lock.Unlock()
 	return nil
 }
 
 // DeleteJobDependent removes job dependent relation between a job and list of jobs
-func DeleteJobDependent(dbTxn *sql.Tx, jobSeqId int64, dependentJobSeqIds []int64) error {
-	fmt.Println(jobSeqId, dependentJobSeqIds)
+func (database *Database) DeleteJobDependent(dbTxn *sql.Tx, jobSeqId int64, dependentJobSeqIds []int64) error {
+	database.lock.Lock()
 	for _, dependentJobSeqId := range dependentJobSeqIds {
-		_, err := dbTxn.Exec("delete from job_dependent where job_id=? and dependent_job_id=?", jobSeqId, dependentJobSeqId)
+		_, err := dbTxn.Exec(
+			`delete from job_dependent 
+			where job_id=? and dependent_job_id=?`,
+			jobSeqId,
+			dependentJobSeqId)
 		if err != nil {
 			return fmt.Errorf("deleteJobDependent: %v", err)
 		}
 	}
+	database.lock.Unlock()
 	return nil
 }
 
 // DeleteJobRelation
-func DeleteJobRelation(dbTxn *sql.Tx, jobSeqId int64) error {
-	_, err := dbTxn.Exec("delete from job_dependent where job_id=? or dependent_job_id=?", jobSeqId, jobSeqId)
+func (database *Database) DeleteJobRelation(dbTxn *sql.Tx, jobSeqId int64) error {
+	database.lock.Lock()
+	_, err := dbTxn.Exec(
+		`delete from job_dependent 
+		where job_id=? 
+		or dependent_job_id=?`,
+		jobSeqId,
+		jobSeqId)
+	database.lock.Unlock()
 	if err != nil {
 		return fmt.Errorf("deleteJobRelation: %v", err)
 	}
@@ -61,10 +79,15 @@ func DeleteJobRelation(dbTxn *sql.Tx, jobSeqId int64) error {
 // }
 
 // GetJobDependentsIdList gets list of dependent job id for requested job id
-func GetJobDependentsIdList(dbTxn *sql.Tx, jobSeqId int64) ([]int64, error) {
+func (database *Database) GetJobDependentsIdList(dbTxn *sql.Tx, jobSeqId int64) ([]int64, error) {
 	var dependentJobsIds []int64
 
-	rows, err := dbTxn.Query("select dependent_job_id from job_dependent where job_id=?", jobSeqId)
+	database.lock.Lock()
+	rows, err := dbTxn.Query(
+		`select dependent_job_id from job_dependent 
+		where job_id=?`,
+		jobSeqId)
+	database.lock.Unlock()
 	if err != nil {
 		return dependentJobsIds, err
 	}
@@ -81,16 +104,16 @@ func GetJobDependentsIdList(dbTxn *sql.Tx, jobSeqId int64) ([]int64, error) {
 }
 
 // UpdateJobDependents updates dependent jobs for given job with latest conditions list
-func UpdateJobDependents(dbTxn *sql.Tx, jobName string, conditions []string) error {
+func (database *Database) UpdateJobDependents(dbTxn *sql.Tx, jobName string, conditions []string) error {
 	var deleteList, insertList []int64
 
-	jobSeqId, err := GetJobId(dbTxn, jobName)
+	jobSeqId, err := database.GetJobId(dbTxn, jobName)
 	if err != nil {
 		return err
 	}
 
 	var existingConditionJobsLookup map[int64]bool = make(map[int64]bool)
-	existingConditionJobs, err := GetJobDependentsIdList(dbTxn, jobSeqId)
+	existingConditionJobs, err := database.GetJobDependentsIdList(dbTxn, jobSeqId)
 	if err != nil {
 		return err
 	}
@@ -99,7 +122,7 @@ func UpdateJobDependents(dbTxn *sql.Tx, jobName string, conditions []string) err
 	}
 
 	var newConditionJobsLookup map[int64]bool = make(map[int64]bool)
-	newConditionJobs, err := GetJobIdList(dbTxn, conditions)
+	newConditionJobs, err := database.GetJobIdList(dbTxn, conditions)
 	if err != nil {
 		return err
 	}
@@ -120,10 +143,10 @@ func UpdateJobDependents(dbTxn *sql.Tx, jobName string, conditions []string) err
 	}
 
 	// Actual update
-	if err := DeleteJobDependent(dbTxn, jobSeqId, deleteList); err != nil {
+	if err := database.DeleteJobDependent(dbTxn, jobSeqId, deleteList); err != nil {
 		return err
 	}
-	if err := InsertJobDependent(dbTxn, jobSeqId, insertList); err != nil {
+	if err := database.InsertJobDependent(dbTxn, jobSeqId, insertList); err != nil {
 		return err
 	}
 

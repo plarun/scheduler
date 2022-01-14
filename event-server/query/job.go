@@ -4,22 +4,17 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 
 	pb "github.com/plarun/scheduler/event-server/data"
 	"github.com/plarun/scheduler/event-server/model"
 )
 
-// Check whether a job is available in job table
-func CheckJob(db *sql.DB, jobName string) bool {
-	var job string
-	row := db.QueryRow("select job_name from job where job_name=?", jobName)
-	err := row.Scan(&job)
-	return err != sql.ErrNoRows
-}
+const (
+	timeGap = "00:00:05"
+)
 
 // DB transaction executes all the queries then commits or nothing.
-func TransactionJobQuery(ctx context.Context, db *sql.DB, queries *model.QueryQueue) (*pb.SubmitJilRes, error) {
+func (database *Database) TransactionJobQuery(ctx context.Context, queries *model.QueryQueue) (*pb.SubmitJilRes, error) {
 
 	var inserted, updated, deleted int32 = 0, 0, 0
 	res := &pb.SubmitJilRes{
@@ -28,7 +23,7 @@ func TransactionJobQuery(ctx context.Context, db *sql.DB, queries *model.QueryQu
 		Deleted: 0,
 	}
 
-	dbTxn, err := db.BeginTx(ctx, nil)
+	dbTxn, err := database.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return res, err
 	}
@@ -37,17 +32,17 @@ func TransactionJobQuery(ctx context.Context, db *sql.DB, queries *model.QueryQu
 	for queries.HasNext() {
 		query := queries.Next()
 		if query.Action == pb.JilAction_INSERT {
-			if err := InsertJob(dbTxn, query); err != nil {
+			if err := database.InsertJob(dbTxn, query); err != nil {
 				return res, err
 			}
 			inserted++
 		} else if query.Action == pb.JilAction_UPDATE {
-			if err := UpdateJob(dbTxn, query); err != nil {
+			if err := database.UpdateJob(dbTxn, query); err != nil {
 				return res, err
 			}
 			updated++
 		} else if query.Action == pb.JilAction_DELETE {
-			if err := DeleteJob(dbTxn, query.Data.JobName); err != nil {
+			if err := database.DeleteJob(dbTxn, query.Data.JobName); err != nil {
 				return res, err
 			}
 			deleted++
@@ -64,13 +59,27 @@ func TransactionJobQuery(ctx context.Context, db *sql.DB, queries *model.QueryQu
 	return res, nil
 }
 
+// Check whether a job is available in job table
+func (database *Database) CheckJob(jobName string) bool {
+	var job string
+
+	database.lock.Lock()
+	row := database.DB.QueryRow(
+		`select job_name from job 
+		where job_name=?`,
+		jobName)
+	database.lock.Unlock()
+
+	err := row.Scan(&job)
+	return err != sql.ErrNoRows
+}
+
 // InsertJob inserts a new job definition into job table
-func InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
-	log.Println(jobData.Data)
+func (database *Database) InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
+	database.lock.Lock()
 	result, err := dbTxn.Exec(
-		"insert into job "+
-			"(job_name,command,std_out_log,std_err_log,machine,start_times,run_days,status) "+
-			"values (?,?,?,?,?,?,?,?)",
+		`insert into job (job_name,command,std_out_log,std_err_log,machine,start_times,run_days,status) 
+		values (?,?,?,?,?,?,?,?)`,
 		jobData.Data.JobName,
 		jobData.Data.Command,
 		jobData.Data.StdOut,
@@ -80,18 +89,20 @@ func InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 		jobData.Data.RunDays,
 		"INACTIVE",
 	)
+	database.lock.Unlock()
+
 	if err != nil {
 		return fmt.Errorf("insertJob: %v", err)
 	}
 
 	jobSeqId, _ := result.LastInsertId()
-	dependentJobSeqIds, err := GetJobIdList(dbTxn, jobData.Data.Conditions)
+	dependentJobSeqIds, err := database.GetJobIdList(dbTxn, jobData.Data.Conditions)
 	if err != nil {
 		return err
 	}
 
 	if jobData.AttributeFlag&model.CONDITIONS != 0 {
-		if err := InsertJobDependent(dbTxn, jobSeqId, dependentJobSeqIds); err != nil {
+		if err := database.InsertJobDependent(dbTxn, jobSeqId, dependentJobSeqIds); err != nil {
 			return err
 		}
 	}
@@ -100,9 +111,16 @@ func InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 }
 
 // GetJobId gets job sequence ID by job name
-func GetJobId(dbTxn *sql.Tx, jobName string) (int64, error) {
+func (database *Database) GetJobId(dbTxn *sql.Tx, jobName string) (int64, error) {
 	var jobSeqId int64 = 0
-	row := dbTxn.QueryRow("select job_seq_id from job where job_name=?", jobName)
+
+	database.lock.Lock()
+	row := dbTxn.QueryRow(
+		`select job_seq_id from job 
+		where job_name=?`,
+		jobName)
+	database.lock.Unlock()
+
 	if err := row.Scan(&jobSeqId); err != nil {
 		return jobSeqId, err
 	}
@@ -110,11 +128,10 @@ func GetJobId(dbTxn *sql.Tx, jobName string) (int64, error) {
 }
 
 // GetJobIdList gets list of job sequence ID for list of jobs by job name
-func GetJobIdList(dbTxn *sql.Tx, jobNameList []string) ([]int64, error) {
+func (database *Database) GetJobIdList(dbTxn *sql.Tx, jobNameList []string) ([]int64, error) {
 	var jobSeqIdList []int64 = make([]int64, 0)
-
 	for _, jobName := range jobNameList {
-		if jobSeqId, err := GetJobId(dbTxn, jobName); err != nil {
+		if jobSeqId, err := database.GetJobId(dbTxn, jobName); err != nil {
 			return jobSeqIdList, err
 		} else {
 			jobSeqIdList = append(jobSeqIdList, jobSeqId)
@@ -125,17 +142,17 @@ func GetJobIdList(dbTxn *sql.Tx, jobNameList []string) ([]int64, error) {
 }
 
 // DeleteJob deletes an existing job definition from job table
-func DeleteJob(dbTxn *sql.Tx, jobName string) error {
+func (database *Database) DeleteJob(dbTxn *sql.Tx, jobName string) error {
 	var jobSeqId int64
 	var err error
 
-	jobSeqId, err = GetJobId(dbTxn, jobName)
+	jobSeqId, err = database.GetJobId(dbTxn, jobName)
 	if err != nil {
 		return err
 	}
 
 	// remove all the relations of job
-	err = DeleteJobRelation(dbTxn, jobSeqId)
+	err = database.DeleteJobRelation(dbTxn, jobSeqId)
 	if err != nil {
 		return err
 	}
@@ -144,7 +161,12 @@ func DeleteJob(dbTxn *sql.Tx, jobName string) error {
 	// todo
 
 	// remove the definition of job
-	_, err = dbTxn.Exec("delete from job where job_name=?", jobName)
+	database.lock.Lock()
+	_, err = dbTxn.Exec(
+		`delete from job 
+		where job_name=?`,
+		jobName)
+	database.lock.Unlock()
 	if err != nil {
 		return fmt.Errorf("deleteJobByJobName: %v", err)
 	}
@@ -153,18 +175,22 @@ func DeleteJob(dbTxn *sql.Tx, jobName string) error {
 }
 
 // UpdateJob updates one or more columns in job table by job name
-func UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
-
+func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 	columns := buildJobUpdateQuery(jobData)
-	log.Println(columns)
 	if len(columns) != 0 {
-		_, err := dbTxn.Exec("update job set "+columns+" where job_name=?;", jobData.Data.JobName)
+		database.lock.Lock()
+		_, err := dbTxn.Exec(
+			"update job set "+
+				columns+
+				" where job_name=?;",
+			jobData.Data.JobName)
+		database.lock.Unlock()
 		if err != nil {
 			return fmt.Errorf("updateJob: %v", err)
 		}
 	}
 	if jobData.AttributeFlag&model.CONDITIONS != 0 {
-		if err := UpdateJobDependents(dbTxn, jobData.Data.JobName, jobData.Data.Conditions); err != nil {
+		if err := database.UpdateJobDependents(dbTxn, jobData.Data.JobName, jobData.Data.Conditions); err != nil {
 			return err
 		}
 	}
@@ -172,81 +198,33 @@ func UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 	return nil
 }
 
-// // Get all jobs inside the box job from job table
-// func (server *JobDataServer) GetAllJobsInBox(ctx context.Context, req *pb.GetAllJobsInBoxReq) (*pb.GetAllJobsInBoxRes, error) {
-// 	res := &pb.GetAllJobsInBoxRes{}
-// 	var jobType string
-// 	row := server.db.QueryRow("select job_type from job where job_name=?", req.JobName)
-// 	err := row.Scan(&jobType)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return res, fmt.Errorf("job not found")
-// 		}
-// 		return res, fmt.Errorf("getByJobName%s: %v", req.JobName, err)
-// 	}
-// 	if jobType != "BOX" {
-// 		return res, fmt.Errorf("%s is not box job", req.JobName)
-// 	}
+// GetNextRunJobs gives list of jobs ready for next run
+func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTime string, runDay string) ([]*pb.ReadyJob, error) {
+	database.lock.Lock()
+	rows, err := dbTxn.Query(
+		`select job_name from job 
+		where start_times between ? and ? 
+		and find_in_set('?', run_days)"+
+		and status in ('INACTIVE', 'SUCCESS', 'FAILED', 'TERMINATED') 
+		and current_time-time(last_run) > ?`,
+		startTime,
+		endTime,
+		runDay,
+		timeGap)
+	database.lock.Unlock()
+	if err != nil {
+		return nil, err
+	}
 
-// 	rows, err := server.db.Query("select * from job where box_job_seq_id=?")
-// 	if err != nil {
-// 		return nil, fmt.Errorf("getAllJobsInBox: %v", err)
-// 	}
-// 	defer rows.Close()
+	nextJobs := make([]*pb.ReadyJob, 0)
+	for rows.Next() {
+		var jobName string
+		if err := rows.Scan(&jobName); err != nil {
+			return nil, err
+		}
+		job := &pb.ReadyJob{JobName: jobName}
+		nextJobs = append(nextJobs, job)
+	}
 
-// 	var childJobs []*pb.JobData
-// 	for rows.Next() {
-// 		childJob := &pb.JobData{}
-
-// 		err := rows.Scan(
-// 			&childJob.JobSeqId,
-// 			&childJob.JobName,
-// 			&childJob.Command,
-// 			&childJob.StdOutLog,
-// 			&childJob.StdOutErr,
-// 			&childJob.Machine,
-// 			&childJob.StartTime,
-// 			&childJob.RunWindow,
-// 			&childJob.RunDays,
-// 		)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("getAllJobsInBox: %v", err)
-// 		}
-
-// 		childJobs = append(childJobs, childJob)
-// 	}
-
-// 	if err = rows.Err(); err != nil {
-// 		return nil, fmt.Errorf("getAllJobsInBox: %v", err)
-// 	}
-
-// 	res.Jobs = childJobs
-// 	return res, nil
-// }
-
-// Get an existing job from job table
-// func (server JilServer) getJob(jobName string) (error) {
-// 	res := &pb.GetJobRes{}
-// 	job := res.JobData
-
-// 	row := server.DB.QueryRow("select * from job where job_name=?", jobName)
-// 	err := row.Scan(
-// 		&job.JobSeqId,
-// 		&job.JobName,
-// 		&job.Command,
-// 		&job.StdOutLog,
-// 		&job.StdOutErr,
-// 		&job.Machine,
-// 		&job.StartTime,
-// 		&job.RunWindow,
-// 		&job.RunDays,
-// 	)
-// 	res.JobData = job
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return res, fmt.Errorf("job not found")
-// 		}
-// 		return res, fmt.Errorf("getByJobName%s: %v", req.JobName, err)
-// 	}
-// 	return res, nil
-// }
+	return nextJobs, nil
+}
