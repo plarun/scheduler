@@ -67,7 +67,7 @@ func (jobInfo JobInfo) SubmitJil(inputFilename string) error {
 	}
 
 	for _, jil := range jilList {
-		fmt.Println(jil.Action, jil.Data)
+		log.Println(jil.Action, jil.Data)
 	}
 
 	res, err := jobInfo.client.Submit(ctx, submitReq)
@@ -76,7 +76,7 @@ func (jobInfo JobInfo) SubmitJil(inputFilename string) error {
 	}
 
 	// logging
-	fmt.Println(res)
+	log.Println(res)
 	return nil
 }
 

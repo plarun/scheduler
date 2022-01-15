@@ -2,7 +2,12 @@ package query
 
 import (
 	"database/sql"
+	"fmt"
+	"log"
+	"os"
 	"sync"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 // singleton instance for database
@@ -15,7 +20,42 @@ type Database struct {
 
 func GetDatabase() *Database {
 	if DB == nil {
-		return &Database{}
+		DB = &Database{
+			lock: &sync.Mutex{},
+		}
 	}
 	return DB
+}
+
+func ConnectDB() {
+	fmt.Println("DB connecting...")
+
+	username := os.Getenv("DBUSER")
+	password := os.Getenv("DBPASS")
+
+	cfg := mysql.Config{
+		User:   username,
+		Passwd: password,
+		Net:    "tcp",
+		Addr:   "127.0.0.1:3306",
+		DBName: "scheduler",
+	}
+
+	// create DB conn instance
+	database := GetDatabase()
+
+	// get db handle
+	var err error
+	db, err := sql.Open("mysql", cfg.FormatDSN())
+	if err != nil {
+		log.Fatal(err)
+	}
+	database.DB = db
+
+	// ping Database to check connectivity
+	pingErr := db.Ping()
+	if pingErr != nil {
+		log.Fatal(pingErr)
+	}
+	fmt.Println("DB connected...")
 }

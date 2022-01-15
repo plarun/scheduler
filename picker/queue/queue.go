@@ -2,6 +2,7 @@ package queue
 
 import (
 	"fmt"
+	"log"
 	"sync"
 )
 
@@ -99,4 +100,15 @@ func (cwque *ConcurrentWaitingQueue) Size() uint32 {
 	len := cwque.wQue.size
 	cwque.lock.Unlock()
 	return len
+}
+
+func (cwque *ConcurrentWaitingQueue) Print() {
+	log.Println()
+	fmt.Print("[ ")
+	curr := cwque.wQue.in
+	for curr != nil {
+		fmt.Printf("%v, ", curr.job)
+		curr = curr.next
+	}
+	fmt.Println(" ]")
 }

@@ -1,4 +1,3 @@
 /* update job1 */
 update: job1
 command: test_command
-conditions: testJob

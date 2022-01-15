@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 
 	pb "github.com/plarun/scheduler/event-server/data"
 	"github.com/plarun/scheduler/event-server/model"
@@ -201,10 +202,11 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 // GetNextRunJobs gives list of jobs ready for next run
 func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTime string, runDay string) ([]*pb.ReadyJob, error) {
 	database.lock.Lock()
+	log.Printf("searching next jobs... %s to %s\n", startTime, endTime)
 	rows, err := dbTxn.Query(
 		`select job_name from job 
 		where start_times between ? and ? 
-		and find_in_set('?', run_days)"+
+		and find_in_set(?, run_days) 
 		and status in ('INACTIVE', 'SUCCESS', 'FAILED', 'TERMINATED') 
 		and current_time-time(last_run) > ?`,
 		startTime,

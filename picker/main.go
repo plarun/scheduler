@@ -5,35 +5,40 @@ import (
 	"time"
 
 	pb "github.com/plarun/scheduler/picker/data"
-	"github.com/plarun/scheduler/picker/queue"
+	"github.com/plarun/scheduler/picker/picker"
+
 	"google.golang.org/grpc"
 )
 
-const port = 5556
-
-var waitingQueue = queue.NewWaitingQueue()
+// const port = 5556
 
 func main() {
+	log.Println("Picker started...")
 	// client service to communicate with event-server
-	go startClient()
+	clientErrChan := make(chan error)
+	go func() {
+		conn, err := grpc.Dial("localhost:5555", grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("connection failed: %v", err)
+		}
+		defer conn.Close()
+
+		client := pb.NewNextJobsClient(conn)
+		jobPicker := picker.NewJobPicker(client)
+		log.Println("client services starting...")
+		for {
+			time.Sleep(time.Second * 5)
+			if err := jobPicker.NextJobs(); err != nil {
+				clientErrChan <- err
+			}
+			jobPicker.Queue.Print()
+		}
+	}()
+
+	log.Fatal(<-clientErrChan)
 
 	// server service to communicate with controller
 	serve()
-}
-
-func startClient() {
-	conn, err := grpc.Dial("localhost:5555", grpc.WithInsecure)
-	if err != nil {
-		log.Fatalf("connection failed: %v", err)
-	}
-	defer conn.Close()
-
-	client := pb.NewNextJobsClient(conn)
-	picker := NewJobPicker(client)
-	for true {
-		time.Sleep(time.Second * 5)
-		picker.Pick()
-	}
 }
 
 func serve() {

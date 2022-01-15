@@ -19,8 +19,8 @@ func (server NextJobsServer) Next(ctx context.Context, req *pb.NextJobsReq) (*pb
 	start := time.Now()
 	end := start.Add(time.Second * 5)
 
-	var startTime string = strconv.Itoa(start.Hour()) + ":" + strconv.Itoa(start.Minute())
-	var endTime string = strconv.Itoa(end.Hour()) + ":" + strconv.Itoa(end.Minute())
+	var startTime string = strconv.Itoa(start.Hour()) + ":" + strconv.Itoa(start.Minute()) + ":" + strconv.Itoa(start.Second())
+	var endTime string = strconv.Itoa(end.Hour()) + ":" + strconv.Itoa(end.Minute()) + ":" + strconv.Itoa(end.Second())
 
 	dbTxn, err := server.Database.DB.BeginTx(ctx, nil)
 	if err != nil {
