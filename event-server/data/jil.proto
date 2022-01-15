@@ -7,18 +7,13 @@ option go_package = "./;data";
 // Message to represent JIL data for job
 message JilData {
 	string JobName = 1;
-	string JobType = 2;
-	string BoxName = 3;
-	string Command = 4;
-	repeated string Conditions = 5;
-	string StdOut = 6;
-	string StdErr = 7;
-	string DateCondition = 8;
-	string AlarmIfFail = 9;
-	string MaxRunAlarm = 10;
-	string Machine = 11;
-	string RunDays = 12;
-	string StartTimes = 13;
+	string Command = 2;
+	repeated string Conditions = 3;
+	string StdOut = 4;
+	string StdErr = 5;
+	string Machine = 6;
+	string RunDays = 7;
+	string StartTimes = 8;
 }
 
 // Type to represent JIL action

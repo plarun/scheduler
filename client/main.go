@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 
 	pb "github.com/plarun/scheduler/client/data"
-	"github.com/plarun/scheduler/client/model"
 	"google.golang.org/grpc"
 
 	"github.com/plarun/scheduler/client/job"
@@ -33,17 +31,24 @@ func startClient() {
 	defer conn.Close()
 
 	// client services
-	clientServices := model.NewClientServices()
+	// clientServices := model.NewClientServices()
 	// clientServices.SubmitJil = pb.NewSubmitJilClient(conn)
-	clientServices.SendEvent = pb.NewSendEventClient(conn)
-	clientServices.JobStatus = pb.NewJobStatusClient(conn)
-	clientServices.Dependent = pb.NewJobDependsClient(conn)
+	// clientServices.SendEvent = pb.NewSendEventClient(conn)
+	// clientServices.JobStatus = pb.NewJobStatusClient(conn)
+	// clientServices.Dependent = pb.NewJobDependsClient(conn)
 
-	switch cmd := flag.Arg(0); cmd {
-	case "submitjil":
+	cmd := flag.Arg(0)
+
+	if cmd == "submitjil" {
 		err = submitJil(pb.NewSubmitJilClient(conn))
-	case "sendevent":
-		err = sendevent(context.Background(), nil)
+	} else if cmd == "sendevent" {
+		err = sendEvent(pb.NewSendEventClient(conn))
+	} else if cmd == "jobstat" || cmd == "jobdef" || cmd == "jobhist" {
+		err = status(cmd, pb.NewJobStatusClient(conn))
+	} else if cmd == "jobdepend" || cmd == "jobfuture" {
+		err = dependents(cmd, pb.NewJobDependsClient(conn))
+	} else {
+		printHelp()
 	}
 
 	if err != nil {
@@ -53,7 +58,7 @@ func startClient() {
 }
 
 // sendevent is a subcommand to send a job action event request
-func sendevent(ctx context.Context, client interface{}) error {
+func sendEvent(client interface{}) error {
 	fmt.Println("send event")
 	fmt.Println("not implemented")
 	return nil
@@ -62,7 +67,7 @@ func sendevent(ctx context.Context, client interface{}) error {
 // submitjil is a subcommand to parse and request the job definitions
 func submitJil(client pb.SubmitJilClient) error {
 	if flag.NArg() != 2 {
-		return fmt.Errorf("invalid argument\nusage:\n\tsubmitjil filepath")
+		return fmt.Errorf("invalid argument\nusage:\n\tsubmitjil <filepath>")
 	}
 
 	inputFilename := flag.Arg(1)
@@ -73,4 +78,58 @@ func submitJil(client pb.SubmitJilClient) error {
 	}
 
 	return nil
+}
+
+// status is a subcommand to view latest runs, jobs definition and run history
+func status(subCommand string, client pb.JobStatusClient) error {
+	controller := job.NewJobStatusController(client)
+
+	if subCommand == "jobstat" {
+		if flag.NArg() != 2 {
+			return fmt.Errorf("invalid argument\nusage:\n\tjobstat <job_name>")
+		}
+
+		jobName := flag.Arg(1)
+		err := controller.PrintJobStatus(jobName)
+		if err != nil {
+			return err
+		}
+	} else if subCommand == "jobdef" {
+		if flag.NArg() != 2 {
+			return fmt.Errorf("invalid argument\nusage:\n\tjobdef <job_name>")
+		}
+
+		jobName := flag.Arg(1)
+		err := controller.PrintJobDefinition(jobName)
+		if err != nil {
+			return err
+		}
+	} else if subCommand == "jobhist" {
+		if flag.NArg() != 2 {
+			return fmt.Errorf("invalid argument\nusage:\n\tjobhist <job_name>")
+		}
+
+		jobName := flag.Arg(1)
+		controller.PrintJobHistory(jobName)
+	}
+
+	return nil
+}
+
+// depends is a subcommand to view job relations
+func dependents(subcommand string, client pb.JobDependsClient) error {
+	return nil
+}
+
+func printHelp() {
+	helpStr := `Usage:
+	submitjil <file>
+	sendevent <job_name> <event_type>
+	jobstat <job_name>
+	jobdef <job_name>
+	jobhist <job_name>
+	jobdepend <job_name>
+	jobfuture <job_name>`
+
+	fmt.Println(helpStr)
 }

@@ -58,3 +58,16 @@ const (
 	FR int8 = 1 << iota
 	SA int8 = 1 << iota
 )
+
+// Job Status Number to string
+var StatusTypeConv = map[string]string{
+	"INACTIVE":   "IN",
+	"ACTIVE":     "AC",
+	"STARTED":    "ST",
+	"RUNNING":    "RU",
+	"SUCCESS":    "SU",
+	"FAILURE":    "FA",
+	"ONICE":      "OI",
+	"ONHOLD":     "OH",
+	"TERMINATED": "TE",
+}

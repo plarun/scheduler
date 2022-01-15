@@ -3,7 +3,6 @@ package query
 import (
 	"database/sql"
 	"fmt"
-	// pb "github.com/plarun/scheduler/event-server/data"
 )
 
 // InsertJobDependent creates job dependent relation between a job and list of jobs
@@ -57,26 +56,33 @@ func (database *Database) DeleteJobRelation(dbTxn *sql.Tx, jobSeqId int64) error
 	return nil
 }
 
-// // GetJobDependents gets all the related jobs
-// func GetJobDependents(dbTxn *sql.Tx, jobSeqId int64) ([]string, error) {
+// GetJobDependents gets all the related jobs
+func (database *Database) GetJobDependents(dbTxn *sql.Tx, jobSeqId int64) ([]string, error) {
+	var dependentJobs []string
 
-// 	var dependentJobs []string
+	database.lock.Lock()
+	rows, err := dbTxn.Query(
+		`select job_name from job 
+		where job_seq_id in (
+			select dependent_job_id from job_dependent 
+			where job_seq_id=?
+		)`,
+		jobSeqId)
+	database.lock.Unlock()
+	if err != nil {
+		return dependentJobs, err
+	}
 
-// 	rows, err := dbTxn.Query("select job_name from job where job_seq_id in (select dependent_job_id from job_dependent where job_seq_id=?)", jobSeqId)
-// 	if err != nil {
-// 		return dependentJobs, err
-// 	}
+	for rows.Next() {
+		var jobName string
+		if err := rows.Scan(&jobName); err != nil {
+			return dependentJobs, err
+		}
+		dependentJobs = append(dependentJobs, jobName)
+	}
 
-// 	for rows.Next() {
-// 		var jobName string
-// 		if err := rows.Scan(&jobName); err != nil {
-// 			return dependentJobs, err
-// 		}
-// 		dependentJobs = append(dependentJobs, jobName)
-// 	}
-
-// 	return dependentJobs, nil
-// }
+	return dependentJobs, nil
+}
 
 // GetJobDependentsIdList gets list of dependent job id for requested job id
 func (database *Database) GetJobDependentsIdList(dbTxn *sql.Tx, jobSeqId int64) ([]int64, error) {

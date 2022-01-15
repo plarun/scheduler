@@ -41,7 +41,7 @@ func (server JilServer) Submit(ctx context.Context, req *pb.SubmitJilReq) (*pb.S
 
 	// database transaction helps to execute list of queries
 	// after all queries are success then commits otherwise rollbacks
-	res, err := server.Database.TransactionJobQuery(ctx, &processQueue)
+	res, err := server.TransactionJobQuery(ctx, &processQueue)
 	if err != nil {
 		return res, err
 	}
@@ -79,20 +79,47 @@ func (server JilServer) validateJils(jils []*pb.Jil) error {
 	return nil
 }
 
-// // validateInsertJil validates the input data for JIL action type insert
-// func validateInsertJil(jobData *pb.JilData) error {
+// DB transaction executes all the queries then commits or nothing.
+func (server JilServer) TransactionJobQuery(ctx context.Context, queries *model.QueryQueue) (*pb.SubmitJilRes, error) {
+	var inserted, updated, deleted int32 = 0, 0, 0
+	res := &pb.SubmitJilRes{
+		Created: 0,
+		Updated: 0,
+		Deleted: 0,
+	}
 
-// 	return nil
-// }
+	dbTxn, err := server.Database.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return res, err
+	}
+	defer dbTxn.Rollback()
 
-// // validateUpdateJil validates the input data for JIL action type update
-// func validateUpdateJil(jobData *pb.JilData) error {
+	for queries.HasNext() {
+		query := queries.Next()
+		if query.Action == pb.JilAction_INSERT {
+			if err := server.Database.InsertJob(dbTxn, query); err != nil {
+				return res, err
+			}
+			inserted++
+		} else if query.Action == pb.JilAction_UPDATE {
+			if err := server.Database.UpdateJob(dbTxn, query); err != nil {
+				return res, err
+			}
+			updated++
+		} else if query.Action == pb.JilAction_DELETE {
+			if err := server.Database.DeleteJob(dbTxn, query.Data.JobName); err != nil {
+				return res, err
+			}
+			deleted++
+		}
+	}
 
-// 	return nil
-// }
+	if err := dbTxn.Commit(); err != nil {
+		return res, err
+	}
 
-// // validateDeleteJil validates the input data for JIL action type delete
-// func validateDeleteJil(jobData *pb.JilData) error {
-
-// 	return nil
-// }
+	res.Created = inserted
+	res.Updated = updated
+	res.Deleted = deleted
+	return res, nil
+}

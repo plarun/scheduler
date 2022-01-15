@@ -1,7 +1,6 @@
 package query
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -13,52 +12,6 @@ import (
 const (
 	timeGap = "00:00:05"
 )
-
-// DB transaction executes all the queries then commits or nothing.
-func (database *Database) TransactionJobQuery(ctx context.Context, queries *model.QueryQueue) (*pb.SubmitJilRes, error) {
-
-	var inserted, updated, deleted int32 = 0, 0, 0
-	res := &pb.SubmitJilRes{
-		Created: 0,
-		Updated: 0,
-		Deleted: 0,
-	}
-
-	dbTxn, err := database.DB.BeginTx(ctx, nil)
-	if err != nil {
-		return res, err
-	}
-	defer dbTxn.Rollback()
-
-	for queries.HasNext() {
-		query := queries.Next()
-		if query.Action == pb.JilAction_INSERT {
-			if err := database.InsertJob(dbTxn, query); err != nil {
-				return res, err
-			}
-			inserted++
-		} else if query.Action == pb.JilAction_UPDATE {
-			if err := database.UpdateJob(dbTxn, query); err != nil {
-				return res, err
-			}
-			updated++
-		} else if query.Action == pb.JilAction_DELETE {
-			if err := database.DeleteJob(dbTxn, query.Data.JobName); err != nil {
-				return res, err
-			}
-			deleted++
-		}
-	}
-
-	if err := dbTxn.Commit(); err != nil {
-		return res, err
-	}
-
-	res.Created = inserted
-	res.Updated = updated
-	res.Deleted = deleted
-	return res, nil
-}
 
 // Check whether a job is available in job table
 func (database *Database) CheckJob(jobName string) bool {
@@ -229,4 +182,37 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 	}
 
 	return nextJobs, nil
+}
+
+// GetJobData gets job definition
+func (database *Database) GetJobData(dbTxn *sql.Tx, jobName string) (*pb.GetJilRes, error) {
+	res := &pb.GetJilRes{}
+	var jobSeqId int64
+
+	database.lock.Lock()
+	jobRow := dbTxn.QueryRow(
+		`select job_seq_id, job_name, command, std_out_log, std_err_log, machine, run_days, start_times from job
+		where job_name=?`,
+		jobName)
+	database.lock.Unlock()
+
+	err := jobRow.Scan(
+		&jobSeqId,
+		&res.JobName,
+		&res.Command,
+		&res.StdOut,
+		&res.StdErr,
+		&res.Machine,
+		&res.RunDays,
+		&res.StartTimes)
+	if err != nil {
+		return nil, err
+	}
+
+	res.Conditions, err = database.GetJobDependents(dbTxn, jobSeqId)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }

@@ -2,7 +2,6 @@ package query
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -28,7 +27,7 @@ func GetDatabase() *Database {
 }
 
 func ConnectDB() {
-	fmt.Println("DB connecting...")
+	log.Println("DB connecting...")
 
 	username := os.Getenv("DBUSER")
 	password := os.Getenv("DBPASS")
@@ -57,5 +56,5 @@ func ConnectDB() {
 	if pingErr != nil {
 		log.Fatal(pingErr)
 	}
-	fmt.Println("DB connected...")
+	log.Println("DB connected...")
 }

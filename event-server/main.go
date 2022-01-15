@@ -31,11 +31,13 @@ func serve() {
 
 	// grpc server can have arguments for unary and stream as server options
 	grpcServer := grpc.NewServer()
+
 	// register all servers here
 	pb.RegisterSubmitJilServer(grpcServer, service.JilServer{Database: query.GetDatabase()})
 	pb.RegisterNextJobsServer(grpcServer, service.NextJobsServer{Database: query.GetDatabase()})
+	pb.RegisterJobStatusServer(grpcServer, service.StatusServer{Database: query.GetDatabase()})
 
-	fmt.Printf("Scheduler grpc server is running at port: %d\n", port)
+	log.Printf("Scheduler grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {
 		log.Fatalf("failed to start server %v", err)
 	}
