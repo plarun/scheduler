@@ -57,7 +57,7 @@ func (builder JobInfoBuilder) buildInsertOrUpdateJil() (model.JilData, error) {
 		jilData.JobName = jobName
 		attributeFlag = model.JOB_NAME | attributeFlag
 	} else {
-		return jilData, fmt.Errorf("job_name shouldn't be empty")
+		return jilData, fmt.Errorf("job_name should not be empty")
 	}
 
 	// Job Command
@@ -113,6 +113,10 @@ func (builder JobInfoBuilder) buildInsertOrUpdateJil() (model.JilData, error) {
 				return jilData, fmt.Errorf("start_time: %v is not allowed, only hh:mm format is allowed", startTimes)
 			}
 		}
+	} else {
+		// default start time
+		jilData.StartTimes = "00:00:00"
+		attributeFlag = model.START_TIMES | attributeFlag
 	}
 
 	// Run Days
@@ -124,6 +128,9 @@ func (builder JobInfoBuilder) buildInsertOrUpdateJil() (model.JilData, error) {
 			return jilData, err
 		}
 		jilData.RunDays = runDays
+		attributeFlag = model.RUN_DAYS | attributeFlag
+	} else {
+		jilData.RunDays = "su,mo,tu,we,th,fr,sa"
 		attributeFlag = model.RUN_DAYS | attributeFlag
 	}
 

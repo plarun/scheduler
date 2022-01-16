@@ -9,6 +9,10 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
+const (
+	defaultTime = "1900-01-01 00:00:00"
+)
+
 // singleton instance for database
 var DB *Database = nil
 

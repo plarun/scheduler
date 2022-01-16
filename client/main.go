@@ -30,13 +30,6 @@ func startClient() {
 	}
 	defer conn.Close()
 
-	// client services
-	// clientServices := model.NewClientServices()
-	// clientServices.SubmitJil = pb.NewSubmitJilClient(conn)
-	// clientServices.SendEvent = pb.NewSendEventClient(conn)
-	// clientServices.JobStatus = pb.NewJobStatusClient(conn)
-	// clientServices.Dependent = pb.NewJobDependsClient(conn)
-
 	cmd := flag.Arg(0)
 
 	if cmd == "submitjil" {
@@ -59,21 +52,25 @@ func startClient() {
 
 // sendevent is a subcommand to send a job action event request
 func sendEvent(client interface{}) error {
-	fmt.Println("send event")
-	fmt.Println("not implemented")
+	if flag.NArg() != 3 {
+		return fmt.Errorf("invalid argument\nusage:\n\tsendevent <job_name> <event_type>")
+	}
+
+	jobName := flag.Arg(1)
+	eventType := flag.Arg(2)
 	return nil
 }
 
 // submitjil is a subcommand to parse and request the job definitions
 func submitJil(client pb.SubmitJilClient) error {
 	if flag.NArg() != 2 {
-		return fmt.Errorf("invalid argument\nusage:\n\tsubmitjil <filepath>")
+		return fmt.Errorf("invalid argument\nusage:\n\tsubmitjil <file_path>")
 	}
 
 	inputFilename := flag.Arg(1)
 
-	jobInfo := job.NewJobInfo(client)
-	if err := jobInfo.SubmitJil(inputFilename); err != nil {
+	controller := job.NewJobInfoController(client)
+	if err := controller.SubmitJil(inputFilename); err != nil {
 		return err
 	}
 
@@ -116,11 +113,12 @@ func status(subCommand string, client pb.JobStatusClient) error {
 	return nil
 }
 
-// depends is a subcommand to view job relations
+// dependents is a subcommand to view job relations
 func dependents(subcommand string, client pb.JobDependsClient) error {
 	return nil
 }
 
+// printHelp prints subcommand usage
 func printHelp() {
 	helpStr := `Usage:
 	submitjil <file>

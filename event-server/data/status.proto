@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package data;
 
-import "google/protobuf/timestamp.proto";
-
 option go_package = "./;data";
 
 // Type to represent job status
@@ -27,8 +25,8 @@ message GetJobRunStatusReq {
 // Response message for job run status
 message GetJobRunStatusRes {
 	string JobName = 1;
-	google.protobuf.Timestamp StartTime = 2;
-	google.protobuf.Timestamp EndTime = 3;
+	string StartTime = 2;
+	string EndTime = 3;
 	Status StatusType = 4;
 }
 
@@ -40,8 +38,8 @@ message GetJobRunHistoryReq {
 // Response message for job run history
 message GetJobRunHistoryRes {
 	string JobName = 1;
-	repeated google.protobuf.Timestamp StartTime = 2;
-	repeated google.protobuf.Timestamp EndTime = 3;
+	repeated string StartTime = 2;
+	repeated string EndTime = 3;
 	repeated Status StatusType = 4;
 }
 

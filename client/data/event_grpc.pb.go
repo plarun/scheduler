@@ -18,15 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SendEventClient interface {
-	SendForceStartEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
-	SendStartEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
-	SendKillEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
-	SendOnHoldEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
-	SendOffHoldEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
-	SendOnIceEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
-	SendOffIceEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
-	SendMarkAsSuccessEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
-	SendMarkAsFailureEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
+	Event(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error)
 }
 
 type sendEventClient struct {
@@ -37,81 +29,9 @@ func NewSendEventClient(cc grpc.ClientConnInterface) SendEventClient {
 	return &sendEventClient{cc}
 }
 
-func (c *sendEventClient) SendForceStartEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
+func (c *sendEventClient) Event(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
 	out := new(SendEventRes)
-	err := c.cc.Invoke(ctx, "/data.SendEvent/SendForceStartEvent", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sendEventClient) SendStartEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
-	out := new(SendEventRes)
-	err := c.cc.Invoke(ctx, "/data.SendEvent/SendStartEvent", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sendEventClient) SendKillEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
-	out := new(SendEventRes)
-	err := c.cc.Invoke(ctx, "/data.SendEvent/SendKillEvent", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sendEventClient) SendOnHoldEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
-	out := new(SendEventRes)
-	err := c.cc.Invoke(ctx, "/data.SendEvent/SendOnHoldEvent", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sendEventClient) SendOffHoldEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
-	out := new(SendEventRes)
-	err := c.cc.Invoke(ctx, "/data.SendEvent/SendOffHoldEvent", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sendEventClient) SendOnIceEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
-	out := new(SendEventRes)
-	err := c.cc.Invoke(ctx, "/data.SendEvent/SendOnIceEvent", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sendEventClient) SendOffIceEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
-	out := new(SendEventRes)
-	err := c.cc.Invoke(ctx, "/data.SendEvent/SendOffIceEvent", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sendEventClient) SendMarkAsSuccessEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
-	out := new(SendEventRes)
-	err := c.cc.Invoke(ctx, "/data.SendEvent/SendMarkAsSuccessEvent", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *sendEventClient) SendMarkAsFailureEvent(ctx context.Context, in *SendEventReq, opts ...grpc.CallOption) (*SendEventRes, error) {
-	out := new(SendEventRes)
-	err := c.cc.Invoke(ctx, "/data.SendEvent/SendMarkAsFailureEvent", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/data.SendEvent/Event", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -122,15 +42,7 @@ func (c *sendEventClient) SendMarkAsFailureEvent(ctx context.Context, in *SendEv
 // All implementations must embed UnimplementedSendEventServer
 // for forward compatibility
 type SendEventServer interface {
-	SendForceStartEvent(context.Context, *SendEventReq) (*SendEventRes, error)
-	SendStartEvent(context.Context, *SendEventReq) (*SendEventRes, error)
-	SendKillEvent(context.Context, *SendEventReq) (*SendEventRes, error)
-	SendOnHoldEvent(context.Context, *SendEventReq) (*SendEventRes, error)
-	SendOffHoldEvent(context.Context, *SendEventReq) (*SendEventRes, error)
-	SendOnIceEvent(context.Context, *SendEventReq) (*SendEventRes, error)
-	SendOffIceEvent(context.Context, *SendEventReq) (*SendEventRes, error)
-	SendMarkAsSuccessEvent(context.Context, *SendEventReq) (*SendEventRes, error)
-	SendMarkAsFailureEvent(context.Context, *SendEventReq) (*SendEventRes, error)
+	Event(context.Context, *SendEventReq) (*SendEventRes, error)
 	mustEmbedUnimplementedSendEventServer()
 }
 
@@ -138,32 +50,8 @@ type SendEventServer interface {
 type UnimplementedSendEventServer struct {
 }
 
-func (UnimplementedSendEventServer) SendForceStartEvent(context.Context, *SendEventReq) (*SendEventRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendForceStartEvent not implemented")
-}
-func (UnimplementedSendEventServer) SendStartEvent(context.Context, *SendEventReq) (*SendEventRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendStartEvent not implemented")
-}
-func (UnimplementedSendEventServer) SendKillEvent(context.Context, *SendEventReq) (*SendEventRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendKillEvent not implemented")
-}
-func (UnimplementedSendEventServer) SendOnHoldEvent(context.Context, *SendEventReq) (*SendEventRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendOnHoldEvent not implemented")
-}
-func (UnimplementedSendEventServer) SendOffHoldEvent(context.Context, *SendEventReq) (*SendEventRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendOffHoldEvent not implemented")
-}
-func (UnimplementedSendEventServer) SendOnIceEvent(context.Context, *SendEventReq) (*SendEventRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendOnIceEvent not implemented")
-}
-func (UnimplementedSendEventServer) SendOffIceEvent(context.Context, *SendEventReq) (*SendEventRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendOffIceEvent not implemented")
-}
-func (UnimplementedSendEventServer) SendMarkAsSuccessEvent(context.Context, *SendEventReq) (*SendEventRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendMarkAsSuccessEvent not implemented")
-}
-func (UnimplementedSendEventServer) SendMarkAsFailureEvent(context.Context, *SendEventReq) (*SendEventRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SendMarkAsFailureEvent not implemented")
+func (UnimplementedSendEventServer) Event(context.Context, *SendEventReq) (*SendEventRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Event not implemented")
 }
 func (UnimplementedSendEventServer) mustEmbedUnimplementedSendEventServer() {}
 
@@ -178,164 +66,20 @@ func RegisterSendEventServer(s grpc.ServiceRegistrar, srv SendEventServer) {
 	s.RegisterService(&SendEvent_ServiceDesc, srv)
 }
 
-func _SendEvent_SendForceStartEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SendEvent_Event_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SendEventReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SendEventServer).SendForceStartEvent(ctx, in)
+		return srv.(SendEventServer).Event(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/data.SendEvent/SendForceStartEvent",
+		FullMethod: "/data.SendEvent/Event",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendEventServer).SendForceStartEvent(ctx, req.(*SendEventReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SendEvent_SendStartEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendEventReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SendEventServer).SendStartEvent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/data.SendEvent/SendStartEvent",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendEventServer).SendStartEvent(ctx, req.(*SendEventReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SendEvent_SendKillEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendEventReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SendEventServer).SendKillEvent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/data.SendEvent/SendKillEvent",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendEventServer).SendKillEvent(ctx, req.(*SendEventReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SendEvent_SendOnHoldEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendEventReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SendEventServer).SendOnHoldEvent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/data.SendEvent/SendOnHoldEvent",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendEventServer).SendOnHoldEvent(ctx, req.(*SendEventReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SendEvent_SendOffHoldEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendEventReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SendEventServer).SendOffHoldEvent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/data.SendEvent/SendOffHoldEvent",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendEventServer).SendOffHoldEvent(ctx, req.(*SendEventReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SendEvent_SendOnIceEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendEventReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SendEventServer).SendOnIceEvent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/data.SendEvent/SendOnIceEvent",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendEventServer).SendOnIceEvent(ctx, req.(*SendEventReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SendEvent_SendOffIceEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendEventReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SendEventServer).SendOffIceEvent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/data.SendEvent/SendOffIceEvent",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendEventServer).SendOffIceEvent(ctx, req.(*SendEventReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SendEvent_SendMarkAsSuccessEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendEventReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SendEventServer).SendMarkAsSuccessEvent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/data.SendEvent/SendMarkAsSuccessEvent",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendEventServer).SendMarkAsSuccessEvent(ctx, req.(*SendEventReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _SendEvent_SendMarkAsFailureEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SendEventReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SendEventServer).SendMarkAsFailureEvent(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/data.SendEvent/SendMarkAsFailureEvent",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SendEventServer).SendMarkAsFailureEvent(ctx, req.(*SendEventReq))
+		return srv.(SendEventServer).Event(ctx, req.(*SendEventReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -348,40 +92,8 @@ var SendEvent_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*SendEventServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SendForceStartEvent",
-			Handler:    _SendEvent_SendForceStartEvent_Handler,
-		},
-		{
-			MethodName: "SendStartEvent",
-			Handler:    _SendEvent_SendStartEvent_Handler,
-		},
-		{
-			MethodName: "SendKillEvent",
-			Handler:    _SendEvent_SendKillEvent_Handler,
-		},
-		{
-			MethodName: "SendOnHoldEvent",
-			Handler:    _SendEvent_SendOnHoldEvent_Handler,
-		},
-		{
-			MethodName: "SendOffHoldEvent",
-			Handler:    _SendEvent_SendOffHoldEvent_Handler,
-		},
-		{
-			MethodName: "SendOnIceEvent",
-			Handler:    _SendEvent_SendOnIceEvent_Handler,
-		},
-		{
-			MethodName: "SendOffIceEvent",
-			Handler:    _SendEvent_SendOffIceEvent_Handler,
-		},
-		{
-			MethodName: "SendMarkAsSuccessEvent",
-			Handler:    _SendEvent_SendMarkAsSuccessEvent_Handler,
-		},
-		{
-			MethodName: "SendMarkAsFailureEvent",
-			Handler:    _SendEvent_SendMarkAsFailureEvent_Handler,
+			MethodName: "Event",
+			Handler:    _SendEvent_Event_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

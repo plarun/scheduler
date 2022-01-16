@@ -27,17 +27,10 @@ message SendEventReq {
 message SendEventRes {
 	string JobName = 1;
 	bool EventChanged = 2;
+	string CurrentStatus = 3;
 }
 
 // Service to handle send event actions
 service SendEvent {
-	rpc SendForceStartEvent(SendEventReq) returns (SendEventRes) {}
-	rpc SendStartEvent(SendEventReq) returns (SendEventRes) {}
-	rpc SendKillEvent(SendEventReq) returns (SendEventRes) {}
-	rpc SendOnHoldEvent(SendEventReq) returns (SendEventRes) {}
-	rpc SendOffHoldEvent(SendEventReq) returns (SendEventRes) {}
-	rpc SendOnIceEvent(SendEventReq) returns (SendEventRes) {}
-	rpc SendOffIceEvent(SendEventReq) returns (SendEventRes) {}
-	rpc SendMarkAsSuccessEvent(SendEventReq) returns (SendEventRes) {}
-	rpc SendMarkAsFailureEvent(SendEventReq) returns (SendEventRes) {}
+	rpc Event(SendEventReq) returns (SendEventRes) {}
 }

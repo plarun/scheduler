@@ -20,6 +20,7 @@ func (database *Database) InsertJobDependent(dbTxn *sql.Tx, jobSeqId int64, depe
 		}
 	}
 	database.lock.Unlock()
+
 	return nil
 }
 
@@ -37,6 +38,7 @@ func (database *Database) DeleteJobDependent(dbTxn *sql.Tx, jobSeqId int64, depe
 		}
 	}
 	database.lock.Unlock()
+
 	return nil
 }
 
@@ -50,9 +52,11 @@ func (database *Database) DeleteJobRelation(dbTxn *sql.Tx, jobSeqId int64) error
 		jobSeqId,
 		jobSeqId)
 	database.lock.Unlock()
+
 	if err != nil {
 		return fmt.Errorf("deleteJobRelation: %v", err)
 	}
+
 	return nil
 }
 
@@ -69,6 +73,7 @@ func (database *Database) GetJobDependents(dbTxn *sql.Tx, jobSeqId int64) ([]str
 		)`,
 		jobSeqId)
 	database.lock.Unlock()
+
 	if err != nil {
 		return dependentJobs, err
 	}
@@ -94,6 +99,7 @@ func (database *Database) GetJobDependentsIdList(dbTxn *sql.Tx, jobSeqId int64) 
 		where job_id=?`,
 		jobSeqId)
 	database.lock.Unlock()
+
 	if err != nil {
 		return dependentJobsIds, err
 	}
@@ -157,4 +163,37 @@ func (database *Database) UpdateJobDependents(dbTxn *sql.Tx, jobName string, con
 	}
 
 	return nil
+}
+
+// CheckConditions checks whether job's condition satisfied
+func (database *Database) CheckConditions(dbTxn *sql.Tx, jobName string) (bool, error) {
+	var unsatisfied int
+
+	jobSeqId, err := database.GetJobId(dbTxn, jobName)
+	if err != nil {
+		return false, err
+	}
+
+	database.lock.Lock()
+	row, err := database.DB.Query(
+		`select count(*)
+		from job
+		where job_seq_id in (
+			select dependent_job_id
+			from job_dependent
+			where job_id=?) 
+		and status<>'SUCCESS'`,
+		jobSeqId)
+	database.lock.Unlock()
+
+	if err != nil {
+		return false, err
+	}
+
+	err = row.Scan(&unsatisfied)
+	if err != nil {
+		return false, err
+	}
+
+	return unsatisfied == 0, nil
 }

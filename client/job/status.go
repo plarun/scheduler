@@ -32,18 +32,10 @@ func (controller JobStatusController) PrintJobStatus(jobName string) error {
 		return err
 	}
 
-	var startTime, endTime string
-	if jobStatusRes.GetStartTime() == nil {
-		startTime = "--:--:--"
-	}
-	if jobStatusRes.GetEndTime() == nil {
-		endTime = "--:--:--"
-	}
-
 	runStatus(
 		jobStatusRes.GetJobName(),
-		startTime,
-		endTime,
+		jobStatusRes.GetStartTime(),
+		jobStatusRes.GetEndTime(),
 		model.StatusTypeConv[jobStatusRes.GetStatusType().String()])
 
 	return nil

@@ -3,7 +3,6 @@ package query
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	pb "github.com/plarun/scheduler/event-server/data"
 	"github.com/plarun/scheduler/event-server/model"
@@ -124,6 +123,7 @@ func (database *Database) DeleteJob(dbTxn *sql.Tx, jobName string) error {
 		where job_name=?`,
 		jobName)
 	database.lock.Unlock()
+
 	if err != nil {
 		return fmt.Errorf("deleteJobByJobName: %v", err)
 	}
@@ -158,7 +158,6 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 // GetNextRunJobs gives list of jobs ready for next run
 func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTime string, runDay string) ([]*pb.ReadyJob, error) {
 	database.lock.Lock()
-	log.Printf("searching next jobs... %s to %s\n", startTime, endTime)
 	rows, err := dbTxn.Query(
 		`select job_name from job 
 		where start_times between ? and ? 
@@ -170,6 +169,7 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 		runDay,
 		timeGap)
 	database.lock.Unlock()
+
 	if err != nil {
 		return nil, err
 	}
@@ -218,4 +218,46 @@ func (database *Database) GetJobData(dbTxn *sql.Tx, jobName string) (*pb.GetJilR
 	}
 
 	return res, nil
+}
+
+// GetStatus gets the current status of job
+func (database *Database) GetStatus(dbTxn *sql.Tx, jobName string) (pb.Status, error) {
+	var statusName string
+	var status pb.Status
+
+	database.lock.Lock()
+	row := dbTxn.QueryRow(
+		`select status
+		from job
+		where job_name=?`,
+		jobName)
+	database.lock.Unlock()
+
+	err := row.Scan(&statusName)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return status, fmt.Errorf("job not found")
+		}
+		return status, err
+	}
+
+	return pb.Status(pb.Status_value[statusName]), nil
+}
+
+// ChangeStatus updates the status of job
+func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.Status) error {
+	database.lock.Lock()
+	_, err := dbTxn.Exec(
+		`update job 
+		set status=? 
+		where job_name=?`,
+		pb.Status_name[int32(status.Number())],
+		jobName)
+	database.lock.Unlock()
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

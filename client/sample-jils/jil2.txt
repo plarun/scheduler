@@ -1,7 +1,27 @@
-/* update job1 */
-update: job1
-command: updated_test_command1
+/* insert job2 */
+insert: job2
+command: test_command2
+std_out_log: test_std_out2
+std_err_log: test_std_err2
+machine: test_machine
+start_times: 04:00
 
-/* update job2 */
-update: job2
-conditions: job1
+/* insert job5 */
+insert: job5
+command: test_command5
+conditions: job1 & job2
+std_out_log: test_std_out5
+std_err_log: test_std_err5
+machine: test_machine
+start_times: 06:00
+run_days: mo,tu,we,th,fr,sa
+
+/* insert job6 */
+insert: job6
+command: test_command6
+conditions: job1 & job2 & job3
+std_out_log: test_std_out6
+std_err_log: test_std_err6
+machine: test_machine
+start_times: 05:35
+run_days: mo,tu,we,th,fr,sa

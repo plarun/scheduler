@@ -14,19 +14,19 @@ import (
 )
 
 // JobInfo wraps the SubmitJilClient and manages parsing and prevalidation on JIL
-type JobInfo struct {
+type JobInfoController struct {
 	client pb.SubmitJilClient
 }
 
-func NewJobInfo(client pb.SubmitJilClient) *JobInfo {
-	return &JobInfo{client: client}
+func NewJobInfoController(client pb.SubmitJilClient) *JobInfoController {
+	return &JobInfoController{client: client}
 }
 
 // SubmitJil submits the JIL to grpc server after parsing and building the Job info from JIL
-func (jobInfo JobInfo) SubmitJil(inputFilename string) error {
+func (controller JobInfoController) SubmitJil(inputFilename string) error {
 	log.Println("jil submitted for parsing...")
 	// parse the raw JIL
-	parsedJils, err := jobInfo.Parse(inputFilename)
+	parsedJils, err := controller.Parse(inputFilename)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (jobInfo JobInfo) SubmitJil(inputFilename string) error {
 		log.Println(jil.Action, jil.Data)
 	}
 
-	res, err := jobInfo.client.Submit(ctx, submitReq)
+	res, err := controller.client.Submit(ctx, submitReq)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (jobInfo JobInfo) SubmitJil(inputFilename string) error {
 // 3. Then other keys followed by action key without any empty line
 // 4. Single line comments can be added as c style comments
 // 5. Empty line represents the end of one job data
-func (jobInfo JobInfo) Parse(inputFile string) ([]model.JilData, error) {
+func (controller JobInfoController) Parse(inputFile string) ([]model.JilData, error) {
 	file, err := os.Open(inputFile)
 	if err != nil {
 		return nil, fmt.Errorf("file: %s doesn't exist", inputFile)
@@ -123,7 +123,7 @@ func (jobInfo JobInfo) Parse(inputFile string) ([]model.JilData, error) {
 			commentClose := commentLine[len(commentLine)-2:]
 			if commentClose == "*/" {
 				if singleParseInProgress {
-					return nil, jobInfo.logErr(lineNum, line, "comment should only be mentioned in begining of attribures")
+					return nil, controller.logErr(lineNum, line, "comment should only be mentioned in begining of attribures")
 				}
 				continue // ignore comment on top of each jil data
 			}
@@ -132,7 +132,7 @@ func (jobInfo JobInfo) Parse(inputFile string) ([]model.JilData, error) {
 		if len(line) != 0 {
 			parsedLine := strings.SplitN(line, ":", 2)
 			if len(parsedLine) < 2 {
-				return nil, jobInfo.logErr(lineNum, line, "line unparsable")
+				return nil, controller.logErr(lineNum, line, "line unparsable")
 			}
 
 			attribute := parsedLine[0]
@@ -140,23 +140,23 @@ func (jobInfo JobInfo) Parse(inputFile string) ([]model.JilData, error) {
 			// remove leading spaces or leading tabs
 			value = strings.TrimLeft(value, " \t")
 
-			action, isActionAttribute := jobInfo.actionAttribute(attribute)
+			action, isActionAttribute := controller.actionAttribute(attribute)
 			if isActionAttribute {
 				if singleParseInProgress {
-					return nil, jobInfo.logErr(lineNum, line, "non standard format")
+					return nil, controller.logErr(lineNum, line, "non standard format")
 				}
 				singleParseInProgress = true
 				if value == "" {
-					return nil, jobInfo.logErr(lineNum, line, "jil action shouldn't be empty")
+					return nil, controller.logErr(lineNum, line, "jil action shouldn't be empty")
 				}
 				chunk["action"] = action
 				chunk["job_name"] = value
 			} else if !singleParseInProgress {
-				return nil, jobInfo.logErr(lineNum, line, "jil attributes of same job shouldn't be separated by empty line")
+				return nil, controller.logErr(lineNum, line, "jil attributes of same job shouldn't be separated by empty line")
 			}
 
-			if !jobInfo.valueAttribute(attribute) {
-				return nil, jobInfo.logErr(lineNum, line, "invalid attribute")
+			if !controller.valueAttribute(attribute) {
+				return nil, controller.logErr(lineNum, line, "invalid attribute")
 			} else {
 				if !isActionAttribute {
 					chunk[attribute] = value
@@ -183,12 +183,12 @@ func (jobInfo JobInfo) Parse(inputFile string) ([]model.JilData, error) {
 }
 
 // logErr returns error with line number, line content and error message
-func (JobInfo) logErr(lineNum int64, line string, errMsg string) error {
+func (JobInfoController) logErr(lineNum int64, line string, errMsg string) error {
 	return fmt.Errorf("line no: %d\nline: %s\nerror: %s", lineNum, line, errMsg)
 }
 
 // actionAttribute checks if attribute is one of valid JIL action
-func (JobInfo) actionAttribute(attribute string) (string, bool) {
+func (JobInfoController) actionAttribute(attribute string) (string, bool) {
 	if attribute == "insert" {
 		return "insert", true
 	} else if attribute == "update" {
@@ -201,8 +201,8 @@ func (JobInfo) actionAttribute(attribute string) (string, bool) {
 }
 
 // valueAttribute checks if attribute is not actionAttribute but one of the valid JIL attributes
-func (jobInfo JobInfo) valueAttribute(attribute string) bool {
-	_, ok := jobInfo.actionAttribute(attribute)
+func (controller JobInfoController) valueAttribute(attribute string) bool {
+	_, ok := controller.actionAttribute(attribute)
 	if ok {
 		return true
 	}

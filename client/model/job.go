@@ -1,5 +1,9 @@
 package model
 
+import (
+	pb "github.com/plarun/scheduler/client/data"
+)
+
 // List of attributes for jil
 var StaticAttributes = []string{
 	"command",
@@ -70,4 +74,17 @@ var StatusTypeConv = map[string]string{
 	"ONICE":      "OI",
 	"ONHOLD":     "OH",
 	"TERMINATED": "TE",
+}
+
+// String to Job Event type
+var EventTypeConv = map[string]pb.Event{
+	"on_ice":       pb.Event_ON_ICE,
+	"off_ice":      pb.Event_OFF_ICE,
+	"on_hold":      pb.Event_ON_HOLD,
+	"off_hold":     pb.Event_OFF_HOLD,
+	"start":        pb.Event_START,
+	"force_start":  pb.Event_FORCE_START,
+	"kill":         pb.Event_KILL,
+	"mark_success": pb.Event_MARK_AS_SUCCESS,
+	"mark_failure": pb.Event_MARK_AS_FAILURE,
 }

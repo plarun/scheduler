@@ -36,6 +36,7 @@ func serve() {
 	pb.RegisterSubmitJilServer(grpcServer, service.JilServer{Database: query.GetDatabase()})
 	pb.RegisterNextJobsServer(grpcServer, service.NextJobsServer{Database: query.GetDatabase()})
 	pb.RegisterJobStatusServer(grpcServer, service.StatusServer{Database: query.GetDatabase()})
+	pb.RegisterSendEventServer(grpcServer, service.SendEventServer{Database: query.GetDatabase()})
 
 	log.Printf("Scheduler grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {

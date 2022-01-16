@@ -1,2 +1,7 @@
-/* delete job2 */
 delete: job2
+
+delete: job5
+
+delete: job6
+
+delete: job7
