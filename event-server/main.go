@@ -29,14 +29,16 @@ func serve() {
 		log.Fatalf("failed to listen %v", err)
 	}
 
+	database := query.GetDatabase()
+
 	// grpc server can have arguments for unary and stream as server options
 	grpcServer := grpc.NewServer()
 
 	// register all servers here
-	pb.RegisterSubmitJilServer(grpcServer, service.JilServer{Database: query.GetDatabase()})
-	pb.RegisterNextJobsServer(grpcServer, service.NextJobsServer{Database: query.GetDatabase()})
-	pb.RegisterJobStatusServer(grpcServer, service.StatusServer{Database: query.GetDatabase()})
-	pb.RegisterSendEventServer(grpcServer, service.SendEventServer{Database: query.GetDatabase()})
+	pb.RegisterSubmitJilServer(grpcServer, service.JilServer{Database: database})
+	pb.RegisterNextJobsServer(grpcServer, service.NextJobsServer{Database: database})
+	pb.RegisterJobStatusServer(grpcServer, service.StatusServer{Database: database})
+	pb.RegisterSendEventServer(grpcServer, service.SendEventServer{Database: database})
 
 	log.Printf("Scheduler grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {
