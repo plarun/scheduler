@@ -51,13 +51,19 @@ func startClient() {
 }
 
 // sendevent is a subcommand to send a job action event request
-func sendEvent(client interface{}) error {
+func sendEvent(client pb.SendEventClient) error {
 	if flag.NArg() != 3 {
 		return fmt.Errorf("invalid argument\nusage:\n\tsendevent <job_name> <event_type>")
 	}
 
 	jobName := flag.Arg(1)
 	eventType := flag.Arg(2)
+
+	controller := job.NewEventController(client)
+	if err := controller.Event(jobName, eventType); err != nil {
+		return err
+	}
+
 	return nil
 }
 
