@@ -76,6 +76,9 @@ func (database *Database) GetJobId(dbTxn *sql.Tx, jobName string) (int64, error)
 	database.lock.Unlock()
 
 	if err := row.Scan(&jobSeqId); err != nil {
+		if err == sql.ErrNoRows {
+			return jobSeqId, fmt.Errorf("job not found")
+		}
 		return jobSeqId, err
 	}
 	return jobSeqId, nil

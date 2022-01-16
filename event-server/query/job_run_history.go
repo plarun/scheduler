@@ -2,6 +2,7 @@ package query
 
 import (
 	"database/sql"
+	"fmt"
 
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -20,6 +21,9 @@ func (database *Database) LastRun(dbTxn *sql.Tx, jobName string) (*timestamppb.T
 
 	err := rows.Scan(&startTime, &endTime, &status)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return startTime, endTime, status, fmt.Errorf("job not found")
+		}
 		return startTime, endTime, status, err
 	}
 

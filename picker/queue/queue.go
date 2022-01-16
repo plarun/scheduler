@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"sync"
+
+	pb "github.com/plarun/scheduler/picker/data"
 )
 
 // Double ended node
 type WaitingJob struct {
-	job  interface{}
+	job  *pb.ReadyJob
 	prev *WaitingJob
 	next *WaitingJob
 }
@@ -21,7 +23,7 @@ type WaitingQueue struct {
 }
 
 // newWaitingJob returns a new WaitingJob node
-func (wque *WaitingQueue) newWaitingJob(data interface{}) *WaitingJob {
+func (wque *WaitingQueue) newWaitingJob(data *pb.ReadyJob) *WaitingJob {
 	return &WaitingJob{
 		job:  data,
 		prev: nil,
@@ -29,7 +31,7 @@ func (wque *WaitingQueue) newWaitingJob(data interface{}) *WaitingJob {
 	}
 }
 
-func (wque *WaitingQueue) push(data interface{}) error {
+func (wque *WaitingQueue) push(data *pb.ReadyJob) error {
 	var node *WaitingJob = wque.newWaitingJob(data)
 	if wque.size == 0 {
 		wque.in = node
@@ -43,7 +45,7 @@ func (wque *WaitingQueue) push(data interface{}) error {
 	return nil
 }
 
-func (wque *WaitingQueue) pop() (interface{}, error) {
+func (wque *WaitingQueue) pop() (*WaitingJob, error) {
 	if wque.size == 0 {
 		return nil, fmt.Errorf("waiting queue is empty")
 	}
@@ -59,9 +61,11 @@ func (wque *WaitingQueue) pop() (interface{}, error) {
 	return node, nil
 }
 
-func (wque *WaitingQueue) empty() bool {
-	return wque.size == 0
-}
+// func (wque *WaitingQueue) empty() bool {
+// 	return wque.size == 0
+// }
+
+var wQue *ConcurrentWaitingQueue = nil
 
 // ConcurrentWaitingQueue is a concurrency wrapper for WaitingQueue
 type ConcurrentWaitingQueue struct {
@@ -70,42 +74,84 @@ type ConcurrentWaitingQueue struct {
 }
 
 func NewWaitingQueue() *ConcurrentWaitingQueue {
-	queue := &ConcurrentWaitingQueue{
-		lock: &sync.Mutex{},
-		wQue: &WaitingQueue{
-			in:   nil,
-			out:  nil,
-			size: 0,
-		},
+	if wQue == nil {
+		wQue = &ConcurrentWaitingQueue{
+			lock: &sync.Mutex{},
+			wQue: &WaitingQueue{
+				in:   nil,
+				out:  nil,
+				size: 0,
+			},
+		}
 	}
-	return queue
+	return wQue
 }
 
-func (cwque *ConcurrentWaitingQueue) Push(data interface{}) error {
-	cwque.lock.Lock()
-	err := cwque.wQue.push(data)
-	cwque.lock.Unlock()
+func (que *ConcurrentWaitingQueue) Push(data *pb.ReadyJob) error {
+	que.lock.Lock()
+	err := que.wQue.push(data)
+	que.lock.Unlock()
 	return err
 }
 
-func (cwque *ConcurrentWaitingQueue) Pop() (interface{}, error) {
-	cwque.lock.Lock()
-	data, err := cwque.wQue.pop()
-	cwque.lock.Unlock()
+func (que *ConcurrentWaitingQueue) Pop() (*WaitingJob, error) {
+	que.lock.Lock()
+	data, err := que.wQue.pop()
+	que.lock.Unlock()
 	return data, err
 }
 
-func (cwque *ConcurrentWaitingQueue) Size() uint32 {
-	cwque.lock.Lock()
-	len := cwque.wQue.size
-	cwque.lock.Unlock()
+// func (que *ConcurrentWaitingQueue) Remove(node *WaitingJob) *WaitingJob {
+// 	if node == nil {
+// 		return nil
+// 	}
+
+// 	if que.Size() == 1 {
+// 		que.wQue.out, que.wQue.in = nil, nil
+// 	} else if node == que.wQue.out {
+// 		que.wQue.out = node.next
+// 		que.wQue.out.prev = nil
+// 	} else if node == que.wQue.in {
+// 		que.wQue.in = node.prev
+// 		que.wQue.in.next = nil
+// 	} else {
+// 		node.prev.next = node.next
+// 		node.next.prev = node.prev
+// 	}
+
+// 	node.prev, node.next = nil, nil
+// 	que.wQue.size--
+
+// 	return node
+// }
+
+func (que *ConcurrentWaitingQueue) FeedBack(node *WaitingJob) error {
+	que.lock.Lock()
+	if node.next != nil || que.wQue.size > 1 {
+		var err error
+		if node, err = que.Pop(); err != nil {
+			return err
+		}
+		if err = que.Push(node.job); err != nil {
+			return err
+		}
+		node = nil
+	}
+	que.lock.Unlock()
+	return nil
+}
+
+func (que *ConcurrentWaitingQueue) Size() uint32 {
+	que.lock.Lock()
+	len := que.wQue.size
+	que.lock.Unlock()
 	return len
 }
 
-func (cwque *ConcurrentWaitingQueue) Print() {
+func (que *ConcurrentWaitingQueue) Print() {
 	log.Println()
 	fmt.Print("[ ")
-	curr := cwque.wQue.in
+	curr := que.wQue.in
 	for curr != nil {
 		fmt.Printf("%v, ", curr.job)
 		curr = curr.next
