@@ -51,7 +51,7 @@ func (controller JobStatusController) PrintJobDefinition(jobName string) error {
 
 	log.Println(jobDefinitionReq.JobName)
 
-	jobDefinitionRes, err := controller.client.GetJil(ctx, jobDefinitionReq)
+	jobDefinitionRes, err := controller.client.GetJobDefinition(ctx, jobDefinitionReq)
 	if err != nil {
 		return err
 	}

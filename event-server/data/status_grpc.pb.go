@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type JobStatusClient interface {
 	GetJobRunStatus(ctx context.Context, in *GetJobRunStatusReq, opts ...grpc.CallOption) (*GetJobRunStatusRes, error)
 	GetJobRunHistory(ctx context.Context, in *GetJobRunHistoryReq, opts ...grpc.CallOption) (*GetJobRunHistoryRes, error)
-	GetJil(ctx context.Context, in *GetJilReq, opts ...grpc.CallOption) (*GetJilRes, error)
+	GetJobDefinition(ctx context.Context, in *GetJilReq, opts ...grpc.CallOption) (*GetJilRes, error)
 }
 
 type jobStatusClient struct {
@@ -49,9 +49,9 @@ func (c *jobStatusClient) GetJobRunHistory(ctx context.Context, in *GetJobRunHis
 	return out, nil
 }
 
-func (c *jobStatusClient) GetJil(ctx context.Context, in *GetJilReq, opts ...grpc.CallOption) (*GetJilRes, error) {
+func (c *jobStatusClient) GetJobDefinition(ctx context.Context, in *GetJilReq, opts ...grpc.CallOption) (*GetJilRes, error) {
 	out := new(GetJilRes)
-	err := c.cc.Invoke(ctx, "/data.JobStatus/GetJil", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/data.JobStatus/GetJobDefinition", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (c *jobStatusClient) GetJil(ctx context.Context, in *GetJilReq, opts ...grp
 type JobStatusServer interface {
 	GetJobRunStatus(context.Context, *GetJobRunStatusReq) (*GetJobRunStatusRes, error)
 	GetJobRunHistory(context.Context, *GetJobRunHistoryReq) (*GetJobRunHistoryRes, error)
-	GetJil(context.Context, *GetJilReq) (*GetJilRes, error)
+	GetJobDefinition(context.Context, *GetJilReq) (*GetJilRes, error)
 	mustEmbedUnimplementedJobStatusServer()
 }
 
@@ -78,8 +78,8 @@ func (UnimplementedJobStatusServer) GetJobRunStatus(context.Context, *GetJobRunS
 func (UnimplementedJobStatusServer) GetJobRunHistory(context.Context, *GetJobRunHistoryReq) (*GetJobRunHistoryRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetJobRunHistory not implemented")
 }
-func (UnimplementedJobStatusServer) GetJil(context.Context, *GetJilReq) (*GetJilRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetJil not implemented")
+func (UnimplementedJobStatusServer) GetJobDefinition(context.Context, *GetJilReq) (*GetJilRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetJobDefinition not implemented")
 }
 func (UnimplementedJobStatusServer) mustEmbedUnimplementedJobStatusServer() {}
 
@@ -130,20 +130,20 @@ func _JobStatus_GetJobRunHistory_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _JobStatus_GetJil_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _JobStatus_GetJobDefinition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetJilReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(JobStatusServer).GetJil(ctx, in)
+		return srv.(JobStatusServer).GetJobDefinition(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/data.JobStatus/GetJil",
+		FullMethod: "/data.JobStatus/GetJobDefinition",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(JobStatusServer).GetJil(ctx, req.(*GetJilReq))
+		return srv.(JobStatusServer).GetJobDefinition(ctx, req.(*GetJilReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -164,8 +164,8 @@ var JobStatus_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _JobStatus_GetJobRunHistory_Handler,
 		},
 		{
-			MethodName: "GetJil",
-			Handler:    _JobStatus_GetJil_Handler,
+			MethodName: "GetJobDefinition",
+			Handler:    _JobStatus_GetJobDefinition_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

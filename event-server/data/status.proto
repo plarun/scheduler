@@ -6,15 +6,14 @@ option go_package = "./;data";
 
 // Type to represent job status
 enum Status {
-	INACTIVE = 0;
-	ACTIVE = 1;
-	STARTED = 2;
+	IDLE = 0;
+	QUEUED = 1;
+	READY = 2;
 	RUNNING = 3;
 	SUCCESS = 4;
-	FAILURE = 5;
-	ONICE = 6;
-	ONHOLD = 7;
-	TERMINATED = 8;
+	FAILED = 5;
+	ABORTED = 6;
+	FROZEN = 7;
 }
 
 // Request message to get run status of job
@@ -64,5 +63,5 @@ message GetJilRes {
 service JobStatus {
 	rpc GetJobRunStatus(GetJobRunStatusReq) returns (GetJobRunStatusRes) {}
 	rpc GetJobRunHistory(GetJobRunHistoryReq) returns (GetJobRunHistoryRes) {}
-	rpc GetJil(GetJilReq) returns (GetJilRes) {}
+	rpc GetJobDefinition(GetJilReq) returns (GetJilRes) {}
 }

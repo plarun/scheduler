@@ -74,7 +74,7 @@ func (x *JobWithStatus) GetStatusType() Status {
 	if x != nil {
 		return x.StatusType
 	}
-	return Status_INACTIVE
+	return Status_IDLE
 }
 
 // Request message to get preceded and succeeded jobs of job

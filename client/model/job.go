@@ -65,26 +65,21 @@ const (
 
 // Job Status Number to string
 var StatusTypeConv = map[string]string{
-	"INACTIVE":   "IN",
-	"ACTIVE":     "AC",
-	"STARTED":    "ST",
-	"RUNNING":    "RU",
-	"SUCCESS":    "SU",
-	"FAILURE":    "FA",
-	"ONICE":      "OI",
-	"ONHOLD":     "OH",
-	"TERMINATED": "TE",
+	"IDLE":    "ID",
+	"QUEUED":  "QU",
+	"READY":   "RE",
+	"RUNNING": "RU",
+	"SUCCESS": "SU",
+	"FAILED":  "FA",
+	"ABORTED": "AB",
+	"FROZEN":  "FZ",
 }
 
 // String to Job Event type
 var EventTypeConv = map[string]pb.Event{
-	"on_ice":       pb.Event_ON_ICE,
-	"off_ice":      pb.Event_OFF_ICE,
-	"on_hold":      pb.Event_ON_HOLD,
-	"off_hold":     pb.Event_OFF_HOLD,
-	"start":        pb.Event_START,
-	"force_start":  pb.Event_FORCE_START,
-	"kill":         pb.Event_KILL,
-	"mark_success": pb.Event_MARK_AS_SUCCESS,
-	"mark_failure": pb.Event_MARK_AS_FAILURE,
+	"start":  pb.Event_START,
+	"abort":  pb.Event_ABORT,
+	"freeze": pb.Event_FREEZE,
+	"reset":  pb.Event_RESET,
+	"green":  pb.Event_GREEN,
 }

@@ -6,15 +6,11 @@ option go_package = "./;data";
 
 // Type to represent different events
 enum Event {
-	FORCE_START = 0;
-	START = 1;
-	KILL = 2;
-	ON_HOLD = 3;
-	OFF_HOLD = 4;
-	ON_ICE = 5;
-	OFF_ICE = 6;
-	MARK_AS_SUCCESS = 7;
-	MARK_AS_FAILURE = 8;
+	START = 0;
+	ABORT = 1;
+	FREEZE = 2;
+	RESET = 3;
+	GREEN = 4;
 }
 
 // Request message to send one of the events of type Event

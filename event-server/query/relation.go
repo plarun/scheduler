@@ -10,11 +10,10 @@ func (database *Database) InsertJobDependent(dbTxn *sql.Tx, jobSeqId int64, depe
 	database.lock.Lock()
 	for _, dependentJobSeqId := range dependentJobSeqIds {
 		_, err := dbTxn.Exec(
-			`insert into job_dependent (job_id, dependent_job_id, dependent_flag) 
-			values (?, ?, ?)`,
+			`insert into job_dependent (job_id, dependent_job_id) 
+			values (?, ?)`,
 			jobSeqId,
-			dependentJobSeqId,
-			"SU")
+			dependentJobSeqId)
 		if err != nil {
 			return fmt.Errorf("insertJobDependent: %v", err)
 		}

@@ -34,42 +34,25 @@ func (server SendEventServer) Send(ctx context.Context, req *pb.SendEventReq) (*
 	}
 
 	switch eventType {
-	case pb.Event_MARK_AS_SUCCESS:
+	case pb.Event_START:
+		// todo
+	case pb.Event_ABORT:
+		// todo
+	case pb.Event_RESET:
+		err = server.reset(dbTxn, jobName, currStatus, res)
+		if err != nil {
+			return nil, err
+		}
+	case pb.Event_FREEZE:
+		err = server.freeze(dbTxn, jobName, currStatus, res)
+		if err != nil {
+			return nil, err
+		}
+	case pb.Event_GREEN:
 		err = server.markAsSuccess(dbTxn, jobName, currStatus, res)
 		if err != nil {
 			return nil, err
 		}
-	case pb.Event_MARK_AS_FAILURE:
-		err = server.markAsFailure(dbTxn, jobName, currStatus, res)
-		if err != nil {
-			return nil, err
-		}
-	case pb.Event_ON_ICE:
-		err = server.onIce(dbTxn, jobName, currStatus, res)
-		if err != nil {
-			return nil, err
-		}
-	case pb.Event_OFF_ICE:
-		err = server.offIce(dbTxn, jobName, currStatus, res)
-		if err != nil {
-			return nil, err
-		}
-	case pb.Event_ON_HOLD:
-		err = server.onHold(dbTxn, jobName, currStatus, res)
-		if err != nil {
-			return nil, err
-		}
-	case pb.Event_OFF_HOLD:
-		err = server.offHold(dbTxn, jobName, currStatus, res)
-		if err != nil {
-			return nil, err
-		}
-	case pb.Event_START:
-		// todo
-	case pb.Event_FORCE_START:
-		// todo
-	case pb.Event_KILL:
-		// todo
 	}
 
 	currStatus, err = server.Database.GetStatus(dbTxn, jobName)
@@ -82,7 +65,7 @@ func (server SendEventServer) Send(ctx context.Context, req *pb.SendEventReq) (*
 }
 
 func (server SendEventServer) markAsSuccess(dbTxn *sql.Tx, jobName string, currStatus pb.Status, res *pb.SendEventRes) error {
-	if currStatus == pb.Status_TERMINATED || currStatus == pb.Status_FAILURE || currStatus == pb.Status_INACTIVE {
+	if currStatus == pb.Status_ABORTED || currStatus == pb.Status_FAILED || currStatus == pb.Status_IDLE {
 		err := server.Database.ChangeStatus(dbTxn, jobName, pb.Status_SUCCESS)
 		if err != nil {
 			return err
@@ -94,9 +77,9 @@ func (server SendEventServer) markAsSuccess(dbTxn *sql.Tx, jobName string, currS
 	return nil
 }
 
-func (server SendEventServer) markAsFailure(dbTxn *sql.Tx, jobName string, currStatus pb.Status, res *pb.SendEventRes) error {
-	if currStatus == pb.Status_TERMINATED || currStatus == pb.Status_SUCCESS || currStatus == pb.Status_INACTIVE {
-		err := server.Database.ChangeStatus(dbTxn, jobName, pb.Status_FAILURE)
+func (server SendEventServer) freeze(dbTxn *sql.Tx, jobName string, currStatus pb.Status, res *pb.SendEventRes) error {
+	if currStatus == pb.Status_ABORTED || currStatus == pb.Status_SUCCESS || currStatus == pb.Status_IDLE || currStatus == pb.Status_FAILED {
+		err := server.Database.ChangeStatus(dbTxn, jobName, pb.Status_FROZEN)
 		if err != nil {
 			return err
 		}
@@ -107,48 +90,9 @@ func (server SendEventServer) markAsFailure(dbTxn *sql.Tx, jobName string, currS
 	return nil
 }
 
-func (server SendEventServer) onIce(dbTxn *sql.Tx, jobName string, currStatus pb.Status, res *pb.SendEventRes) error {
-	if currStatus == pb.Status_TERMINATED || currStatus == pb.Status_SUCCESS || currStatus == pb.Status_INACTIVE || currStatus == pb.Status_FAILURE {
-		err := server.Database.ChangeStatus(dbTxn, jobName, pb.Status_ONICE)
-		if err != nil {
-			return err
-		}
-
-		res.EventChanged = true
-	}
-
-	return nil
-}
-
-func (server SendEventServer) offIce(dbTxn *sql.Tx, jobName string, currStatus pb.Status, res *pb.SendEventRes) error {
-	if currStatus == pb.Status_ONICE {
-		err := server.Database.ChangeStatus(dbTxn, jobName, pb.Status_INACTIVE)
-		if err != nil {
-			return err
-		}
-
-		res.EventChanged = true
-	}
-
-	return nil
-}
-
-func (server SendEventServer) onHold(dbTxn *sql.Tx, jobName string, currStatus pb.Status, res *pb.SendEventRes) error {
-	if currStatus == pb.Status_TERMINATED || currStatus == pb.Status_SUCCESS || currStatus == pb.Status_INACTIVE || currStatus == pb.Status_FAILURE {
-		err := server.Database.ChangeStatus(dbTxn, jobName, pb.Status_ONHOLD)
-		if err != nil {
-			return err
-		}
-
-		res.EventChanged = true
-	}
-
-	return nil
-}
-
-func (server SendEventServer) offHold(dbTxn *sql.Tx, jobName string, currStatus pb.Status, res *pb.SendEventRes) error {
-	if currStatus == pb.Status_ONHOLD {
-		err := server.Database.ChangeStatus(dbTxn, jobName, pb.Status_INACTIVE)
+func (server SendEventServer) reset(dbTxn *sql.Tx, jobName string, currStatus pb.Status, res *pb.SendEventRes) error {
+	if currStatus == pb.Status_FROZEN {
+		err := server.Database.ChangeStatus(dbTxn, jobName, pb.Status_IDLE)
 		if err != nil {
 			return err
 		}
