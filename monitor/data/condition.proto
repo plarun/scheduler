@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package data;
+
+option go_package = "./;data";
+
+// Request message from Monitor to Picker to check and free the holded dependent jobs
+message JobConditionReq {
+	string JobName = 1;
+	bool ConditionSatisfied = 2;
+}
+
+// Response message is empty, since Picker dont need to respond the Monitor
+message JobConditionRes {}
+
+// Service to check and free the holded job
+service Condition {
+	rpc ConditionStatus(JobConditionReq) returns (JobConditionRes) {}
+}
