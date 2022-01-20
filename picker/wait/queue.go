@@ -1,4 +1,4 @@
-package queue
+package wait
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 
 // Double ended node
 type WaitingJob struct {
-	job  *pb.ReadyJob
+	job  *pb.Job
 	prev *WaitingJob
 	next *WaitingJob
 }
@@ -23,7 +23,7 @@ type WaitingQueue struct {
 }
 
 // newWaitingJob returns a new WaitingJob node
-func (wque *WaitingQueue) newWaitingJob(data *pb.ReadyJob) *WaitingJob {
+func (wque *WaitingQueue) newWaitingJob(data *pb.Job) *WaitingJob {
 	return &WaitingJob{
 		job:  data,
 		prev: nil,
@@ -31,7 +31,7 @@ func (wque *WaitingQueue) newWaitingJob(data *pb.ReadyJob) *WaitingJob {
 	}
 }
 
-func (wque *WaitingQueue) push(data *pb.ReadyJob) error {
+func (wque *WaitingQueue) push(data *pb.Job) error {
 	var node *WaitingJob = wque.newWaitingJob(data)
 	if wque.size == 0 {
 		wque.in = node
@@ -87,7 +87,7 @@ func NewWaitingQueue() *ConcurrentWaitingQueue {
 	return wQue
 }
 
-func (que *ConcurrentWaitingQueue) Push(data *pb.ReadyJob) error {
+func (que *ConcurrentWaitingQueue) Push(data *pb.Job) error {
 	que.lock.Lock()
 	err := que.wQue.push(data)
 	que.lock.Unlock()

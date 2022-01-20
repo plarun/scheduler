@@ -4,20 +4,22 @@ import (
 	"time"
 
 	pb "github.com/plarun/scheduler/picker/data"
-	"github.com/plarun/scheduler/picker/queue"
+	"github.com/plarun/scheduler/picker/wait"
 	"golang.org/x/net/context"
 )
 
 // JobPicker wraps the NextJobsClient and queues the next run jobs
 type JobPicker struct {
 	Client pb.NextJobsClient
-	Queue  *queue.ConcurrentWaitingQueue
+	Queue  *wait.ConcurrentWaitingQueue
+	Holder *wait.ConcurrentHolder
 }
 
 func NewJobPicker(client pb.NextJobsClient) *JobPicker {
 	return &JobPicker{
 		Client: client,
-		Queue:  queue.NewWaitingQueue(),
+		Queue:  wait.NewWaitingQueue(),
+		Holder: wait.NewConcurrentHolder(),
 	}
 }
 
@@ -33,7 +35,11 @@ func (picker JobPicker) NextJobs() error {
 	}
 
 	for _, job := range nextJobRes.JobList {
-		picker.Queue.Push(job)
+		if job.ConditionSatisfied {
+			picker.Queue.Push(job)
+		} else {
+			picker.Holder.Hold(job)
+		}
 	}
 
 	return nil

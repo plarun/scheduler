@@ -4,17 +4,17 @@ import (
 	"context"
 
 	pb "github.com/plarun/scheduler/picker/data"
-	"github.com/plarun/scheduler/picker/queue"
+	"github.com/plarun/scheduler/picker/wait"
 )
 
 type JobPass struct {
 	pb.UnimplementedPassJobsServer
-	Queue *queue.ConcurrentWaitingQueue
+	Queue *wait.ConcurrentWaitingQueue
 }
 
 func NewJobPass() *JobPass {
 	return &JobPass{
-		Queue: queue.NewWaitingQueue(),
+		Queue: wait.NewWaitingQueue(),
 	}
 }
 

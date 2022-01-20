@@ -5,9 +5,9 @@ package data;
 option go_package = "./;data";
 
 // Message to represent job ready for next run
-message ReadyJob {
+message Job {
 	string JobName = 1;
-	repeated string Preceders = 2;
+	bool ConditionSatisfied = 2;
 }
 
 // Request message to get list of jobs for next run
@@ -15,7 +15,7 @@ message NextJobsReq {}
 
 // Response message with list of jobs
 message NextJobsRes {
-	repeated ReadyJob JobList = 1;
+	repeated Job JobList = 1;
 }
 
 // Service to handle get jobs for next run

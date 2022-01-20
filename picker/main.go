@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/plarun/scheduler/picker/checker"
 	pb "github.com/plarun/scheduler/picker/data"
 	"github.com/plarun/scheduler/picker/pass"
 	"github.com/plarun/scheduler/picker/picker"
@@ -58,6 +59,7 @@ func serve() {
 
 	// register all servers here
 	pb.RegisterPassJobsServer(grpcServer, pass.NewJobPass())
+	pb.RegisterConditionServer(grpcServer, checker.NewHoldChecker())
 
 	fmt.Printf("Scheduler grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {
