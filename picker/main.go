@@ -8,8 +8,7 @@ import (
 
 	"github.com/plarun/scheduler/picker/checker"
 	pb "github.com/plarun/scheduler/picker/data"
-	"github.com/plarun/scheduler/picker/pass"
-	"github.com/plarun/scheduler/picker/picker"
+	"github.com/plarun/scheduler/picker/pickpass"
 
 	"google.golang.org/grpc"
 )
@@ -22,28 +21,52 @@ func main() {
 	// server service to communicate with controller
 	serve()
 
-	// client service to communicate with event-server
-	clientErrChan := make(chan error)
-	go func() {
-		conn, err := grpc.Dial("localhost:5555", grpc.WithInsecure())
-		if err != nil {
-			log.Fatalf("connection failed: %v", err)
-		}
-		defer conn.Close()
+	// pick client
+	pickConn, err := grpc.Dial("localhost:5555", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("connection failed: %v", err)
+	}
+	defer pickConn.Close()
+	pickClient := pb.NewPickJobsClient(pickConn)
 
-		client := pb.NewNextJobsClient(conn)
-		jobPicker := picker.NewJobPicker(client)
+	// pass client
+	passConn, err := grpc.Dial("localhost:5557", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("connection failed: %v", err)
+	}
+	defer passConn.Close()
+	passClient := pb.NewPassJobsClient(passConn)
+
+	jobPickPass := pickpass.NewJobPicker(pickClient, passClient)
+
+	// pick jobs from event-server
+	pickErrChan := make(chan error)
+	go func() {
 		log.Println("client services starting...")
 		for {
-			time.Sleep(time.Second * 5)
-			if err := jobPicker.NextJobs(); err != nil {
-				clientErrChan <- err
+			if err := jobPickPass.PickJobs(); err != nil {
+				pickErrChan <- err
 			}
-			jobPicker.Queue.Print()
+			jobPickPass.Queue.Print()
+			time.Sleep(time.Second * 5)
 		}
 	}()
 
-	log.Fatal(<-clientErrChan)
+	log.Fatal(<-pickErrChan)
+
+	// pass jobs to controller
+	passErrChan := make(chan error)
+	go func() {
+
+		for {
+			if err := jobPickPass.PassJobs(); err != nil {
+				passErrChan <- err
+			}
+			time.Sleep(time.Second * 5)
+		}
+	}()
+
+	log.Fatal(<-passErrChan)
 }
 
 func serve() {
@@ -58,7 +81,6 @@ func serve() {
 	grpcServer := grpc.NewServer()
 
 	// register all servers here
-	pb.RegisterPassJobsServer(grpcServer, pass.NewJobPass())
 	pb.RegisterConditionServer(grpcServer, checker.NewHoldChecker())
 
 	fmt.Printf("Scheduler grpc server is running at port: %d\n", port)

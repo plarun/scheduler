@@ -15,6 +15,10 @@ type WaitingJob struct {
 	next *WaitingJob
 }
 
+func (job *WaitingJob) Job() *pb.Job {
+	return job.job
+}
+
 // WaitingQueue represents list of jobs waiting for next run
 type WaitingQueue struct {
 	in   *WaitingJob
@@ -30,40 +34,6 @@ func (wque *WaitingQueue) newWaitingJob(data *pb.Job) *WaitingJob {
 		next: nil,
 	}
 }
-
-func (wque *WaitingQueue) push(data *pb.Job) error {
-	var node *WaitingJob = wque.newWaitingJob(data)
-	if wque.size == 0 {
-		wque.in = node
-		wque.out = node
-	} else {
-		node.next = wque.in
-		wque.in.prev = node
-		wque.in = node
-	}
-	wque.size++
-	return nil
-}
-
-func (wque *WaitingQueue) pop() (*WaitingJob, error) {
-	if wque.size == 0 {
-		return nil, fmt.Errorf("waiting queue is empty")
-	}
-	var node *WaitingJob = wque.out
-	wque.out = wque.out.prev
-	if wque.out != nil {
-		wque.out.next = nil
-	}
-	wque.size--
-	if wque.size == 0 {
-		wque.in, wque.out = nil, nil
-	}
-	return node, nil
-}
-
-// func (wque *WaitingQueue) empty() bool {
-// 	return wque.size == 0
-// }
 
 var wQue *ConcurrentWaitingQueue = nil
 
@@ -89,16 +59,40 @@ func NewWaitingQueue() *ConcurrentWaitingQueue {
 
 func (que *ConcurrentWaitingQueue) Push(data *pb.Job) error {
 	que.lock.Lock()
-	err := que.wQue.push(data)
+
+	var node *WaitingJob = que.wQue.newWaitingJob(data)
+	if que.wQue.size == 0 {
+		que.wQue.in = node
+		que.wQue.out = node
+	} else {
+		node.next = que.wQue.in
+		que.wQue.in.prev = node
+		que.wQue.in = node
+	}
+	que.wQue.size++
+
 	que.lock.Unlock()
-	return err
+	return nil
 }
 
 func (que *ConcurrentWaitingQueue) Pop() (*WaitingJob, error) {
 	que.lock.Lock()
-	data, err := que.wQue.pop()
+
+	if que.wQue.size == 0 {
+		return nil, fmt.Errorf("waiting queue is empty")
+	}
+	var node *WaitingJob = que.wQue.out
+	que.wQue.out = que.wQue.out.prev
+	if que.wQue.out != nil {
+		que.wQue.out.next = nil
+	}
+	que.wQue.size--
+	if que.wQue.size == 0 {
+		que.wQue.in, que.wQue.out = nil, nil
+	}
+
 	que.lock.Unlock()
-	return data, err
+	return node, nil
 }
 
 // func (que *ConcurrentWaitingQueue) Remove(node *WaitingJob) *WaitingJob {
@@ -124,22 +118,6 @@ func (que *ConcurrentWaitingQueue) Pop() (*WaitingJob, error) {
 
 // 	return node
 // }
-
-func (que *ConcurrentWaitingQueue) FeedBack(node *WaitingJob) error {
-	que.lock.Lock()
-	if node.next != nil || que.wQue.size > 1 {
-		var err error
-		if node, err = que.Pop(); err != nil {
-			return err
-		}
-		if err = que.Push(node.job); err != nil {
-			return err
-		}
-		node = nil
-	}
-	que.lock.Unlock()
-	return nil
-}
 
 func (que *ConcurrentWaitingQueue) Size() uint32 {
 	que.lock.Lock()

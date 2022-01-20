@@ -77,14 +77,14 @@ func (x *Job) GetConditionSatisfied() bool {
 }
 
 // Request message to get list of jobs for next run
-type NextJobsReq struct {
+type PickJobsReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *NextJobsReq) Reset() {
-	*x = NextJobsReq{}
+func (x *PickJobsReq) Reset() {
+	*x = PickJobsReq{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_next_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -92,13 +92,13 @@ func (x *NextJobsReq) Reset() {
 	}
 }
 
-func (x *NextJobsReq) String() string {
+func (x *PickJobsReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NextJobsReq) ProtoMessage() {}
+func (*PickJobsReq) ProtoMessage() {}
 
-func (x *NextJobsReq) ProtoReflect() protoreflect.Message {
+func (x *PickJobsReq) ProtoReflect() protoreflect.Message {
 	mi := &file_next_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -110,13 +110,13 @@ func (x *NextJobsReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use NextJobsReq.ProtoReflect.Descriptor instead.
-func (*NextJobsReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use PickJobsReq.ProtoReflect.Descriptor instead.
+func (*PickJobsReq) Descriptor() ([]byte, []int) {
 	return file_next_proto_rawDescGZIP(), []int{1}
 }
 
 // Response message with list of jobs
-type NextJobsRes struct {
+type PickJobsRes struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -124,8 +124,8 @@ type NextJobsRes struct {
 	JobList []*Job `protobuf:"bytes,1,rep,name=JobList,proto3" json:"JobList,omitempty"`
 }
 
-func (x *NextJobsRes) Reset() {
-	*x = NextJobsRes{}
+func (x *PickJobsRes) Reset() {
+	*x = PickJobsRes{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_next_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -133,13 +133,13 @@ func (x *NextJobsRes) Reset() {
 	}
 }
 
-func (x *NextJobsRes) String() string {
+func (x *PickJobsRes) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NextJobsRes) ProtoMessage() {}
+func (*PickJobsRes) ProtoMessage() {}
 
-func (x *NextJobsRes) ProtoReflect() protoreflect.Message {
+func (x *PickJobsRes) ProtoReflect() protoreflect.Message {
 	mi := &file_next_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -151,16 +151,103 @@ func (x *NextJobsRes) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use NextJobsRes.ProtoReflect.Descriptor instead.
-func (*NextJobsRes) Descriptor() ([]byte, []int) {
+// Deprecated: Use PickJobsRes.ProtoReflect.Descriptor instead.
+func (*PickJobsRes) Descriptor() ([]byte, []int) {
 	return file_next_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *NextJobsRes) GetJobList() []*Job {
+func (x *PickJobsRes) GetJobList() []*Job {
 	if x != nil {
 		return x.JobList
 	}
 	return nil
+}
+
+// Request message to pass list of jobs
+type PassJobsReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	JobList []*Job `protobuf:"bytes,1,rep,name=JobList,proto3" json:"JobList,omitempty"`
+}
+
+func (x *PassJobsReq) Reset() {
+	*x = PassJobsReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_next_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PassJobsReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PassJobsReq) ProtoMessage() {}
+
+func (x *PassJobsReq) ProtoReflect() protoreflect.Message {
+	mi := &file_next_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PassJobsReq.ProtoReflect.Descriptor instead.
+func (*PassJobsReq) Descriptor() ([]byte, []int) {
+	return file_next_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *PassJobsReq) GetJobList() []*Job {
+	if x != nil {
+		return x.JobList
+	}
+	return nil
+}
+
+// Response message for pass jobs is empty
+type PassJobsRes struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *PassJobsRes) Reset() {
+	*x = PassJobsRes{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_next_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PassJobsRes) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PassJobsRes) ProtoMessage() {}
+
+func (x *PassJobsRes) ProtoReflect() protoreflect.Message {
+	mi := &file_next_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PassJobsRes.ProtoReflect.Descriptor instead.
+func (*PassJobsRes) Descriptor() ([]byte, []int) {
+	return file_next_proto_rawDescGZIP(), []int{4}
 }
 
 var File_next_proto protoreflect.FileDescriptor
@@ -172,16 +259,24 @@ var file_next_proto_rawDesc = []byte{
 	0x61, 0x6d, 0x65, 0x12, 0x2e, 0x0a, 0x12, 0x43, 0x6f, 0x6e, 0x64, 0x69, 0x74, 0x69, 0x6f, 0x6e,
 	0x53, 0x61, 0x74, 0x69, 0x73, 0x66, 0x69, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52,
 	0x12, 0x43, 0x6f, 0x6e, 0x64, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x61, 0x74, 0x69, 0x73, 0x66,
-	0x69, 0x65, 0x64, 0x22, 0x0d, 0x0a, 0x0b, 0x4e, 0x65, 0x78, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52,
-	0x65, 0x71, 0x22, 0x32, 0x0a, 0x0b, 0x4e, 0x65, 0x78, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65,
+	0x69, 0x65, 0x64, 0x22, 0x0d, 0x0a, 0x0b, 0x50, 0x69, 0x63, 0x6b, 0x4a, 0x6f, 0x62, 0x73, 0x52,
+	0x65, 0x71, 0x22, 0x32, 0x0a, 0x0b, 0x50, 0x69, 0x63, 0x6b, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65,
 	0x73, 0x12, 0x23, 0x0a, 0x07, 0x4a, 0x6f, 0x62, 0x4c, 0x69, 0x73, 0x74, 0x18, 0x01, 0x20, 0x03,
 	0x28, 0x0b, 0x32, 0x09, 0x2e, 0x64, 0x61, 0x74, 0x61, 0x2e, 0x4a, 0x6f, 0x62, 0x52, 0x07, 0x4a,
-	0x6f, 0x62, 0x4c, 0x69, 0x73, 0x74, 0x32, 0x3a, 0x0a, 0x08, 0x4e, 0x65, 0x78, 0x74, 0x4a, 0x6f,
-	0x62, 0x73, 0x12, 0x2e, 0x0a, 0x04, 0x4e, 0x65, 0x78, 0x74, 0x12, 0x11, 0x2e, 0x64, 0x61, 0x74,
-	0x61, 0x2e, 0x4e, 0x65, 0x78, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x11, 0x2e,
-	0x64, 0x61, 0x74, 0x61, 0x2e, 0x4e, 0x65, 0x78, 0x74, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x73,
-	0x22, 0x00, 0x42, 0x09, 0x5a, 0x07, 0x2e, 0x2f, 0x3b, 0x64, 0x61, 0x74, 0x61, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x62, 0x4c, 0x69, 0x73, 0x74, 0x22, 0x32, 0x0a, 0x0b, 0x50, 0x61, 0x73, 0x73, 0x4a, 0x6f,
+	0x62, 0x73, 0x52, 0x65, 0x71, 0x12, 0x23, 0x0a, 0x07, 0x4a, 0x6f, 0x62, 0x4c, 0x69, 0x73, 0x74,
+	0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x09, 0x2e, 0x64, 0x61, 0x74, 0x61, 0x2e, 0x4a, 0x6f,
+	0x62, 0x52, 0x07, 0x4a, 0x6f, 0x62, 0x4c, 0x69, 0x73, 0x74, 0x22, 0x0d, 0x0a, 0x0b, 0x50, 0x61,
+	0x73, 0x73, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x73, 0x32, 0x3a, 0x0a, 0x08, 0x50, 0x69, 0x63,
+	0x6b, 0x4a, 0x6f, 0x62, 0x73, 0x12, 0x2e, 0x0a, 0x04, 0x50, 0x69, 0x63, 0x6b, 0x12, 0x11, 0x2e,
+	0x64, 0x61, 0x74, 0x61, 0x2e, 0x50, 0x69, 0x63, 0x6b, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x71,
+	0x1a, 0x11, 0x2e, 0x64, 0x61, 0x74, 0x61, 0x2e, 0x50, 0x69, 0x63, 0x6b, 0x4a, 0x6f, 0x62, 0x73,
+	0x52, 0x65, 0x73, 0x22, 0x00, 0x32, 0x3a, 0x0a, 0x08, 0x50, 0x61, 0x73, 0x73, 0x4a, 0x6f, 0x62,
+	0x73, 0x12, 0x2e, 0x0a, 0x04, 0x50, 0x61, 0x73, 0x73, 0x12, 0x11, 0x2e, 0x64, 0x61, 0x74, 0x61,
+	0x2e, 0x50, 0x61, 0x73, 0x73, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x71, 0x1a, 0x11, 0x2e, 0x64,
+	0x61, 0x74, 0x61, 0x2e, 0x50, 0x61, 0x73, 0x73, 0x4a, 0x6f, 0x62, 0x73, 0x52, 0x65, 0x73, 0x22,
+	0x00, 0x42, 0x09, 0x5a, 0x07, 0x2e, 0x2f, 0x3b, 0x64, 0x61, 0x74, 0x61, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -196,21 +291,26 @@ func file_next_proto_rawDescGZIP() []byte {
 	return file_next_proto_rawDescData
 }
 
-var file_next_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_next_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_next_proto_goTypes = []interface{}{
 	(*Job)(nil),         // 0: data.Job
-	(*NextJobsReq)(nil), // 1: data.NextJobsReq
-	(*NextJobsRes)(nil), // 2: data.NextJobsRes
+	(*PickJobsReq)(nil), // 1: data.PickJobsReq
+	(*PickJobsRes)(nil), // 2: data.PickJobsRes
+	(*PassJobsReq)(nil), // 3: data.PassJobsReq
+	(*PassJobsRes)(nil), // 4: data.PassJobsRes
 }
 var file_next_proto_depIdxs = []int32{
-	0, // 0: data.NextJobsRes.JobList:type_name -> data.Job
-	1, // 1: data.NextJobs.Next:input_type -> data.NextJobsReq
-	2, // 2: data.NextJobs.Next:output_type -> data.NextJobsRes
-	2, // [2:3] is the sub-list for method output_type
-	1, // [1:2] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // 0: data.PickJobsRes.JobList:type_name -> data.Job
+	0, // 1: data.PassJobsReq.JobList:type_name -> data.Job
+	1, // 2: data.PickJobs.Pick:input_type -> data.PickJobsReq
+	3, // 3: data.PassJobs.Pass:input_type -> data.PassJobsReq
+	2, // 4: data.PickJobs.Pick:output_type -> data.PickJobsRes
+	4, // 5: data.PassJobs.Pass:output_type -> data.PassJobsRes
+	4, // [4:6] is the sub-list for method output_type
+	2, // [2:4] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_next_proto_init() }
@@ -232,7 +332,7 @@ func file_next_proto_init() {
 			}
 		}
 		file_next_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NextJobsReq); i {
+			switch v := v.(*PickJobsReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -244,7 +344,31 @@ func file_next_proto_init() {
 			}
 		}
 		file_next_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NextJobsRes); i {
+			switch v := v.(*PickJobsRes); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_next_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PassJobsReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_next_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PassJobsRes); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -262,9 +386,9 @@ func file_next_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_next_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   5,
 			NumExtensions: 0,
-			NumServices:   1,
+			NumServices:   2,
 		},
 		GoTypes:           file_next_proto_goTypes,
 		DependencyIndexes: file_next_proto_depIdxs,

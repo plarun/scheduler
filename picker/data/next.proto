@@ -11,14 +11,27 @@ message Job {
 }
 
 // Request message to get list of jobs for next run
-message NextJobsReq {}
+message PickJobsReq {}
 
 // Response message with list of jobs
-message NextJobsRes {
+message PickJobsRes {
 	repeated Job JobList = 1;
 }
 
+// Request message to pass list of jobs
+message PassJobsReq {
+	repeated Job JobList = 1;
+}
+
+// Response message for pass jobs is empty
+message PassJobsRes {}
+
 // Service to handle get jobs for next run
-service NextJobs {
-	rpc Next(NextJobsReq) returns (NextJobsRes) {}
+service PickJobs {
+	rpc Pick(PickJobsReq) returns (PickJobsRes) {}
+}
+
+// Service to handle pass jobs
+service PassJobs {
+	rpc Pass(PassJobsReq) returns (PassJobsRes) {}
 }
