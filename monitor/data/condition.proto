@@ -7,7 +7,7 @@ option go_package = "./;data";
 // Request message from Monitor to Picker to check and free the holded dependent jobs
 message JobConditionReq {
 	string JobName = 1;
-	repeated string DependentJobs = 2;
+	repeated string Successors = 2;
 }
 
 // Response message is empty, since Picker dont need to respond the Monitor
