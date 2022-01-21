@@ -212,7 +212,7 @@ func (database *Database) GetJobData(dbTxn *sql.Tx, jobName string) (*pb.GetJilR
 		return nil, err
 	}
 
-	res.Conditions, err = database.GetJobDependents(dbTxn, jobSeqId)
+	res.Conditions, err = database.GetPreceders(dbTxn, jobSeqId)
 	if err != nil {
 		return nil, err
 	}

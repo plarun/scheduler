@@ -59,38 +59,38 @@ func (database *Database) DeleteJobRelation(dbTxn *sql.Tx, jobSeqId int64) error
 	return nil
 }
 
-// GetJobDependents gets all the related jobs
-func (database *Database) GetJobDependents(dbTxn *sql.Tx, jobSeqId int64) ([]string, error) {
-	var dependentJobs []string
+// GetPredecessors gets all the related jobs
+func (database *Database) GetPreceders(dbTxn *sql.Tx, jobSeqId int64) ([]string, error) {
+	var preceders []string
 
 	database.lock.Lock()
 	rows, err := dbTxn.Query(
 		`select job_name from job 
 		where job_seq_id in (
-			select dependent_job_id from job_dependent 
-			where job_seq_id=?
+			select job_dependent_id from job_dependent 
+			where job_id=?
 		)`,
 		jobSeqId)
 	database.lock.Unlock()
 
 	if err != nil {
-		return dependentJobs, err
+		return preceders, err
 	}
 
 	for rows.Next() {
 		var jobName string
 		if err := rows.Scan(&jobName); err != nil {
-			return dependentJobs, err
+			return preceders, err
 		}
-		dependentJobs = append(dependentJobs, jobName)
+		preceders = append(preceders, jobName)
 	}
 
-	return dependentJobs, nil
+	return preceders, nil
 }
 
-// GetJobDependentsIdList gets list of dependent job id for requested job id
-func (database *Database) GetJobDependentsIdList(dbTxn *sql.Tx, jobSeqId int64) ([]int64, error) {
-	var dependentJobsIds []int64
+// GetPrecedersIdList gets list of dependent job id for requested job id
+func (database *Database) GetPrecedersIdList(dbTxn *sql.Tx, jobSeqId int64) ([]int64, error) {
+	var precedersId []int64
 
 	database.lock.Lock()
 	rows, err := dbTxn.Query(
@@ -100,18 +100,18 @@ func (database *Database) GetJobDependentsIdList(dbTxn *sql.Tx, jobSeqId int64) 
 	database.lock.Unlock()
 
 	if err != nil {
-		return dependentJobsIds, err
+		return precedersId, err
 	}
 
 	for rows.Next() {
 		var dependentJobId int64
 		if err := rows.Scan(&dependentJobId); err != nil {
-			return dependentJobsIds, err
+			return precedersId, err
 		}
-		dependentJobsIds = append(dependentJobsIds, dependentJobId)
+		precedersId = append(precedersId, dependentJobId)
 	}
 
-	return dependentJobsIds, nil
+	return precedersId, nil
 }
 
 // UpdateJobDependents updates dependent jobs for given job with latest conditions list
@@ -124,7 +124,7 @@ func (database *Database) UpdateJobDependents(dbTxn *sql.Tx, jobName string, con
 	}
 
 	var existingConditionJobsLookup map[int64]bool = make(map[int64]bool)
-	existingConditionJobs, err := database.GetJobDependentsIdList(dbTxn, jobSeqId)
+	existingConditionJobs, err := database.GetPrecedersIdList(dbTxn, jobSeqId)
 	if err != nil {
 		return err
 	}
@@ -162,6 +162,35 @@ func (database *Database) UpdateJobDependents(dbTxn *sql.Tx, jobName string, con
 	}
 
 	return nil
+}
+
+// GetSuccessors gets all the related jobs
+func (database *Database) GetSuccessors(dbTxn *sql.Tx, jobSeqId int64) ([]string, error) {
+	var dependentJobs []string
+
+	database.lock.Lock()
+	rows, err := dbTxn.Query(
+		`select job_name from job 
+		where job_seq_id in (
+			select job_id from job_dependent 
+			where job_dependent_id=?
+		)`,
+		jobSeqId)
+	database.lock.Unlock()
+
+	if err != nil {
+		return dependentJobs, err
+	}
+
+	for rows.Next() {
+		var jobName string
+		if err := rows.Scan(&jobName); err != nil {
+			return dependentJobs, err
+		}
+		dependentJobs = append(dependentJobs, jobName)
+	}
+
+	return dependentJobs, nil
 }
 
 // CheckConditions checks whether job's condition satisfied
