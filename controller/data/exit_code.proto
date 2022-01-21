@@ -5,9 +5,9 @@ package data;
 option go_package = "./;data";
 
 enum ExitCode {
-    SUCCESS = 0;
-    FAILED = 1;
-    ABORTED = 2;
+    SU = 0;
+    FA = 1;
+    AB = 2;
 }
 
 // Request message to update the run status of job

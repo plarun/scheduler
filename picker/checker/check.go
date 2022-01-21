@@ -21,12 +21,11 @@ func NewHoldChecker() *HoldChecker {
 }
 
 func (checker HoldChecker) ConditionStatus(ctx context.Context, req *pb.JobConditionReq) (*pb.JobConditionRes, error) {
-	if req.GetConditionSatisfied() && checker.Holder.Contains(req.GetJobName()) {
-		job := &pb.Job{
-			JobName:            req.GetJobName(),
-			ConditionSatisfied: true,
+	for _, dependentJob := range req.GetDependentJobs() {
+		if checker.Holder.Contains(dependentJob) {
+			job := checker.Holder.Free(dependentJob)
+			checker.Queue.Push(job)
 		}
-		checker.Queue.Push(job)
 	}
 
 	return &pb.JobConditionRes{}, nil
