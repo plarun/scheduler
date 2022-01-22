@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package data;
+
+option go_package = "./;data";
+
+// Request message to get the run data of job
+message RunDataReq {
+	string JobName = 1;
+}
+
+// Response message for job's run data
+message RunDataRes {
+    string JobName = 1;
+    string Command = 2;
+    string Machine = 3;
+    string OutFile = 4;
+    string ErrFile = 5;
+}
+
+// Service to get run data of job
+service RunData {
+	rpc GetRunData(RunDataReq) returns (RunDataRes) {}
+}

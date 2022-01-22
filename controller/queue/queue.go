@@ -4,12 +4,26 @@ import (
 	"fmt"
 	"log"
 	"sync"
+
+	pb "github.com/plarun/scheduler/controller/data"
 )
 
 type ProcessJob struct {
-	job  interface{}
+	job  *pb.Job
 	prev *ProcessJob
 	next *ProcessJob
+}
+
+func (pque *ProcessQueue) newProcessJob(job *pb.Job) *ProcessJob {
+	return &ProcessJob{
+		job:  job,
+		prev: nil,
+		next: nil,
+	}
+}
+
+func (job *ProcessJob) Job() *pb.Job {
+	return job.job
 }
 
 type ProcessQueue struct {
@@ -18,55 +32,7 @@ type ProcessQueue struct {
 	size uint32
 }
 
-func NewProcessQueue() *ProcessQueue {
-	return &ProcessQueue{
-		in:   nil,
-		out:  nil,
-		size: 0,
-	}
-}
-
-func (pque *ProcessQueue) newProcessJob(job interface{}) *ProcessJob {
-	return &ProcessJob{
-		job:  job,
-		prev: nil,
-		next: nil,
-	}
-}
-
-func (pque *ProcessQueue) push(data interface{}) error {
-	var node *ProcessJob = pque.newProcessJob(data)
-	if pque.size == 0 {
-		pque.in = node
-		pque.out = node
-	} else {
-		node.next = pque.in
-		pque.in.prev = node
-		pque.in = node
-	}
-	pque.size++
-	return nil
-}
-
-func (pque *ProcessQueue) pop() (interface{}, error) {
-	if pque.size == 0 {
-		return nil, fmt.Errorf("waiting queue is empty")
-	}
-	var node *ProcessJob = pque.out
-	pque.out = pque.out.prev
-	if pque.out != nil {
-		pque.out.next = nil
-	}
-	pque.size--
-	if pque.size == 0 {
-		pque.in, pque.out = nil, nil
-	}
-	return node, nil
-}
-
-func (pque *ProcessQueue) empty() bool {
-	return pque.size == 0
-}
+var pQue *ConcurrentProcessQueue = nil
 
 // ConcurrentProcessQueue is a concurrency wrapper for ProcessQueue
 type ConcurrentProcessQueue struct {
@@ -74,30 +40,57 @@ type ConcurrentProcessQueue struct {
 	pQue *ProcessQueue
 }
 
-func NewWaitingQueue() *ConcurrentProcessQueue {
-	queue := &ConcurrentProcessQueue{
-		lock: &sync.Mutex{},
-		pQue: &ProcessQueue{
-			in:   nil,
-			out:  nil,
-			size: 0,
-		},
+func NewProcessQueue() *ConcurrentProcessQueue {
+	if pQue == nil {
+		pQue = &ConcurrentProcessQueue{
+			lock: &sync.Mutex{},
+			pQue: &ProcessQueue{
+				in:   nil,
+				out:  nil,
+				size: 0,
+			},
+		}
 	}
-	return queue
+
+	return pQue
 }
 
-func (que *ConcurrentProcessQueue) Push(data interface{}) error {
+func (que *ConcurrentProcessQueue) Push(data *pb.Job) error {
 	que.lock.Lock()
-	err := que.pQue.push(data)
+
+	var node *ProcessJob = que.pQue.newProcessJob(data)
+	if que.pQue.size == 0 {
+		que.pQue.in = node
+		que.pQue.out = node
+	} else {
+		node.next = que.pQue.in
+		que.pQue.in.prev = node
+		que.pQue.in = node
+	}
+	que.pQue.size++
+
 	que.lock.Unlock()
-	return err
+	return nil
 }
 
-func (que *ConcurrentProcessQueue) Pop() (interface{}, error) {
+func (que *ConcurrentProcessQueue) Pop() (*ProcessJob, error) {
 	que.lock.Lock()
-	data, err := que.pQue.pop()
+
+	if que.pQue.size == 0 {
+		return nil, fmt.Errorf("waiting queue is empty")
+	}
+	var node *ProcessJob = que.pQue.out
+	que.pQue.out = que.pQue.out.prev
+	if que.pQue.out != nil {
+		que.pQue.out.next = nil
+	}
+	que.pQue.size--
+	if que.pQue.size == 0 {
+		que.pQue.in, que.pQue.out = nil, nil
+	}
+
 	que.lock.Unlock()
-	return data, err
+	return node, nil
 }
 
 func (que *ConcurrentProcessQueue) Size() uint32 {

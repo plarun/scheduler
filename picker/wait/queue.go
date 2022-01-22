@@ -15,6 +15,15 @@ type WaitingJob struct {
 	next *WaitingJob
 }
 
+// newWaitingJob returns a new WaitingJob node
+func (wque *WaitingQueue) newWaitingJob(data *pb.Job) *WaitingJob {
+	return &WaitingJob{
+		job:  data,
+		prev: nil,
+		next: nil,
+	}
+}
+
 func (job *WaitingJob) Job() *pb.Job {
 	return job.job
 }
@@ -24,15 +33,6 @@ type WaitingQueue struct {
 	in   *WaitingJob
 	out  *WaitingJob
 	size uint32
-}
-
-// newWaitingJob returns a new WaitingJob node
-func (wque *WaitingQueue) newWaitingJob(data *pb.Job) *WaitingJob {
-	return &WaitingJob{
-		job:  data,
-		prev: nil,
-		next: nil,
-	}
 }
 
 var wQue *ConcurrentWaitingQueue = nil
