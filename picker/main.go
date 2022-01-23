@@ -37,7 +37,7 @@ func main() {
 	defer passConn.Close()
 	passClient := pb.NewPassJobsClient(passConn)
 
-	jobPickPass := pickpass.NewJobPicker(pickClient, passClient)
+	jobPickPass := pickpass.GetPickPass(pickClient, passClient)
 
 	// pick jobs from event-server
 	pickErrChan := make(chan error)
@@ -47,26 +47,11 @@ func main() {
 			if err := jobPickPass.PickJobs(); err != nil {
 				pickErrChan <- err
 			}
-			jobPickPass.Queue.Print()
 			time.Sleep(time.Second * 5)
 		}
 	}()
 
 	log.Fatal(<-pickErrChan)
-
-	// pass jobs to controller
-	passErrChan := make(chan error)
-	go func() {
-
-		for {
-			if err := jobPickPass.PassJobs(); err != nil {
-				passErrChan <- err
-			}
-			time.Sleep(time.Second * 5)
-		}
-	}()
-
-	log.Fatal(<-passErrChan)
 }
 
 func serve() {

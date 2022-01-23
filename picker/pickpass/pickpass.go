@@ -8,21 +8,25 @@ import (
 	"golang.org/x/net/context"
 )
 
+var PickPass *JobPicker = nil
+
 // JobPicker wraps the NextJobsClient and queues the next run jobs
 type JobPicker struct {
 	PickClient pb.PickJobsClient
 	PassClient pb.PassJobsClient
-	Queue      *wait.ConcurrentWaitingQueue
 	Holder     *wait.ConcurrentHolder
 }
 
-func NewJobPicker(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *JobPicker {
-	return &JobPicker{
-		PickClient: pickClient,
-		PassClient: passClient,
-		Queue:      wait.NewWaitingQueue(),
-		Holder:     wait.NewConcurrentHolder(),
+func GetPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *JobPicker {
+	if PickPass == nil {
+		PickPass = &JobPicker{
+			PickClient: pickClient,
+			PassClient: passClient,
+			Holder:     wait.NewConcurrentHolder(),
+		}
 	}
+
+	return PickPass
 }
 
 // NextJobs get and pushes the next run jobs to waiting queue
@@ -38,7 +42,7 @@ func (picker JobPicker) PickJobs() error {
 
 	for _, job := range pickJobRes.JobList {
 		if job.ConditionSatisfied {
-			picker.Queue.Push(job)
+			PassJobs(job)
 		} else {
 			picker.Holder.Hold(job)
 		}
@@ -48,27 +52,17 @@ func (picker JobPicker) PickJobs() error {
 }
 
 // PassJobs passes the jobs in queue to controller
-func (picker JobPicker) PassJobs() error {
+func PassJobs(job *pb.Job) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	if picker.Queue.Size() == 0 {
-		return nil
-	}
-
-	var jobList []*pb.Job
-
-	for picker.Queue.Size() != 0 {
-		job, err := picker.Queue.Pop()
-		if err != nil {
-			return err
-		}
-		jobList = append(jobList, job.Job())
-	}
+	// Already initialized
+	picker := GetPickPass(nil, nil)
 
 	passJobReq := &pb.PassJobsReq{
-		JobList: jobList,
+		ReadyJob: job,
 	}
+
 	_, err := picker.PassClient.Pass(ctx, passJobReq)
 	if err != nil {
 		return err
