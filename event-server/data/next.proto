@@ -7,6 +7,10 @@ option go_package = "./;data";
 // Message to represent job ready for next run
 message ReadyJob {
 	string JobName = 1;
+	string Command = 2;
+	string Machine = 3;
+	string OutFile = 4;
+	string ErrFile = 5;
 }
 
 // Request message to get list of jobs for next run

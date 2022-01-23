@@ -40,8 +40,8 @@ func Update(jobName string) {
 	defer cancel()
 
 	req := &pb.JobConditionReq{
-		JobName:       jobName,
-		DependentJobs: successors,
+		JobName:    jobName,
+		Successors: successors,
 	}
 	client := pb.NewConditionClient(conn)
 	_, err = client.ConditionStatus(ctx, req)
