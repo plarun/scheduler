@@ -5,7 +5,7 @@ package data;
 option go_package = "./;data";
 
 // Message to represent job ready for next run
-message Job {
+message ReadyJob {
 	string JobName = 1;
 	string Command = 2;
 	string Machine = 3;
@@ -19,12 +19,12 @@ message PickJobsReq {}
 
 // Response message with list of jobs
 message PickJobsRes {
-	repeated Job JobList = 1;
+	repeated ReadyJob JobList = 1;
 }
 
 // Request message to pass list of jobs
 message PassJobsReq {
-	Job ReadyJob = 1;
+	ReadyJob Job = 1;
 }
 
 // Response message for pass jobs is empty

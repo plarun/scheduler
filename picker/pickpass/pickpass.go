@@ -1,6 +1,7 @@
 package pickpass
 
 import (
+	"log"
 	"time"
 
 	pb "github.com/plarun/scheduler/picker/data"
@@ -35,6 +36,7 @@ func (picker JobPicker) PickJobs() error {
 	defer cancel()
 
 	pickJobReq := &pb.PickJobsReq{}
+	log.Println("PickJobs() call to Pick")
 	pickJobRes, err := picker.PickClient.Pick(ctx, pickJobReq)
 	if err != nil {
 		return err
@@ -48,11 +50,13 @@ func (picker JobPicker) PickJobs() error {
 		}
 	}
 
+	picker.Holder.Print()
+
 	return nil
 }
 
 // PassJobs passes the jobs in queue to controller
-func PassJobs(job *pb.Job) error {
+func PassJobs(job *pb.ReadyJob) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
@@ -60,9 +64,10 @@ func PassJobs(job *pb.Job) error {
 	picker := GetPickPass(nil, nil)
 
 	passJobReq := &pb.PassJobsReq{
-		ReadyJob: job,
+		Job: job,
 	}
 
+	log.Println("PassJobs(job *pb.ReadyJob) call to pass jobs to Controller")
 	_, err := picker.PassClient.Pass(ctx, passJobReq)
 	if err != nil {
 		return err

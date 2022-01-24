@@ -14,86 +14,86 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// NextJobsClient is the client API for NextJobs service.
+// PickJobsClient is the client API for PickJobs service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type NextJobsClient interface {
-	Next(ctx context.Context, in *NextJobsReq, opts ...grpc.CallOption) (*NextJobsRes, error)
+type PickJobsClient interface {
+	Pick(ctx context.Context, in *PickJobsReq, opts ...grpc.CallOption) (*PickJobsRes, error)
 }
 
-type nextJobsClient struct {
+type pickJobsClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewNextJobsClient(cc grpc.ClientConnInterface) NextJobsClient {
-	return &nextJobsClient{cc}
+func NewPickJobsClient(cc grpc.ClientConnInterface) PickJobsClient {
+	return &pickJobsClient{cc}
 }
 
-func (c *nextJobsClient) Next(ctx context.Context, in *NextJobsReq, opts ...grpc.CallOption) (*NextJobsRes, error) {
-	out := new(NextJobsRes)
-	err := c.cc.Invoke(ctx, "/data.NextJobs/Next", in, out, opts...)
+func (c *pickJobsClient) Pick(ctx context.Context, in *PickJobsReq, opts ...grpc.CallOption) (*PickJobsRes, error) {
+	out := new(PickJobsRes)
+	err := c.cc.Invoke(ctx, "/data.PickJobs/Pick", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// NextJobsServer is the server API for NextJobs service.
-// All implementations must embed UnimplementedNextJobsServer
+// PickJobsServer is the server API for PickJobs service.
+// All implementations must embed UnimplementedPickJobsServer
 // for forward compatibility
-type NextJobsServer interface {
-	Next(context.Context, *NextJobsReq) (*NextJobsRes, error)
-	mustEmbedUnimplementedNextJobsServer()
+type PickJobsServer interface {
+	Pick(context.Context, *PickJobsReq) (*PickJobsRes, error)
+	mustEmbedUnimplementedPickJobsServer()
 }
 
-// UnimplementedNextJobsServer must be embedded to have forward compatible implementations.
-type UnimplementedNextJobsServer struct {
+// UnimplementedPickJobsServer must be embedded to have forward compatible implementations.
+type UnimplementedPickJobsServer struct {
 }
 
-func (UnimplementedNextJobsServer) Next(context.Context, *NextJobsReq) (*NextJobsRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Next not implemented")
+func (UnimplementedPickJobsServer) Pick(context.Context, *PickJobsReq) (*PickJobsRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Pick not implemented")
 }
-func (UnimplementedNextJobsServer) mustEmbedUnimplementedNextJobsServer() {}
+func (UnimplementedPickJobsServer) mustEmbedUnimplementedPickJobsServer() {}
 
-// UnsafeNextJobsServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to NextJobsServer will
+// UnsafePickJobsServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to PickJobsServer will
 // result in compilation errors.
-type UnsafeNextJobsServer interface {
-	mustEmbedUnimplementedNextJobsServer()
+type UnsafePickJobsServer interface {
+	mustEmbedUnimplementedPickJobsServer()
 }
 
-func RegisterNextJobsServer(s grpc.ServiceRegistrar, srv NextJobsServer) {
-	s.RegisterService(&NextJobs_ServiceDesc, srv)
+func RegisterPickJobsServer(s grpc.ServiceRegistrar, srv PickJobsServer) {
+	s.RegisterService(&PickJobs_ServiceDesc, srv)
 }
 
-func _NextJobs_Next_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NextJobsReq)
+func _PickJobs_Pick_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PickJobsReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(NextJobsServer).Next(ctx, in)
+		return srv.(PickJobsServer).Pick(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/data.NextJobs/Next",
+		FullMethod: "/data.PickJobs/Pick",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NextJobsServer).Next(ctx, req.(*NextJobsReq))
+		return srv.(PickJobsServer).Pick(ctx, req.(*PickJobsReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// NextJobs_ServiceDesc is the grpc.ServiceDesc for NextJobs service.
+// PickJobs_ServiceDesc is the grpc.ServiceDesc for PickJobs service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var NextJobs_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "data.NextJobs",
-	HandlerType: (*NextJobsServer)(nil),
+var PickJobs_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "data.PickJobs",
+	HandlerType: (*PickJobsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Next",
-			Handler:    _NextJobs_Next_Handler,
+			MethodName: "Pick",
+			Handler:    _PickJobs_Pick_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

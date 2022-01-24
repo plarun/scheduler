@@ -18,9 +18,6 @@ const port = 5556
 func main() {
 	log.Println("Picker started...")
 
-	// server service to communicate with controller
-	serve()
-
 	// pick client
 	pickConn, err := grpc.Dial("localhost:5555", grpc.WithInsecure())
 	if err != nil {
@@ -52,6 +49,9 @@ func main() {
 	}()
 
 	log.Fatal(<-pickErrChan)
+
+	// server service to communicate with controller
+	serve()
 }
 
 func serve() {
@@ -68,7 +68,7 @@ func serve() {
 	// register all servers here
 	pb.RegisterConditionServer(grpcServer, checker.NewHoldChecker())
 
-	fmt.Printf("Scheduler grpc server is running at port: %d\n", port)
+	log.Printf("PickPass grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {
 		log.Fatalf("failed to start server %v", err)
 	}

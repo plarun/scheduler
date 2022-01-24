@@ -1,6 +1,7 @@
 package wait
 
 import (
+	"log"
 	"sync"
 
 	pb "github.com/plarun/scheduler/picker/data"
@@ -11,19 +12,20 @@ var holder *ConcurrentHolder = nil
 // ConcurrentHolder contains the jobs whose conditions are not yet met
 type ConcurrentHolder struct {
 	lock   *sync.Mutex
-	Holder map[string]*pb.Job
+	Holder map[string]*pb.ReadyJob
 }
 
 func NewConcurrentHolder() *ConcurrentHolder {
 	if holder == nil {
 		holder = &ConcurrentHolder{
-			Holder: make(map[string]*pb.Job),
+			lock:   &sync.Mutex{},
+			Holder: make(map[string]*pb.ReadyJob),
 		}
 	}
 	return holder
 }
 
-func (holder *ConcurrentHolder) Hold(job *pb.Job) {
+func (holder *ConcurrentHolder) Hold(job *pb.ReadyJob) {
 	holder.lock.Lock()
 
 	if _, ok := holder.Holder[job.GetJobName()]; !ok && !job.ConditionSatisfied {
@@ -33,10 +35,10 @@ func (holder *ConcurrentHolder) Hold(job *pb.Job) {
 	holder.lock.Unlock()
 }
 
-func (holder *ConcurrentHolder) Free(jobName string) *pb.Job {
+func (holder *ConcurrentHolder) Free(jobName string) *pb.ReadyJob {
 	holder.lock.Lock()
 
-	var job *pb.Job = nil
+	var job *pb.ReadyJob = nil
 	if _, ok := holder.Holder[jobName]; ok {
 		job = holder.Holder[jobName]
 	}
@@ -56,4 +58,15 @@ func (holder *ConcurrentHolder) Contains(jobName string) bool {
 
 	holder.lock.Unlock()
 	return found
+}
+
+func (holder *ConcurrentHolder) Print() {
+	holder.lock.Lock()
+
+	log.Println("Holder")
+	for key, value := range holder.Holder {
+		log.Printf("[%v]: {%v, %v, %v}\n", key, value.GetJobName(), value.GetCommand(), value.GetConditionSatisfied())
+	}
+
+	holder.lock.Unlock()
 }

@@ -11,11 +11,11 @@ import (
 
 type NextJobsServer struct {
 	Database *query.Database
-	pb.UnimplementedNextJobsServer
+	pb.UnimplementedPickJobsServer
 }
 
 // Next gets all the jobs which are ready for next run
-func (server NextJobsServer) Next(ctx context.Context, req *pb.NextJobsReq) (*pb.NextJobsRes, error) {
+func (server NextJobsServer) Pick(ctx context.Context, req *pb.PickJobsReq) (*pb.PickJobsRes, error) {
 	start := time.Now()
 	end := start.Add(time.Second * 5)
 
@@ -33,7 +33,7 @@ func (server NextJobsServer) Next(ctx context.Context, req *pb.NextJobsReq) (*pb
 		return nil, err
 	}
 
-	res := &pb.NextJobsRes{
+	res := &pb.PickJobsRes{
 		JobList: nextJobs,
 	}
 

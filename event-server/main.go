@@ -36,11 +36,11 @@ func serve() {
 
 	// register all servers here
 	pb.RegisterSubmitJilServer(grpcServer, service.JilServer{Database: database})
-	pb.RegisterNextJobsServer(grpcServer, service.NextJobsServer{Database: database})
+	pb.RegisterPickJobsServer(grpcServer, service.NextJobsServer{Database: database})
 	pb.RegisterJobStatusServer(grpcServer, service.StatusServer{Database: database})
 	pb.RegisterSendEventServer(grpcServer, service.SendEventServer{Database: database})
 
-	log.Printf("Scheduler grpc server is running at port: %d\n", port)
+	log.Printf("Event-Server grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {
 		log.Fatalf("failed to start server %v", err)
 	}

@@ -40,7 +40,7 @@ type ConcurrentProcessQueue struct {
 	pQue *ProcessQueue
 }
 
-func NewProcessQueue() *ConcurrentProcessQueue {
+func GetProcessQueue() *ConcurrentProcessQueue {
 	if pQue == nil {
 		pQue = &ConcurrentProcessQueue{
 			lock: &sync.Mutex{},

@@ -159,11 +159,12 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTime string, runDay string) ([]*pb.ReadyJob, error) {
 	database.lock.Lock()
 	rows, err := dbTxn.Query(
-		`select job_name from job 
+		`select job_name, command, machine, std_out_log, std_err_log
+		from job
 		where start_times between ? and ? 
 		and find_in_set(?, run_days) 
 		and status in ('INACTIVE', 'SUCCESS', 'FAILED', 'TERMINATED') 
-		and current_time-time(last_run) > ?`,
+		and current_time-time(last_start_time) > ?`,
 		startTime,
 		endTime,
 		runDay,
@@ -176,11 +177,34 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 
 	nextJobs := make([]*pb.ReadyJob, 0)
 	for rows.Next() {
-		var jobName string
+		var jobName, command, machine, stdOut, stdErr string
 		if err := rows.Scan(&jobName); err != nil {
 			return nil, err
 		}
-		job := &pb.ReadyJob{JobName: jobName}
+		if err := rows.Scan(&command); err != nil {
+			return nil, err
+		}
+		if err := rows.Scan(&machine); err != nil {
+			return nil, err
+		}
+		if err := rows.Scan(&stdOut); err != nil {
+			return nil, err
+		}
+		if err := rows.Scan(&stdErr); err != nil {
+			return nil, err
+		}
+		conditionSatisfied, err := database.CheckConditions(dbTxn, jobName)
+		if err != nil {
+			return nil, err
+		}
+		job := &pb.ReadyJob{
+			JobName:            jobName,
+			Command:            command,
+			Machine:            machine,
+			OutFile:            stdOut,
+			ErrFile:            stdErr,
+			ConditionSatisfied: conditionSatisfied,
+		}
 		nextJobs = append(nextJobs, job)
 	}
 

@@ -11,17 +11,18 @@ message ReadyJob {
 	string Machine = 3;
 	string OutFile = 4;
 	string ErrFile = 5;
+	bool ConditionSatisfied = 6;
 }
 
 // Request message to get list of jobs for next run
-message NextJobsReq {}
+message PickJobsReq {}
 
 // Response message with list of jobs
-message NextJobsRes {
+message PickJobsRes {
 	repeated ReadyJob JobList = 1;
 }
 
 // Service to handle get jobs for next run
-service NextJobs {
-	rpc Next(NextJobsReq) returns (NextJobsRes) {}
+service PickJobs {
+	rpc Pick(PickJobsReq) returns (PickJobsRes) {}
 }
