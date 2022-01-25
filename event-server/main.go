@@ -30,6 +30,7 @@ func serve() {
 	}
 
 	database := query.GetDatabase()
+	database.SetVerbose()
 
 	// grpc server can have arguments for unary and stream as server options
 	grpcServer := grpc.NewServer()

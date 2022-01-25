@@ -3,16 +3,15 @@ package query
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	pb "github.com/plarun/scheduler/event-server/data"
 	"github.com/plarun/scheduler/event-server/model"
 )
 
-const (
-	timeGap = "00:00:05"
-)
+// const timeGap = "00:00:05"
 
-// Check whether a job is available in job table
+// CheckJob checks whether a job is available in job table
 func (database *Database) CheckJob(jobName string) bool {
 	var job string
 
@@ -24,6 +23,11 @@ func (database *Database) CheckJob(jobName string) bool {
 	database.lock.Unlock()
 
 	err := row.Scan(&job)
+
+	if database.verbose {
+		log.Printf("CheckJob checks whether a job is available in job table\n")
+		log.Printf("Job: %s\n", job)
+	}
 	return err != sql.ErrNoRows
 }
 
@@ -60,6 +64,10 @@ func (database *Database) InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 		}
 	}
 
+	if database.verbose {
+		log.Printf("InsertJob inserts a new job definition into job table\n")
+	}
+
 	return nil
 }
 
@@ -80,6 +88,12 @@ func (database *Database) GetJobId(dbTxn *sql.Tx, jobName string) (int64, error)
 		}
 		return jobSeqId, err
 	}
+
+	if database.verbose {
+		log.Printf("GetJobId gets job sequence ID by job name\n")
+		log.Printf("JobSeqId of %s is %d\n", jobName, jobSeqId)
+	}
+
 	return jobSeqId, nil
 }
 
@@ -92,6 +106,11 @@ func (database *Database) GetJobIdList(dbTxn *sql.Tx, jobNameList []string) ([]i
 		} else {
 			jobSeqIdList = append(jobSeqIdList, jobSeqId)
 		}
+	}
+
+	if database.verbose {
+		log.Printf("GetJobIdList gets list of job sequence ID for list of jobs by job name\n")
+		log.Printf("JobSeqIds of %v are %v\n", jobNameList, jobSeqIdList)
 	}
 
 	return jobSeqIdList, nil
@@ -128,6 +147,11 @@ func (database *Database) DeleteJob(dbTxn *sql.Tx, jobName string) error {
 		return fmt.Errorf("deleteJobByJobName: %v", err)
 	}
 
+	if database.verbose {
+		log.Printf("DeleteJob deletes an existing job definition from job table\n")
+		log.Printf("Job %s is deleted\n", jobName)
+	}
+
 	return nil
 }
 
@@ -152,6 +176,10 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 		}
 	}
 
+	if database.verbose {
+		log.Printf("UpdateJob updates one or more columns in job table by job name\n")
+	}
+
 	return nil
 }
 
@@ -159,43 +187,34 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTime string, runDay string) ([]*pb.ReadyJob, error) {
 	database.lock.Lock()
 	rows, err := dbTxn.Query(
-		`select job_name, command, machine, std_out_log, std_err_log
+		`select job_seq_id, job_name, command, machine, std_out_log, std_err_log
 		from job
 		where start_times between ? and ? 
 		and find_in_set(?, run_days) 
-		and status in ('INACTIVE', 'SUCCESS', 'FAILED', 'TERMINATED') 
-		and current_time-time(last_start_time) > ?`,
+		and status in ('IDLE', 'SUCCESS', 'FAILED', 'ABORTED')`,
 		startTime,
 		endTime,
-		runDay,
-		timeGap)
+		runDay)
 	database.lock.Unlock()
 
+	nextJobs := make([]*pb.ReadyJob, 0)
+
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nextJobs, nil
+		}
+		return nil, fmt.Errorf("GetNextRunJobs: %v", err)
 	}
 
-	nextJobs := make([]*pb.ReadyJob, 0)
 	for rows.Next() {
 		var jobName, command, machine, stdOut, stdErr string
-		if err := rows.Scan(&jobName); err != nil {
-			return nil, err
+		var jobSeqId int
+		if err := rows.Scan(&jobSeqId, &jobName, &command, &machine, &stdOut, &stdErr); err != nil {
+			return nil, fmt.Errorf("GetNextRunJobs scanning: %v", err)
 		}
-		if err := rows.Scan(&command); err != nil {
-			return nil, err
-		}
-		if err := rows.Scan(&machine); err != nil {
-			return nil, err
-		}
-		if err := rows.Scan(&stdOut); err != nil {
-			return nil, err
-		}
-		if err := rows.Scan(&stdErr); err != nil {
-			return nil, err
-		}
-		conditionSatisfied, err := database.CheckConditions(dbTxn, jobName)
+		conditionSatisfied, err := database.CheckConditions(dbTxn, jobSeqId)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("GetNextRunJobs: %v", err)
 		}
 		job := &pb.ReadyJob{
 			JobName:            jobName,
@@ -206,6 +225,19 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 			ConditionSatisfied: conditionSatisfied,
 		}
 		nextJobs = append(nextJobs, job)
+	}
+
+	for _, job := range nextJobs {
+		err := database.ChangeStatus(dbTxn, job.JobName, pb.Status_QUEUED)
+		if err != nil {
+			return nil, fmt.Errorf("GetNextRunJobs: %v", err)
+		}
+	}
+
+	if database.verbose {
+		log.Printf("GetNextRunJobs gives list of jobs ready for next run\n")
+		log.Printf("Time range: %s to %s on %s\n", startTime, endTime, runDay)
+		log.Printf("NextJobs: %v\n", nextJobs)
 	}
 
 	return nextJobs, nil
@@ -241,6 +273,11 @@ func (database *Database) GetJobData(dbTxn *sql.Tx, jobName string) (*pb.GetJilR
 		return nil, err
 	}
 
+	if database.verbose {
+		log.Printf("GetJobData gets job definition\n")
+		log.Printf("Job: %v\n", res.GetJobName())
+	}
+
 	return res, nil
 }
 
@@ -265,22 +302,34 @@ func (database *Database) GetStatus(dbTxn *sql.Tx, jobName string) (pb.Status, e
 		return status, err
 	}
 
+	if database.verbose {
+		log.Printf("GetStatus gets the current status of job\n")
+		log.Printf("Job: %s, Status: %s\n", jobName, statusName)
+	}
+
 	return pb.Status(pb.Status_value[statusName]), nil
 }
 
 // ChangeStatus updates the status of job
 func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.Status) error {
 	database.lock.Lock()
+
 	_, err := dbTxn.Exec(
 		`update job 
 		set status=? 
 		where job_name=?`,
 		pb.Status_name[int32(status.Number())],
 		jobName)
+
 	database.lock.Unlock()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("ChangeStatus: %v", err)
+	}
+
+	if database.verbose {
+		log.Printf("ChangeStatus updates the status of job\n")
+		log.Printf("Job: %s, UpdatedStatus: %s\n", jobName, pb.Status_name[int32(status.Number())])
 	}
 
 	return nil

@@ -17,17 +17,23 @@ const (
 var DB *Database = nil
 
 type Database struct {
-	DB   *sql.DB
-	lock *sync.Mutex
+	DB      *sql.DB
+	lock    *sync.Mutex
+	verbose bool
 }
 
 func GetDatabase() *Database {
 	if DB == nil {
 		DB = &Database{
-			lock: &sync.Mutex{},
+			lock:    &sync.Mutex{},
+			verbose: false,
 		}
 	}
 	return DB
+}
+
+func (db *Database) SetVerbose() {
+	db.verbose = true
 }
 
 func ConnectDB() {

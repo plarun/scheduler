@@ -87,7 +87,7 @@ func submitJil(client pb.SubmitJilClient) error {
 func status(subCommand string, client pb.JobStatusClient) error {
 	controller := job.NewJobStatusController(client)
 
-	if subCommand == "jobstat" {
+	if subCommand == "status" {
 		if flag.NArg() != 2 {
 			return fmt.Errorf("invalid argument\nusage:\n\tstatus <job_name>")
 		}
@@ -97,7 +97,7 @@ func status(subCommand string, client pb.JobStatusClient) error {
 		if err != nil {
 			return err
 		}
-	} else if subCommand == "jobdef" {
+	} else if subCommand == "job" {
 		if flag.NArg() != 2 {
 			return fmt.Errorf("invalid argument\nusage:\n\tjob <job_name>")
 		}
@@ -107,7 +107,7 @@ func status(subCommand string, client pb.JobStatusClient) error {
 		if err != nil {
 			return err
 		}
-	} else if subCommand == "jobhist" {
+	} else if subCommand == "history" {
 		if flag.NArg() != 2 {
 			return fmt.Errorf("invalid argument\nusage:\n\thistory <job_name>")
 		}
