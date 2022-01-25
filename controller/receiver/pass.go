@@ -2,6 +2,7 @@ package receiver
 
 import (
 	"context"
+	"log"
 
 	pb "github.com/plarun/scheduler/controller/data"
 	"github.com/plarun/scheduler/controller/queue"
@@ -21,6 +22,9 @@ func NewPassJobsServer() *PassJobsServer {
 func (pass PassJobsServer) Pass(ctx context.Context, req *pb.PassJobsReq) (*pb.PassJobsRes, error) {
 	job := req.GetReadyJob()
 	pass.queue.Push(job)
+
+	log.Printf("Pass service")
+	pass.queue.Print()
 
 	return &pb.PassJobsRes{}, nil
 }

@@ -233,7 +233,7 @@ func (database *Database) CheckConditions(dbTxn *sql.Tx, jobSeqId int) (bool, er
 	var unsatisfied int
 
 	database.lock.Lock()
-	row, err := database.DB.Query(
+	row := database.DB.QueryRow(
 		`select count(*)
 		from job
 		where job_seq_id in (
@@ -244,11 +244,7 @@ func (database *Database) CheckConditions(dbTxn *sql.Tx, jobSeqId int) (bool, er
 		jobSeqId)
 	database.lock.Unlock()
 
-	if err != nil {
-		return false, err
-	}
-
-	err = row.Scan(&unsatisfied)
+	err := row.Scan(&unsatisfied)
 	if err != nil {
 		return false, err
 	}

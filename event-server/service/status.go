@@ -47,7 +47,12 @@ func (server StatusServer) GetJobDefinition(ctx context.Context, req *pb.GetJilR
 	if err != nil {
 		return nil, err
 	}
-	defer dbTxn.Rollback()
+	defer func() {
+		if err != nil {
+			dbTxn.Rollback()
+		}
+		dbTxn.Commit()
+	}()
 
 	res, err := server.Database.GetJobData(dbTxn, jobName)
 	if err != nil {

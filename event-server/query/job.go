@@ -186,6 +186,7 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 // GetNextRunJobs gives list of jobs ready for next run
 func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTime string, runDay string) ([]*pb.ReadyJob, error) {
 	database.lock.Lock()
+
 	rows, err := dbTxn.Query(
 		`select job_seq_id, job_name, command, machine, std_out_log, std_err_log
 		from job
@@ -195,7 +196,9 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 		startTime,
 		endTime,
 		runDay)
+
 	database.lock.Unlock()
+	defer rows.Close()
 
 	nextJobs := make([]*pb.ReadyJob, 0)
 
@@ -214,7 +217,7 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 		}
 		conditionSatisfied, err := database.CheckConditions(dbTxn, jobSeqId)
 		if err != nil {
-			return nil, fmt.Errorf("GetNextRunJobs: %v", err)
+			return nil, fmt.Errorf("GetNextRunJobs CheckConditions: %v", err)
 		}
 		job := &pb.ReadyJob{
 			JobName:            jobName,
@@ -230,14 +233,15 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 	for _, job := range nextJobs {
 		err := database.ChangeStatus(dbTxn, job.JobName, pb.Status_QUEUED)
 		if err != nil {
-			return nil, fmt.Errorf("GetNextRunJobs: %v", err)
+			return nil, fmt.Errorf("GetNextRunJobs ChangeStatus: %v", err)
 		}
+		log.Printf("Job: %s status update", job.JobName)
 	}
 
 	if database.verbose {
 		log.Printf("GetNextRunJobs gives list of jobs ready for next run\n")
 		log.Printf("Time range: %s to %s on %s\n", startTime, endTime, runDay)
-		log.Printf("NextJobs: %v\n", nextJobs)
+		log.Printf("NextJobs Count: %v\n", len(nextJobs))
 	}
 
 	return nextJobs, nil
@@ -314,14 +318,23 @@ func (database *Database) GetStatus(dbTxn *sql.Tx, jobName string) (pb.Status, e
 func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.Status) error {
 	database.lock.Lock()
 
-	_, err := dbTxn.Exec(
+	statusName := pb.Status_name[int32(status.Number())]
+	result, err := dbTxn.Exec(
 		`update job 
 		set status=? 
 		where job_name=?`,
-		pb.Status_name[int32(status.Number())],
+		statusName,
 		jobName)
 
 	database.lock.Unlock()
+
+	if affectedRowsCount, err := result.RowsAffected(); err != nil {
+		return fmt.Errorf("ChangeStatus: %v", err)
+	} else {
+		if database.verbose {
+			log.Printf("Rows affected: %d", affectedRowsCount)
+		}
+	}
 
 	if err != nil {
 		return fmt.Errorf("ChangeStatus: %v", err)

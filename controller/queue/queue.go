@@ -69,6 +69,8 @@ func (que *ConcurrentProcessQueue) Push(data *pb.Job) error {
 	}
 	que.pQue.size++
 
+	log.Printf("Job: %v is pushed", data.GetJobName())
+
 	que.lock.Unlock()
 	return nil
 }
@@ -105,7 +107,7 @@ func (que *ConcurrentProcessQueue) Print() {
 	fmt.Print("[ ")
 	curr := que.pQue.in
 	for curr != nil {
-		fmt.Printf("%v, ", curr.job)
+		fmt.Printf("%v, ", curr.job.GetJobName())
 		curr = curr.next
 	}
 	fmt.Println(" ]")

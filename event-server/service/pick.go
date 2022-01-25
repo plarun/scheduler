@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -26,11 +27,16 @@ func (server NextJobsServer) Pick(ctx context.Context, req *pb.PickJobsReq) (*pb
 	if err != nil {
 		return nil, err
 	}
-	defer dbTxn.Rollback()
+	defer func() {
+		if err != nil {
+			dbTxn.Rollback()
+		}
+		dbTxn.Commit()
+	}()
 
 	nextJobs, err := server.Database.GetNextRunJobs(dbTxn, startTime, endTime, weekDay())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Pick: %v", err)
 	}
 
 	res := &pb.PickJobsRes{

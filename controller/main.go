@@ -6,10 +6,13 @@ import (
 	"net"
 
 	pb "github.com/plarun/scheduler/controller/data"
+	"github.com/plarun/scheduler/controller/receiver"
 	"google.golang.org/grpc"
 )
 
-const port = 5557
+const (
+	port = 5557
+)
 
 func main() {
 
@@ -35,7 +38,7 @@ func serve() {
 	grpcServer := grpc.NewServer()
 
 	// register all servers here
-	pb.RegisterPassJobsServer(grpcServer, nil)
+	pb.RegisterPassJobsServer(grpcServer, receiver.NewPassJobsServer())
 
 	log.Printf("Controller grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {

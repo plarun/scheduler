@@ -26,7 +26,12 @@ func (server SendEventServer) Send(ctx context.Context, req *pb.SendEventReq) (*
 	if err != nil {
 		return nil, err
 	}
-	defer dbTxn.Rollback()
+	defer func() {
+		if err != nil {
+			dbTxn.Rollback()
+		}
+		dbTxn.Commit()
+	}()
 
 	currStatus, err := server.Database.GetStatus(dbTxn, jobName)
 	if err != nil {

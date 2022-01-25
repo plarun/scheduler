@@ -23,7 +23,12 @@ func (excode ExitCodeServer) Update(ctx context.Context, req *pb.RunStatusReq) (
 	if err != nil {
 		return nil, err
 	}
-	defer dbTxn.Rollback()
+	defer func() {
+		if err != nil {
+			dbTxn.Rollback()
+		}
+		dbTxn.Commit()
+	}()
 
 	var status pb.Status
 	if exitCode == pb.ExitCode_SU {

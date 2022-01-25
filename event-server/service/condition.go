@@ -18,7 +18,12 @@ func Update(jobName string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer dbTxn.Rollback()
+	defer func() {
+		if err != nil {
+			dbTxn.Rollback()
+		}
+		dbTxn.Commit()
+	}()
 
 	jobSeqId, err := database.GetJobId(dbTxn, jobName)
 	if err != nil {

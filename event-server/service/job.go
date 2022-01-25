@@ -92,7 +92,12 @@ func (server JilServer) TransactionJobQuery(ctx context.Context, queries *model.
 	if err != nil {
 		return res, err
 	}
-	defer dbTxn.Rollback()
+	defer func() {
+		if err != nil {
+			dbTxn.Rollback()
+		}
+		dbTxn.Commit()
+	}()
 
 	for queries.HasNext() {
 		query := queries.Next()
