@@ -14,12 +14,13 @@ import (
 // CheckJob checks whether a job is available in job table
 func (database *Database) CheckJob(jobName string) bool {
 	var job string
-
 	database.lock.Lock()
+
 	row := database.DB.QueryRow(
 		`select job_name from job 
 		where job_name=?`,
 		jobName)
+
 	database.lock.Unlock()
 
 	err := row.Scan(&job)
@@ -34,6 +35,7 @@ func (database *Database) CheckJob(jobName string) bool {
 // InsertJob inserts a new job definition into job table
 func (database *Database) InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 	database.lock.Lock()
+
 	result, err := dbTxn.Exec(
 		`insert into job (job_name,command,std_out_log,std_err_log,machine,start_times,run_days,status) 
 		values (?,?,?,?,?,?,?,?)`,
@@ -44,8 +46,9 @@ func (database *Database) InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 		jobData.Data.Machine,
 		jobData.Data.StartTimes,
 		jobData.Data.RunDays,
-		"INACTIVE",
+		"IDLE",
 	)
+
 	database.lock.Unlock()
 
 	if err != nil {
@@ -74,12 +77,13 @@ func (database *Database) InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 // GetJobId gets job sequence ID by job name
 func (database *Database) GetJobId(dbTxn *sql.Tx, jobName string) (int64, error) {
 	var jobSeqId int64 = 0
-
 	database.lock.Lock()
+
 	row := dbTxn.QueryRow(
 		`select job_seq_id from job 
 		where job_name=?`,
 		jobName)
+
 	database.lock.Unlock()
 
 	if err := row.Scan(&jobSeqId); err != nil {
@@ -137,10 +141,12 @@ func (database *Database) DeleteJob(dbTxn *sql.Tx, jobName string) error {
 
 	// remove the definition of job
 	database.lock.Lock()
+
 	_, err = dbTxn.Exec(
 		`delete from job 
 		where job_name=?`,
 		jobName)
+
 	database.lock.Unlock()
 
 	if err != nil {
@@ -160,11 +166,13 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 	columns := buildJobUpdateQuery(jobData)
 	if len(columns) != 0 {
 		database.lock.Lock()
+
 		_, err := dbTxn.Exec(
 			"update job set "+
 				columns+
 				" where job_name=?;",
 			jobData.Data.JobName)
+
 		database.lock.Unlock()
 		if err != nil {
 			return fmt.Errorf("updateJob: %v", err)
@@ -235,7 +243,6 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 		if err != nil {
 			return nil, fmt.Errorf("GetNextRunJobs ChangeStatus: %v", err)
 		}
-		log.Printf("Job: %s status update", job.JobName)
 	}
 
 	if database.verbose {
@@ -251,12 +258,13 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 func (database *Database) GetJobData(dbTxn *sql.Tx, jobName string) (*pb.GetJilRes, error) {
 	res := &pb.GetJilRes{}
 	var jobSeqId int64
-
 	database.lock.Lock()
+
 	jobRow := dbTxn.QueryRow(
 		`select job_seq_id, job_name, command, std_out_log, std_err_log, machine, run_days, start_times from job
 		where job_name=?`,
 		jobName)
+
 	database.lock.Unlock()
 
 	err := jobRow.Scan(
@@ -289,13 +297,14 @@ func (database *Database) GetJobData(dbTxn *sql.Tx, jobName string) (*pb.GetJilR
 func (database *Database) GetStatus(dbTxn *sql.Tx, jobName string) (pb.Status, error) {
 	var statusName string
 	var status pb.Status
-
 	database.lock.Lock()
+
 	row := dbTxn.QueryRow(
 		`select status
 		from job
 		where job_name=?`,
 		jobName)
+
 	database.lock.Unlock()
 
 	err := row.Scan(&statusName)
@@ -316,9 +325,9 @@ func (database *Database) GetStatus(dbTxn *sql.Tx, jobName string) (pb.Status, e
 
 // ChangeStatus updates the status of job
 func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.Status) error {
+	statusName := pb.Status_name[int32(status.Number())]
 	database.lock.Lock()
 
-	statusName := pb.Status_name[int32(status.Number())]
 	result, err := dbTxn.Exec(
 		`update job 
 		set status=? 
@@ -342,7 +351,7 @@ func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.
 
 	if database.verbose {
 		log.Printf("ChangeStatus updates the status of job\n")
-		log.Printf("Job: %s, UpdatedStatus: %s\n", jobName, pb.Status_name[int32(status.Number())])
+		log.Printf("Job: %s, UpdatedStatus: %s\n", jobName, statusName)
 	}
 
 	return nil
