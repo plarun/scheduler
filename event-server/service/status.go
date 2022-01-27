@@ -8,18 +8,18 @@ import (
 	"github.com/plarun/scheduler/event-server/query"
 )
 
-// ExitCodeServer represents the exit code update on job
-type ExitCodeServer struct {
-	pb.UnimplementedRunStatusServer
+// UpdateStatusServer represents the status update on job
+type UpdateStatusServer struct {
+	pb.UnimplementedUpdateStatusServer
 	Database *query.Database
 }
 
 // Update updates the status of job by exitcode from controller
-func (excode ExitCodeServer) Update(ctx context.Context, req *pb.RunStatusReq) (*pb.RunStatusRes, error) {
+func (updStatus UpdateStatusServer) Update(ctx context.Context, req *pb.UpdateStatusReq) (*pb.UpdateStatusRes, error) {
 	jobName := req.GetJobName()
 	exitCode := req.GetStatus()
 
-	dbTxn, err := excode.Database.DB.Begin()
+	dbTxn, err := updStatus.Database.DB.Begin()
 	if err != nil {
 		return nil, err
 	}
@@ -31,20 +31,24 @@ func (excode ExitCodeServer) Update(ctx context.Context, req *pb.RunStatusReq) (
 	}()
 
 	var status pb.Status
-	if exitCode == pb.ExitCode_SU {
+	if exitCode == pb.NewStatus_CHANGE_SUCCESS {
 		status = pb.Status_SUCCESS
-	} else if exitCode == pb.ExitCode_FA {
+	} else if exitCode == pb.NewStatus_CHANGE_FAILED {
 		status = pb.Status_FAILED
-	} else if exitCode == pb.ExitCode_AB {
+	} else if exitCode == pb.NewStatus_CHANGE_ABORTED {
 		status = pb.Status_ABORTED
+	} else if exitCode == pb.NewStatus_CHANGE_READY {
+		status = pb.Status_READY
+	} else if exitCode == pb.NewStatus_CHANGE_RUNNING {
+		status = pb.Status_RUNNING
 	} else {
 		return nil, fmt.Errorf("invalid exit code type")
 	}
 
-	err = excode.Database.ChangeStatus(dbTxn, jobName, status)
+	err = updStatus.Database.ChangeStatus(dbTxn, jobName, status)
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.RunStatusRes{}, nil
+	return &pb.UpdateStatusRes{}, nil
 }

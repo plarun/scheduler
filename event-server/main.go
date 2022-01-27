@@ -40,6 +40,7 @@ func serve() {
 	pb.RegisterPickJobsServer(grpcServer, service.NextJobsServer{Database: database})
 	pb.RegisterJobStatusServer(grpcServer, service.StatusServer{Database: database})
 	pb.RegisterSendEventServer(grpcServer, service.SendEventServer{Database: database})
+	pb.RegisterUpdateStatusServer(grpcServer, service.UpdateStatusServer{Database: database})
 
 	log.Printf("Event-Server grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {
