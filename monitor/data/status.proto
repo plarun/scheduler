@@ -4,18 +4,18 @@ package data;
 
 option go_package = "./;data";
 
-enum Status {
-    READY = 0;
-    RUNNING = 1;
-    SUCCESS = 2;
-    FAILED = 3;
-    ABORTED = 4;
+enum NewStatus {
+    CHANGE_READY = 0;
+    CHANGE_RUNNING = 1;
+    CHANGE_SUCCESS = 2;
+    CHANGE_FAILED = 3;
+    CHANGE_ABORTED = 4;
 }
 
 // Request message to update the run status of job
 message UpdateStatusReq {
 	string JobName = 1;
-    Status Status = 2;
+    NewStatus Status = 2;
 }
 
 // Response message for job's run status update

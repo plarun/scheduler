@@ -18,7 +18,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CheckLockClient interface {
-	Update(ctx context.Context, in *CheckLockReq, opts ...grpc.CallOption) (*CheckLockRes, error)
+	Check(ctx context.Context, in *CheckLockReq, opts ...grpc.CallOption) (*CheckLockRes, error)
 }
 
 type checkLockClient struct {
@@ -29,9 +29,9 @@ func NewCheckLockClient(cc grpc.ClientConnInterface) CheckLockClient {
 	return &checkLockClient{cc}
 }
 
-func (c *checkLockClient) Update(ctx context.Context, in *CheckLockReq, opts ...grpc.CallOption) (*CheckLockRes, error) {
+func (c *checkLockClient) Check(ctx context.Context, in *CheckLockReq, opts ...grpc.CallOption) (*CheckLockRes, error) {
 	out := new(CheckLockRes)
-	err := c.cc.Invoke(ctx, "/data.CheckLock/Update", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/data.CheckLock/Check", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (c *checkLockClient) Update(ctx context.Context, in *CheckLockReq, opts ...
 // All implementations must embed UnimplementedCheckLockServer
 // for forward compatibility
 type CheckLockServer interface {
-	Update(context.Context, *CheckLockReq) (*CheckLockRes, error)
+	Check(context.Context, *CheckLockReq) (*CheckLockRes, error)
 	mustEmbedUnimplementedCheckLockServer()
 }
 
@@ -50,8 +50,8 @@ type CheckLockServer interface {
 type UnimplementedCheckLockServer struct {
 }
 
-func (UnimplementedCheckLockServer) Update(context.Context, *CheckLockReq) (*CheckLockRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
+func (UnimplementedCheckLockServer) Check(context.Context, *CheckLockReq) (*CheckLockRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
 }
 func (UnimplementedCheckLockServer) mustEmbedUnimplementedCheckLockServer() {}
 
@@ -66,20 +66,20 @@ func RegisterCheckLockServer(s grpc.ServiceRegistrar, srv CheckLockServer) {
 	s.RegisterService(&CheckLock_ServiceDesc, srv)
 }
 
-func _CheckLock_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CheckLock_Check_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CheckLockReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(CheckLockServer).Update(ctx, in)
+		return srv.(CheckLockServer).Check(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/data.CheckLock/Update",
+		FullMethod: "/data.CheckLock/Check",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CheckLockServer).Update(ctx, req.(*CheckLockReq))
+		return srv.(CheckLockServer).Check(ctx, req.(*CheckLockReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -92,8 +92,8 @@ var CheckLock_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*CheckLockServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Update",
-			Handler:    _CheckLock_Update_Handler,
+			MethodName: "Check",
+			Handler:    _CheckLock_Check_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
