@@ -1,4 +1,4 @@
-package receiver
+package executor
 
 import (
 	"context"
@@ -21,6 +21,7 @@ func NewPassJobsServer() *PassJobsServer {
 
 func (pass PassJobsServer) Pass(ctx context.Context, req *pb.PassJobsReq) (*pb.PassJobsRes, error) {
 	job := req.GetReadyJob()
+	updateStatus(job.GetJobName())
 	pass.queue.Push(job)
 
 	log.Printf("Pass service")

@@ -8,7 +8,6 @@ import (
 	pb "github.com/plarun/scheduler/controller/data"
 	"github.com/plarun/scheduler/controller/executor"
 	"github.com/plarun/scheduler/controller/queue"
-	"github.com/plarun/scheduler/controller/receiver"
 	"google.golang.org/grpc"
 )
 
@@ -17,6 +16,15 @@ const (
 )
 
 func main() {
+
+	// client connection to Monitor
+	conn, err := grpc.Dial("localhost:5558", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("connection failed: %v", err)
+	}
+	defer conn.Close()
+	statusClient := pb.NewUpdateStatusClient(conn)
+	executor.InitUpdateStatusClient(&statusClient)
 
 	go func() {
 		que := queue.GetProcessQueue()
@@ -39,7 +47,7 @@ func serve() {
 	grpcServer := grpc.NewServer()
 
 	// register all servers here
-	pb.RegisterPassJobsServer(grpcServer, receiver.NewPassJobsServer())
+	pb.RegisterPassJobsServer(grpcServer, executor.NewPassJobsServer())
 
 	log.Printf("Controller grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {
