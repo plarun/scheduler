@@ -169,5 +169,5 @@ var JobStatus_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "status.proto",
+	Metadata: "run.proto",
 }

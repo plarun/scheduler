@@ -2,48 +2,24 @@ package service
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	pb "github.com/plarun/scheduler/event-server/data"
-	"github.com/plarun/scheduler/event-server/model"
 	"github.com/plarun/scheduler/event-server/query"
 )
 
-type StatusServer struct {
+// ExitCodeServer represents the exit code update on job
+type ExitCodeServer struct {
+	pb.UnimplementedRunStatusServer
 	Database *query.Database
-	pb.UnimplementedJobStatusServer
 }
 
-func (server StatusServer) GetJobRunStatus(ctx context.Context, req *pb.GetJobRunStatusReq) (*pb.GetJobRunStatusRes, error) {
+// Update updates the status of job by exitcode from controller
+func (excode ExitCodeServer) Update(ctx context.Context, req *pb.RunStatusReq) (*pb.RunStatusRes, error) {
 	jobName := req.GetJobName()
+	exitCode := req.GetStatus()
 
-	log.Printf("Job: %s run status\n", jobName)
-
-	dbTxn, err := server.Database.DB.BeginTx(ctx, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer dbTxn.Rollback()
-
-	startTime, endTime, status, err := server.Database.LastRun(dbTxn, jobName)
-	if err != nil {
-		return nil, err
-	}
-
-	res := &pb.GetJobRunStatusRes{
-		JobName:    jobName,
-		StartTime:  startTime,
-		EndTime:    endTime,
-		StatusType: model.StatusTypeConv[status],
-	}
-
-	return res, nil
-}
-
-func (server StatusServer) GetJobDefinition(ctx context.Context, req *pb.GetJilReq) (*pb.GetJilRes, error) {
-	jobName := req.GetJobName()
-
-	dbTxn, err := server.Database.DB.BeginTx(ctx, nil)
+	dbTxn, err := excode.Database.DB.Begin()
 	if err != nil {
 		return nil, err
 	}
@@ -54,10 +30,21 @@ func (server StatusServer) GetJobDefinition(ctx context.Context, req *pb.GetJilR
 		dbTxn.Commit()
 	}()
 
-	res, err := server.Database.GetJobData(dbTxn, jobName)
+	var status pb.Status
+	if exitCode == pb.ExitCode_SU {
+		status = pb.Status_SUCCESS
+	} else if exitCode == pb.ExitCode_FA {
+		status = pb.Status_FAILED
+	} else if exitCode == pb.ExitCode_AB {
+		status = pb.Status_ABORTED
+	} else {
+		return nil, fmt.Errorf("invalid exit code type")
+	}
+
+	err = excode.Database.ChangeStatus(dbTxn, jobName, status)
 	if err != nil {
 		return nil, err
 	}
 
-	return res, nil
+	return &pb.RunStatusRes{}, nil
 }

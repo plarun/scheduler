@@ -3,7 +3,7 @@ syntax = "proto3";
 package data;
 
 import "google/protobuf/timestamp.proto";
-import "status.proto";
+import "run.proto";
 
 option go_package = "./;data";
 
