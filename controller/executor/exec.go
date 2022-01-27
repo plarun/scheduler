@@ -26,7 +26,12 @@ func newExecutor() *Executor {
 	}
 }
 
+// execute starts the job
 func (exe *Executor) execute(processJob *pb.Job) {
+	defer func() {
+		exe.executing = false
+	}()
+
 	fout, foutErr := os.OpenFile(processJob.OutFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	ferr, ferrErr := os.OpenFile(processJob.OutFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if foutErr != nil {
@@ -102,6 +107,7 @@ func (epool *ExecutorPool) Start(que *queue.ConcurrentProcessQueue) {
 				if err != nil {
 					panic(err)
 				}
+				log.Printf("Executor will execute the job: %s\n", processJob.Job())
 				executor.execute(processJob.Job())
 			} else {
 				continue

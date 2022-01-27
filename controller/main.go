@@ -6,6 +6,8 @@ import (
 	"net"
 
 	pb "github.com/plarun/scheduler/controller/data"
+	"github.com/plarun/scheduler/controller/executor"
+	"github.com/plarun/scheduler/controller/queue"
 	"github.com/plarun/scheduler/controller/receiver"
 	"google.golang.org/grpc"
 )
@@ -16,13 +18,12 @@ const (
 
 func main() {
 
+	go func() {
+		que := queue.GetProcessQueue()
+		executor.GetExecutorPool().Start(que)
+	}()
+
 	serve()
-
-	// go func() {
-	// 	for {
-
-	// 	}
-	// }()
 
 }
 

@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package data;
+
+option go_package = "./;data";
+
+// Request message to check if its locked
+message CheckLockReq {
+	string JobName = 1;
+}
+
+// Response message for lock status of job
+message CheckLockRes {
+    string JobName = 1;
+    bool Locked = 2;
+}
+
+// Service to check and free the holded job
+service CheckLock {
+	rpc Check(CheckLockReq) returns (CheckLockRes) {}
+}
