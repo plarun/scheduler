@@ -18,13 +18,13 @@ const (
 func main() {
 
 	// client connection to Monitor
-	conn, err := grpc.Dial("localhost:5558", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:5555", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("connection failed: %v", err)
 	}
 	defer conn.Close()
 	statusClient := pb.NewUpdateStatusClient(conn)
-	executor.InitUpdateStatusClient(&statusClient)
+	executor.InitUpdateStatusClient(statusClient)
 
 	go func() {
 		que := queue.GetProcessQueue()

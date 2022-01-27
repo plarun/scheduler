@@ -32,6 +32,10 @@ func (exe *Executor) execute(processJob *pb.Job) {
 		exe.executing = false
 	}()
 
+	if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_RUNNING); err != nil {
+		log.Fatal(err)
+	}
+
 	fout, foutErr := os.OpenFile(processJob.OutFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	ferr, ferrErr := os.OpenFile(processJob.OutFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if foutErr != nil {
@@ -57,8 +61,14 @@ func (exe *Executor) execute(processJob *pb.Job) {
 	err = cmd.Wait()
 	if err != nil {
 		log.Fatal("Job is failed")
+		if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_FAILED); err != nil {
+			log.Fatal(err)
+		}
 	} else {
 		log.Print("Job is success")
+		if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_SUCCESS); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
