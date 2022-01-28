@@ -6,16 +6,35 @@ import (
 
 	pb "github.com/plarun/scheduler/event-server/data"
 	"github.com/plarun/scheduler/event-server/query"
+	"google.golang.org/grpc"
 )
 
+var updateStatusService *UpdateStatusService = nil
+
 // UpdateStatusServer represents the status update on job
-type UpdateStatusServer struct {
+type UpdateStatusService struct {
 	pb.UnimplementedUpdateStatusServer
-	Database *query.Database
+	Database      *query.Database
+	MonitorClient pb.ConditionClient
+}
+
+func InitUpdateStatusService(monitorClient *grpc.ClientConn) {
+	if updateStatusService != nil {
+		return
+	}
+
+	updateStatusService = &UpdateStatusService{
+		Database:      query.GetDatabase(),
+		MonitorClient: pb.NewConditionClient(monitorClient),
+	}
+}
+
+func GetUpdateStatusService(monitorClient *grpc.ClientConn) *UpdateStatusService {
+	return updateStatusService
 }
 
 // Update updates the status of job by exitcode from controller
-func (updStatus UpdateStatusServer) Update(ctx context.Context, req *pb.UpdateStatusReq) (*pb.UpdateStatusRes, error) {
+func (updStatus UpdateStatusService) Update(ctx context.Context, req *pb.UpdateStatusReq) (*pb.UpdateStatusRes, error) {
 	jobName := req.GetJobName()
 	exitCode := req.GetStatus()
 
@@ -45,9 +64,28 @@ func (updStatus UpdateStatusServer) Update(ctx context.Context, req *pb.UpdateSt
 		return nil, fmt.Errorf("invalid exit code type")
 	}
 
-	err = updStatus.Database.ChangeStatus(dbTxn, jobName, status)
-	if err != nil {
+	if err = updStatus.Database.ChangeStatus(dbTxn, jobName, status); err != nil {
 		return nil, err
+	}
+
+	if status == pb.Status_SUCCESS {
+		jobSeqId, err := updStatus.Database.GetJobId(dbTxn, jobName)
+		if err != nil {
+			return &pb.UpdateStatusRes{}, err
+		}
+		successors, err := updStatus.Database.GetSuccessors(dbTxn, jobSeqId)
+		if err != nil {
+			return &pb.UpdateStatusRes{}, err
+		}
+
+		conditionReq := &pb.JobConditionReq{
+			JobName:    jobName,
+			Successors: successors,
+		}
+
+		if _, err := updStatus.MonitorClient.ConditionStatus(ctx, conditionReq); err != nil {
+			return &pb.UpdateStatusRes{}, err
+		}
 	}
 
 	return &pb.UpdateStatusRes{}, nil

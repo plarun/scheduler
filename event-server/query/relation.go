@@ -200,7 +200,8 @@ func (database *Database) GetSuccessors(dbTxn *sql.Tx, jobSeqId int64) ([]string
 
 	database.lock.Lock()
 	rows, err := dbTxn.Query(
-		`select job_name from job 
+		`select job_name 
+		from job 
 		where job_seq_id in (
 			select job_id from job_dependent 
 			where job_dependent_id=?

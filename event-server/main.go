@@ -17,6 +17,15 @@ func main() {
 	// Connect to sql database
 	query.ConnectDB()
 
+	// client connection to monitor
+	monitorConn, err := grpc.Dial("localhost:5558", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("connection failed: %v", err)
+	}
+	defer monitorConn.Close()
+
+	service.InitUpdateStatusService(monitorConn)
+
 	// event server service
 	serve()
 }
@@ -40,7 +49,7 @@ func serve() {
 	pb.RegisterPickJobsServer(grpcServer, service.NextJobsServer{Database: database})
 	pb.RegisterJobStatusServer(grpcServer, service.StatusServer{Database: database})
 	pb.RegisterSendEventServer(grpcServer, service.SendEventServer{Database: database})
-	pb.RegisterUpdateStatusServer(grpcServer, service.UpdateStatusServer{Database: database})
+	pb.RegisterUpdateStatusServer(grpcServer, service.UpdateStatusService{Database: database})
 
 	log.Printf("Event-Server grpc server is running at port: %d\n", port)
 	if err := grpcServer.Serve(listen); err != nil {
