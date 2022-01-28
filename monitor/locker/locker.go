@@ -27,9 +27,21 @@ func (locker *Locker) Put(jobName string) error {
 	locker.lock.Lock()
 
 	if _, ok := locker.lockStatus[jobName]; ok {
-		return fmt.Errorf("job: %s is not available to lock", jobName)
+		return fmt.Errorf("job: %s is already available", jobName)
 	}
 	locker.lockStatus[jobName] = false
+
+	locker.lock.Unlock()
+	return nil
+}
+
+func (locker *Locker) Free(jobName string) error {
+	locker.lock.Lock()
+
+	if _, ok := locker.lockStatus[jobName]; !ok {
+		return fmt.Errorf("job: %s is not available to lock", jobName)
+	}
+	delete(locker.lockStatus, jobName)
 
 	locker.lock.Unlock()
 	return nil
@@ -38,8 +50,8 @@ func (locker *Locker) Put(jobName string) error {
 func (locker *Locker) Lock(jobName string) error {
 	locker.lock.Lock()
 
-	if _, ok := locker.lockStatus[jobName]; ok {
-		return fmt.Errorf("job: %s is already available", jobName)
+	if _, ok := locker.lockStatus[jobName]; !ok {
+		return fmt.Errorf("job: %s is not available to lock", jobName)
 	}
 	locker.lockStatus[jobName] = true
 
@@ -51,7 +63,7 @@ func (locker *Locker) Unlock(jobName string) error {
 	locker.lock.Lock()
 
 	if _, ok := locker.lockStatus[jobName]; !ok {
-		return fmt.Errorf("job: %s is not available to lock", jobName)
+		return fmt.Errorf("job: %s is not available to unlock", jobName)
 	}
 	locker.lockStatus[jobName] = false
 
@@ -63,7 +75,7 @@ func (locker *Locker) Locked(jobName string) (bool, error) {
 	locker.lock.Lock()
 
 	if _, ok := locker.lockStatus[jobName]; !ok {
-		return false, fmt.Errorf("job: %s is not available to lock", jobName)
+		return false, fmt.Errorf("job: %s is not available", jobName)
 	}
 
 	locker.lock.Unlock()

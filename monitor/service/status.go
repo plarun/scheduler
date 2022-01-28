@@ -12,12 +12,12 @@ var statusService *StatusService = nil
 
 type StatusService struct {
 	pb.UnimplementedUpdateStatusServer
-	client pb.UpdateStatusClient
+	eventServerClient pb.UpdateStatusClient
 }
 
 func InitUpdateStatusClient(conn *grpc.ClientConn) {
 	statusService = &StatusService{
-		client: pb.NewUpdateStatusClient(conn),
+		eventServerClient: pb.NewUpdateStatusClient(conn),
 	}
 }
 
@@ -26,7 +26,7 @@ func GetStatusService() *StatusService {
 }
 
 func (stat StatusService) Update(ctx context.Context, req *pb.UpdateStatusReq) (*pb.UpdateStatusRes, error) {
-	_, err := stat.client.Update(ctx, req)
+	_, err := stat.eventServerClient.Update(ctx, req)
 	if err != nil {
 		return &pb.UpdateStatusRes{}, err
 	}
@@ -35,6 +35,10 @@ func (stat StatusService) Update(ctx context.Context, req *pb.UpdateStatusReq) (
 	if updatedStatus == pb.NewStatus_CHANGE_READY {
 		locker := locker.GetLocker()
 		locker.Put(req.GetJobName())
+	} else if updatedStatus == pb.NewStatus_CHANGE_FAILED || updatedStatus == pb.NewStatus_CHANGE_SUCCESS {
+		locker := locker.GetLocker()
+		locker.Free(req.GetJobName())
 	}
+
 	return &pb.UpdateStatusRes{}, nil
 }
