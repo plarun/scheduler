@@ -29,7 +29,7 @@ func main() {
 	defer pickerConn.Close()
 
 	service.InitUpdateStatusClient(eventServerConn)
-	service.InitConditionClient(eventServerConn, pickerConn)
+	service.InitConditionClient(pickerConn)
 
 	serve()
 }

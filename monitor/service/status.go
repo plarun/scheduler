@@ -4,6 +4,7 @@ import (
 	"context"
 
 	pb "github.com/plarun/scheduler/monitor/data"
+	"github.com/plarun/scheduler/monitor/locker"
 	"google.golang.org/grpc"
 )
 
@@ -28,6 +29,12 @@ func (stat StatusService) Update(ctx context.Context, req *pb.UpdateStatusReq) (
 	_, err := stat.client.Update(ctx, req)
 	if err != nil {
 		return &pb.UpdateStatusRes{}, err
+	}
+
+	updatedStatus := req.GetStatus()
+	if updatedStatus == pb.NewStatus_CHANGE_READY {
+		locker := locker.GetLocker()
+		locker.Put(req.GetJobName())
 	}
 	return &pb.UpdateStatusRes{}, nil
 }
