@@ -40,11 +40,10 @@ func main() {
 	pickErrChan := make(chan error)
 	go func() {
 		log.Println("client services starting...")
-		for {
+		for ; true; time.Sleep(time.Second * 5) {
 			if err := jobPickPass.PickJobs(); err != nil {
 				pickErrChan <- err
 			}
-			time.Sleep(time.Second * 5)
 		}
 	}()
 
