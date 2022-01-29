@@ -19,17 +19,13 @@ type UpdateStatusService struct {
 }
 
 func InitUpdateStatusService(monitorClient *grpc.ClientConn) {
-	if updateStatusService != nil {
-		return
-	}
-
 	updateStatusService = &UpdateStatusService{
 		Database:      query.GetDatabase(),
 		MonitorClient: pb.NewConditionClient(monitorClient),
 	}
 }
 
-func GetUpdateStatusService(monitorClient *grpc.ClientConn) *UpdateStatusService {
+func GetUpdateStatusService() *UpdateStatusService {
 	return updateStatusService
 }
 
