@@ -1,18 +1,18 @@
 package executor
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 
 	pb "github.com/plarun/scheduler/controller/data"
 	"github.com/plarun/scheduler/controller/queue"
 )
 
-const (
-	ExecutorsCount = 5
-)
+const ExecutorsCount = 4
 
 type Executor struct {
 	executing bool
@@ -53,19 +53,17 @@ func (exe *Executor) execute(processJob *pb.Job) {
 		cmd.Stderr = ferr
 	}
 
-	err := cmd.Start()
-	if err != nil {
+	if err := cmd.Start(); err != nil {
 		log.Fatalf("Job: %s\nErr: %v", processJob.GetJobName(), err)
 	}
 
-	err = cmd.Wait()
-	if err != nil {
-		log.Fatal("Job is failed")
+	if err := cmd.Wait(); err != nil {
+		log.Println("Job is failed")
 		if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_FAILED); err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		log.Print("Job is success")
+		log.Println("Job is success")
 		if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_SUCCESS); err != nil {
 			log.Fatal(err)
 		}
@@ -87,6 +85,7 @@ func GetExecutorPool() *ExecutorPool {
 		}
 		executorPool = &ExecutorPool{
 			executors: executors,
+			lock:      &sync.Mutex{},
 		}
 	}
 
@@ -108,20 +107,27 @@ func (epool *ExecutorPool) getFreeExecutor() *Executor {
 	return freeExecutor
 }
 
-func (epool *ExecutorPool) Start(que *queue.ConcurrentProcessQueue) {
-	for {
+func (epool *ExecutorPool) Start() error {
+	que := queue.GetProcessQueue()
+
+	for ; true; time.Sleep(time.Millisecond * 500) {
 		if que.Size() != 0 {
 			executor := epool.getFreeExecutor()
+
 			if executor != nil {
 				processJob, err := que.Pop()
+
 				if err != nil {
 					panic(err)
 				}
 				log.Printf("Executor will execute the job: %s\n", processJob.Job())
-				executor.execute(processJob.Job())
-			} else {
-				continue
+
+				go func() {
+					executor.execute(processJob.Job())
+				}()
 			}
 		}
 	}
+
+	return fmt.Errorf("unexpected failure in executor pool")
 }

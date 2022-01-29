@@ -7,7 +7,6 @@ import (
 
 	pb "github.com/plarun/scheduler/controller/data"
 	"github.com/plarun/scheduler/controller/executor"
-	"github.com/plarun/scheduler/controller/queue"
 	"google.golang.org/grpc"
 )
 
@@ -18,7 +17,7 @@ const (
 func main() {
 
 	// client connection to Monitor
-	conn, err := grpc.Dial("localhost:5555", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:5558", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("connection failed: %v", err)
 	}
@@ -26,13 +25,14 @@ func main() {
 	statusClient := pb.NewUpdateStatusClient(conn)
 	executor.InitUpdateStatusClient(statusClient)
 
+	execChanErr := make(chan error)
 	go func() {
-		que := queue.GetProcessQueue()
-		executor.GetExecutorPool().Start(que)
+		execChanErr <- executor.GetExecutorPool().Start()
 	}()
 
 	serve()
 
+	log.Fatal(<-execChanErr)
 }
 
 func serve() {
