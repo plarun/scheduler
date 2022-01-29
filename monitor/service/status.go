@@ -26,8 +26,7 @@ func GetStatusService() *StatusService {
 }
 
 func (stat StatusService) Update(ctx context.Context, req *pb.UpdateStatusReq) (*pb.UpdateStatusRes, error) {
-	_, err := stat.eventServerClient.Update(ctx, req)
-	if err != nil {
+	if _, err := stat.eventServerClient.Update(ctx, req); err != nil {
 		return &pb.UpdateStatusRes{}, err
 	}
 
