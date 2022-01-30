@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	pb "github.com/plarun/scheduler/monitor/data"
 	"google.golang.org/grpc"
@@ -25,6 +26,7 @@ func GetConditionService() *ConditionService {
 }
 
 func (cond ConditionService) ConditionStatus(ctx context.Context, req *pb.JobConditionReq) (*pb.JobConditionRes, error) {
+	log.Println("ConditionService.ConditionStatus")
 	_, err := cond.pickerClient.ConditionStatus(ctx, req)
 	if err != nil {
 		return &pb.JobConditionRes{}, err

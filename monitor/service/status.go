@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 
 	pb "github.com/plarun/scheduler/monitor/data"
 	"github.com/plarun/scheduler/monitor/locker"
@@ -26,6 +27,7 @@ func GetStatusService() *StatusService {
 }
 
 func (stat StatusService) Update(ctx context.Context, req *pb.UpdateStatusReq) (*pb.UpdateStatusRes, error) {
+	log.Println("StatusService.Update")
 	if _, err := stat.eventServerClient.Update(ctx, req); err != nil {
 		return &pb.UpdateStatusRes{}, err
 	}

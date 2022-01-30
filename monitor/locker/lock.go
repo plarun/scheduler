@@ -2,6 +2,7 @@ package locker
 
 import (
 	"context"
+	"log"
 
 	pb "github.com/plarun/scheduler/monitor/data"
 )
@@ -18,6 +19,7 @@ func NewCheckLockServer() *CheckLockServer {
 }
 
 func (locker CheckLockServer) Check(ctx context.Context, req *pb.CheckLockReq) (*pb.CheckLockRes, error) {
+	log.Println("CheckLockServer.Check")
 	jobName := req.GetJobName()
 	locked, err := locker.jobLocker.Locked(jobName)
 	if err != nil {
