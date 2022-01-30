@@ -33,6 +33,19 @@ func buildJobUpdateQuery(jobData *pb.Jil) string {
 	}
 
 	columnStr := strings.Join(columns, ",")
+	return columnStr
+}
 
+func buildJobStatusUpdateQuery(jobName string, status pb.Status) string {
+	var columns []string
+
+	columns = append(columns, fmt.Sprintf("status = '%s'", pb.Status_name[int32(status.Number())]))
+	if status == pb.Status_RUNNING {
+		columns = append(columns, "last_start_time = current_timestamp")
+	} else if status == pb.Status_FAILED || status == pb.Status_SUCCESS {
+		columns = append(columns, "last_end_time = current_timestamp")
+	}
+
+	columnStr := strings.Join(columns, ",")
 	return columnStr
 }

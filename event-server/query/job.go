@@ -26,7 +26,6 @@ func (database *Database) CheckJob(jobName string) bool {
 	err := row.Scan(&job)
 
 	if database.verbose {
-		log.Printf("CheckJob checks whether a job is available in job table\n")
 		log.Printf("Job: %s\n", job)
 	}
 	return err != sql.ErrNoRows
@@ -68,7 +67,7 @@ func (database *Database) InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 	}
 
 	if database.verbose {
-		log.Printf("InsertJob inserts a new job definition into job table\n")
+		log.Printf("Inserted Job: %s\n", jobData.GetData().GetJobName())
 	}
 
 	return nil
@@ -94,7 +93,6 @@ func (database *Database) GetJobId(dbTxn *sql.Tx, jobName string) (int64, error)
 	}
 
 	if database.verbose {
-		log.Printf("GetJobId gets job sequence ID by job name\n")
 		log.Printf("JobSeqId of %s is %d\n", jobName, jobSeqId)
 	}
 
@@ -113,7 +111,6 @@ func (database *Database) GetJobIdList(dbTxn *sql.Tx, jobNameList []string) ([]i
 	}
 
 	if database.verbose {
-		log.Printf("GetJobIdList gets list of job sequence ID for list of jobs by job name\n")
 		log.Printf("JobSeqIds of %v are %v\n", jobNameList, jobSeqIdList)
 	}
 
@@ -154,7 +151,6 @@ func (database *Database) DeleteJob(dbTxn *sql.Tx, jobName string) error {
 	}
 
 	if database.verbose {
-		log.Printf("DeleteJob deletes an existing job definition from job table\n")
 		log.Printf("Job %s is deleted\n", jobName)
 	}
 
@@ -182,10 +178,6 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 		if err := database.UpdateJobDependents(dbTxn, jobData.Data.JobName, jobData.Data.Conditions); err != nil {
 			return err
 		}
-	}
-
-	if database.verbose {
-		log.Printf("UpdateJob updates one or more columns in job table by job name\n")
 	}
 
 	return nil
@@ -246,7 +238,6 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 	}
 
 	if database.verbose {
-		log.Printf("GetNextRunJobs gives list of jobs ready for next run\n")
 		log.Printf("Time range: %s to %s on %s\n", startTime, endTime, runDay)
 		log.Printf("NextJobs Count: %v\n", len(nextJobs))
 	}
@@ -286,7 +277,6 @@ func (database *Database) GetJobData(dbTxn *sql.Tx, jobName string) (*pb.GetJilR
 	}
 
 	if database.verbose {
-		log.Printf("GetJobData gets job definition\n")
 		log.Printf("Job: %v\n", res.GetJobName())
 	}
 
@@ -316,7 +306,6 @@ func (database *Database) GetStatus(dbTxn *sql.Tx, jobName string) (pb.Status, e
 	}
 
 	if database.verbose {
-		log.Printf("GetStatus gets the current status of job\n")
 		log.Printf("Job: %s, Status: %s\n", jobName, statusName)
 	}
 
@@ -328,29 +317,21 @@ func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.
 	statusName := pb.Status_name[int32(status.Number())]
 	database.lock.Lock()
 
-	result, err := dbTxn.Exec(
-		`update job 
-		set status=? 
-		where job_name=?`,
-		statusName,
+	columns := buildJobStatusUpdateQuery(jobName, status)
+
+	_, err := dbTxn.Exec(
+		"update job set "+
+			columns+
+			" where job_name=?",
 		jobName)
 
 	database.lock.Unlock()
-
-	if affectedRowsCount, err := result.RowsAffected(); err != nil {
-		return fmt.Errorf("ChangeStatus: %v", err)
-	} else {
-		if database.verbose {
-			log.Printf("Rows affected: %d", affectedRowsCount)
-		}
-	}
 
 	if err != nil {
 		return fmt.Errorf("ChangeStatus: %v", err)
 	}
 
 	if database.verbose {
-		log.Printf("ChangeStatus updates the status of job\n")
 		log.Printf("Job: %s, UpdatedStatus: %s\n", jobName, statusName)
 	}
 

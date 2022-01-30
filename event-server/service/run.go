@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"log"
 
 	pb "github.com/plarun/scheduler/event-server/data"
 	"github.com/plarun/scheduler/event-server/model"
@@ -16,8 +15,6 @@ type StatusServer struct {
 
 func (server StatusServer) GetJobRunStatus(ctx context.Context, req *pb.GetJobRunStatusReq) (*pb.GetJobRunStatusRes, error) {
 	jobName := req.GetJobName()
-
-	log.Printf("Job: %s run status\n", jobName)
 
 	dbTxn, err := server.Database.DB.BeginTx(ctx, nil)
 	if err != nil {

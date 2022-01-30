@@ -22,7 +22,6 @@ func (database *Database) InsertJobDependent(dbTxn *sql.Tx, jobSeqId int64, depe
 	database.lock.Unlock()
 
 	if database.verbose {
-		log.Printf("InsertJobDependent creates job dependent relation between a job and list of jobs\n")
 		log.Printf("JobSeqId: %v, DependentJobSeqIds: %v\n", jobSeqId, dependentJobSeqIds)
 	}
 
@@ -45,7 +44,6 @@ func (database *Database) DeleteJobDependent(dbTxn *sql.Tx, jobSeqId int64, depe
 	database.lock.Unlock()
 
 	if database.verbose {
-		log.Printf("DeleteJobDependent removes job dependent relation between a job and list of jobs\n")
 		log.Printf("JobSeqId: %v, DependentJobSeqIds: %v\n", jobSeqId, dependentJobSeqIds)
 	}
 
@@ -68,7 +66,6 @@ func (database *Database) DeleteJobRelation(dbTxn *sql.Tx, jobSeqId int64) error
 	}
 
 	if database.verbose {
-		log.Printf("DeleteJobRelation removes all the relations of job to be deleted\n")
 		log.Printf("JobSeqId: %v\n", jobSeqId)
 	}
 
@@ -102,7 +99,6 @@ func (database *Database) GetPreceders(dbTxn *sql.Tx, jobSeqId int64) ([]string,
 	}
 
 	if database.verbose {
-		log.Printf("GetPredecessors gets all the preceeding jobs\n")
 		log.Printf("JobSeqId: %v, Preceders: %v\n", jobSeqId, preceders)
 	}
 
@@ -133,7 +129,6 @@ func (database *Database) GetPrecedersIdList(dbTxn *sql.Tx, jobSeqId int64) ([]i
 	}
 
 	if database.verbose {
-		log.Printf("GetPredecessors gets Ids of all the preceeding jobs\n")
 		log.Printf("JobSeqId: %v, Preceders: %v\n", jobSeqId, precedersId)
 	}
 
@@ -187,10 +182,6 @@ func (database *Database) UpdateJobDependents(dbTxn *sql.Tx, jobName string, con
 		return err
 	}
 
-	if database.verbose {
-		log.Printf("UpdateJobDependents updates dependent jobs for given job with latest conditions list\n")
-	}
-
 	return nil
 }
 
@@ -222,7 +213,6 @@ func (database *Database) GetSuccessors(dbTxn *sql.Tx, jobSeqId int64) ([]string
 	}
 
 	if database.verbose {
-		log.Printf("GetSuccessors gets all the successors\n")
 		log.Printf("JobSeqId: %v, Successors: %v\n", jobSeqId, successors)
 	}
 
@@ -251,7 +241,6 @@ func (database *Database) CheckConditions(dbTxn *sql.Tx, jobSeqId int) (bool, er
 	}
 
 	if database.verbose {
-		log.Printf("CheckConditions checks whether job's condition satisfied\n")
 		log.Printf("Job: %v, Satisfied: %v\n", jobSeqId, unsatisfied == 0)
 	}
 
