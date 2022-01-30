@@ -38,12 +38,6 @@ func (updStatus UpdateStatusService) Update(ctx context.Context, req *pb.UpdateS
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		if err != nil {
-			dbTxn.Rollback()
-		}
-		dbTxn.Commit()
-	}()
 
 	var status pb.Status
 	if exitCode == pb.NewStatus_CHANGE_SUCCESS {
@@ -63,14 +57,21 @@ func (updStatus UpdateStatusService) Update(ctx context.Context, req *pb.UpdateS
 	if err = updStatus.Database.ChangeStatus(dbTxn, jobName, status); err != nil {
 		return nil, err
 	}
+	dbTxn.Commit()
+
+	dbTxn2, err := updStatus.Database.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer dbTxn2.Commit()
 
 	if status == pb.Status_SUCCESS {
-		jobSeqId, err := updStatus.Database.GetJobId(dbTxn, jobName)
+		jobSeqId, err := updStatus.Database.GetJobId(dbTxn2, jobName)
 		if err != nil {
 			return &pb.UpdateStatusRes{}, err
 		}
 
-		satisfiedSuccessors, err := updStatus.Database.GetSatisfiedSuccessors(dbTxn, jobSeqId)
+		satisfiedSuccessors, err := updStatus.Database.GetSatisfiedSuccessors(dbTxn2, jobSeqId)
 		if err != nil {
 			return &pb.UpdateStatusRes{}, err
 		}

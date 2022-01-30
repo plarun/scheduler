@@ -224,7 +224,7 @@ func (database *Database) CheckConditions(dbTxn *sql.Tx, jobSeqId int64) (bool, 
 	var unsatisfied int
 	database.lock.Lock()
 
-	row := dbTxn.QueryRow(
+	row := database.DB.QueryRow(
 		`select count(*)
 		from job
 		where job_seq_id in (
@@ -255,7 +255,7 @@ func (database *Database) GetSatisfiedSuccessors(dbTxn *sql.Tx, jobSeqId int64) 
 
 	rows, err := dbTxn.Query(
 		`select job_seq_id, job_name
-		from job j
+		from job
 		where job_seq_id in (
 			select job_id
 			from job_dependent
@@ -270,9 +270,11 @@ func (database *Database) GetSatisfiedSuccessors(dbTxn *sql.Tx, jobSeqId int64) 
 	for rows.Next() {
 		var jobName string
 		var jobSeqId int64
-		if err := rows.Scan(&jobName, &jobSeqId); err != nil {
+		if err := rows.Scan(&jobSeqId, &jobName); err != nil {
 			return satisfiedSuccessors, err
 		}
+
+		log.Printf("Successor: %s\n", jobName)
 
 		if ok, err := database.CheckConditions(dbTxn, jobSeqId); ok {
 			satisfiedSuccessors = append(satisfiedSuccessors, jobName)
@@ -280,6 +282,8 @@ func (database *Database) GetSatisfiedSuccessors(dbTxn *sql.Tx, jobSeqId int64) 
 			return satisfiedSuccessors, err
 		}
 	}
+
+	log.Printf("Satisfied Successors: %v\n", satisfiedSuccessors)
 
 	return satisfiedSuccessors, nil
 }
