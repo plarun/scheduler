@@ -47,10 +47,10 @@ func main() {
 		}
 	}()
 
-	log.Fatal(<-pickErrChan)
-
 	// server service to communicate with controller
 	serve()
+
+	log.Fatal(<-pickErrChan)
 }
 
 func serve() {
