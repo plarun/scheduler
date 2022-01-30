@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"sync"
 	"time"
 
@@ -17,32 +18,38 @@ const ExecutorsCount = 4
 type Executor struct {
 	executing bool
 	job       *pb.Job
+	name      string
 }
 
-func newExecutor() *Executor {
+func newExecutor(id int) *Executor {
 	return &Executor{
 		executing: false,
 		job:       nil,
+		name:      "Executor" + strconv.Itoa(id),
 	}
 }
 
 // execute starts the job
 func (exe *Executor) execute(processJob *pb.Job) {
 	defer func() {
+		log.Printf("%s is freed\n", exe.name)
 		exe.executing = false
+		exe.job = nil
 	}()
 
 	if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_RUNNING); err != nil {
 		log.Fatal(err)
 	}
 
+	failed := false
+
 	fout, foutErr := os.OpenFile(processJob.OutFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	ferr, ferrErr := os.OpenFile(processJob.OutFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if foutErr != nil {
-		log.Fatal(foutErr)
+		failed = true
 	}
 	if ferrErr != nil {
-		log.Fatal(ferrErr)
+		failed = true
 	}
 
 	cmd := exec.Command(processJob.GetCommand())
@@ -54,16 +61,16 @@ func (exe *Executor) execute(processJob *pb.Job) {
 	}
 
 	if err := cmd.Start(); err != nil {
-		log.Fatalf("Job: %s\nErr: %v", processJob.GetJobName(), err)
+		failed = true
 	}
 
-	if err := cmd.Wait(); err != nil {
-		log.Println("Job is failed")
+	if err := cmd.Wait(); err != nil || failed {
+		log.Printf("%s is failed\n", processJob.JobName)
 		if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_FAILED); err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		log.Println("Job is success")
+		log.Printf("%s is success\n", processJob.JobName)
 		if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_SUCCESS); err != nil {
 			log.Fatal(err)
 		}
@@ -79,9 +86,9 @@ type ExecutorPool struct {
 
 func GetExecutorPool() *ExecutorPool {
 	if executorPool == nil {
-		var executors []*Executor
+		var executors []*Executor = make([]*Executor, 0)
 		for i := 0; i < ExecutorsCount; i++ {
-			executors = append(executors, newExecutor())
+			executors = append(executors, newExecutor(i))
 		}
 		executorPool = &ExecutorPool{
 			executors: executors,
@@ -100,6 +107,7 @@ func (epool *ExecutorPool) getFreeExecutor() *Executor {
 		if !executor.executing {
 			freeExecutor = executor
 			freeExecutor.executing = true
+			break
 		}
 	}
 
@@ -110,7 +118,7 @@ func (epool *ExecutorPool) getFreeExecutor() *Executor {
 func (epool *ExecutorPool) Start() error {
 	que := queue.GetProcessQueue()
 
-	for ; true; time.Sleep(time.Millisecond * 500) {
+	for ; true; time.Sleep(time.Millisecond * 100) {
 		if que.Size() != 0 {
 			executor := epool.getFreeExecutor()
 
@@ -120,7 +128,7 @@ func (epool *ExecutorPool) Start() error {
 				if err != nil {
 					panic(err)
 				}
-				log.Printf("Executor will execute the job: %s\n", processJob.Job())
+				log.Printf("%s: %s\n", executor.name, processJob.Job().GetJobName())
 
 				go func() {
 					executor.execute(processJob.Job())
