@@ -69,14 +69,15 @@ func (updStatus UpdateStatusService) Update(ctx context.Context, req *pb.UpdateS
 		if err != nil {
 			return &pb.UpdateStatusRes{}, err
 		}
-		successors, err := updStatus.Database.GetSuccessors(dbTxn, jobSeqId)
+
+		satisfiedSuccessors, err := updStatus.Database.GetSatisfiedSuccessors(dbTxn, jobSeqId)
 		if err != nil {
 			return &pb.UpdateStatusRes{}, err
 		}
 
 		conditionReq := &pb.JobConditionReq{
-			JobName:    jobName,
-			Successors: successors,
+			JobName:             jobName,
+			SatisfiedSuccessors: satisfiedSuccessors,
 		}
 
 		if _, err := updStatus.MonitorClient.ConditionStatus(ctx, conditionReq); err != nil {

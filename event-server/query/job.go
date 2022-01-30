@@ -211,7 +211,7 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 
 	for rows.Next() {
 		var jobName, command, machine, stdOut, stdErr string
-		var jobSeqId int
+		var jobSeqId int64
 		if err := rows.Scan(&jobSeqId, &jobName, &command, &machine, &stdOut, &stdErr); err != nil {
 			return nil, fmt.Errorf("GetNextRunJobs scanning: %v", err)
 		}

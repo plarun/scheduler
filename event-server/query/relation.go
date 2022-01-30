@@ -220,11 +220,11 @@ func (database *Database) GetSuccessors(dbTxn *sql.Tx, jobSeqId int64) ([]string
 }
 
 // CheckConditions checks whether job's condition satisfied
-func (database *Database) CheckConditions(dbTxn *sql.Tx, jobSeqId int) (bool, error) {
+func (database *Database) CheckConditions(dbTxn *sql.Tx, jobSeqId int64) (bool, error) {
 	var unsatisfied int
-
 	database.lock.Lock()
-	row := database.DB.QueryRow(
+
+	row := dbTxn.QueryRow(
 		`select count(*)
 		from job
 		where job_seq_id in (
@@ -233,6 +233,7 @@ func (database *Database) CheckConditions(dbTxn *sql.Tx, jobSeqId int) (bool, er
 			where job_id=?) 
 		and status<>'SUCCESS'`,
 		jobSeqId)
+
 	database.lock.Unlock()
 
 	err := row.Scan(&unsatisfied)
@@ -245,4 +246,40 @@ func (database *Database) CheckConditions(dbTxn *sql.Tx, jobSeqId int) (bool, er
 	}
 
 	return unsatisfied == 0, nil
+}
+
+// GetSatisfiedSuccessors returns all the successors of the given job whose condition is satisfied
+func (database *Database) GetSatisfiedSuccessors(dbTxn *sql.Tx, jobSeqId int64) ([]string, error) {
+	var satisfiedSuccessors []string
+	database.lock.Lock()
+
+	rows, err := dbTxn.Query(
+		`select job_seq_id, job_name
+		from job j
+		where job_seq_id in (
+			select job_id
+			from job_dependent
+			where dependent_job_id=?)`,
+		jobSeqId)
+
+	database.lock.Unlock()
+	if err != nil {
+		return satisfiedSuccessors, err
+	}
+
+	for rows.Next() {
+		var jobName string
+		var jobSeqId int64
+		if err := rows.Scan(&jobName, &jobSeqId); err != nil {
+			return satisfiedSuccessors, err
+		}
+
+		if ok, err := database.CheckConditions(dbTxn, jobSeqId); ok {
+			satisfiedSuccessors = append(satisfiedSuccessors, jobName)
+		} else if err != nil {
+			return satisfiedSuccessors, err
+		}
+	}
+
+	return satisfiedSuccessors, nil
 }
