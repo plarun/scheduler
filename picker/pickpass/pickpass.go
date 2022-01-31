@@ -9,7 +9,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-var PickPass *JobPicker = nil
+var pickPass *JobPicker = nil
 
 // JobPicker wraps the NextJobsClient and queues the next run jobs
 type JobPicker struct {
@@ -18,16 +18,20 @@ type JobPicker struct {
 	Holder     *wait.ConcurrentHolder
 }
 
-func GetPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *JobPicker {
-	if PickPass == nil {
-		PickPass = &JobPicker{
+func InitPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *JobPicker {
+	if pickPass == nil {
+		pickPass = &JobPicker{
 			PickClient: pickClient,
 			PassClient: passClient,
 			Holder:     wait.NewConcurrentHolder(),
 		}
 	}
 
-	return PickPass
+	return pickPass
+}
+
+func GetPickPass() *JobPicker {
+	return pickPass
 }
 
 // NextJobs get and pushes the next run jobs to waiting queue
@@ -36,7 +40,6 @@ func (picker JobPicker) PickJobs() error {
 	defer cancel()
 
 	pickJobReq := &pb.PickJobsReq{}
-	log.Println("PickJobs() call to Pick")
 	pickJobRes, err := picker.PickClient.Pick(ctx, pickJobReq)
 	if err != nil {
 		return err
@@ -61,13 +64,14 @@ func PassJobs(job *pb.ReadyJob) error {
 	defer cancel()
 
 	// Already initialized
-	picker := GetPickPass(nil, nil)
+	picker := GetPickPass()
 
 	passJobReq := &pb.PassJobsReq{
 		Job: job,
 	}
 
-	log.Println("PassJobs(job *pb.ReadyJob) call to pass jobs to Controller")
+	log.Printf("Job: %s is passed to controller\n", job.GetJobName())
+
 	_, err := picker.PassClient.Pass(ctx, passJobReq)
 	if err != nil {
 		return err

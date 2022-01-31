@@ -34,7 +34,7 @@ func main() {
 	defer passConn.Close()
 	passClient := pb.NewPassJobsClient(passConn)
 
-	jobPickPass := pickpass.GetPickPass(pickClient, passClient)
+	jobPickPass := pickpass.InitPickPass(pickClient, passClient)
 
 	// pick jobs from event-server
 	pickErrChan := make(chan error)
