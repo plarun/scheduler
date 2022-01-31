@@ -2,6 +2,7 @@ package locker
 
 import (
 	"fmt"
+	"log"
 	"sync"
 )
 
@@ -31,6 +32,8 @@ func (locker *Locker) Put(jobName string) error {
 	}
 	locker.lockStatus[jobName] = false
 
+	log.Printf("Job: %s is put into locker\n", jobName)
+
 	locker.lock.Unlock()
 	return nil
 }
@@ -42,6 +45,8 @@ func (locker *Locker) Free(jobName string) error {
 		return fmt.Errorf("job: %s is not available to lock", jobName)
 	}
 	delete(locker.lockStatus, jobName)
+
+	log.Printf("Job: %s is freed from locker\n", jobName)
 
 	locker.lock.Unlock()
 	return nil
@@ -55,6 +60,8 @@ func (locker *Locker) Lock(jobName string) error {
 	}
 	locker.lockStatus[jobName] = true
 
+	log.Printf("Job: %s is locked for block\n", jobName)
+
 	locker.lock.Unlock()
 	return nil
 }
@@ -66,6 +73,8 @@ func (locker *Locker) Unlock(jobName string) error {
 		return fmt.Errorf("job: %s is not available to unlock", jobName)
 	}
 	locker.lockStatus[jobName] = false
+
+	log.Printf("Job: %s is unlocked from block\n", jobName)
 
 	locker.lock.Unlock()
 	return nil
