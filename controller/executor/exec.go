@@ -38,7 +38,7 @@ func (exe *Executor) execute(processJob *pb.Job) {
 	}()
 
 	if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_RUNNING); err != nil {
-		log.Fatal(err)
+		log.Printf("Executor.execute: %v\n", err)
 	}
 
 	failed := false
@@ -67,12 +67,12 @@ func (exe *Executor) execute(processJob *pb.Job) {
 	if err := cmd.Wait(); err != nil || failed {
 		log.Printf("%s is failed\n", processJob.JobName)
 		if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_FAILED); err != nil {
-			log.Fatal(err)
+			log.Printf("Executor.execute: %v\n", err)
 		}
 	} else {
 		log.Printf("%s is success\n", processJob.JobName)
 		if err := updateStatus(processJob.JobName, pb.NewStatus_CHANGE_SUCCESS); err != nil {
-			log.Fatal(err)
+			log.Printf("Executor.execute: %v\n", err)
 		}
 	}
 }
@@ -126,7 +126,7 @@ func (epool *ExecutorPool) Start() error {
 				processJob, err := que.Pop()
 
 				if err != nil {
-					panic(err)
+					log.Fatal(err)
 				}
 				log.Printf("%s: %s\n", executor.name, processJob.Job().GetJobName())
 

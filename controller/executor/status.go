@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	pb "github.com/plarun/scheduler/controller/data"
@@ -27,9 +28,9 @@ func updateStatus(jobName string, status pb.NewStatus) error {
 		JobName: jobName,
 		Status:  status,
 	}
-	_, err := statusClient.client.Update(ctx, updateJobStatusReq)
-	if err != nil {
-		return err
+	if _, err := statusClient.client.Update(ctx, updateJobStatusReq); err != nil {
+		return fmt.Errorf("updateStatus: %v", err)
 	}
+
 	return nil
 }

@@ -69,8 +69,6 @@ func (que *ConcurrentProcessQueue) Push(data *pb.Job) error {
 	}
 	que.pQue.size++
 
-	log.Printf("Job: %v is pushed", data.GetJobName())
-
 	que.lock.Unlock()
 	return nil
 }
@@ -79,7 +77,7 @@ func (que *ConcurrentProcessQueue) Pop() (*ProcessJob, error) {
 	que.lock.Lock()
 
 	if que.pQue.size == 0 {
-		return nil, fmt.Errorf("waiting queue is empty")
+		return nil, fmt.Errorf("process queue is empty")
 	}
 	var node *ProcessJob = que.pQue.out
 	que.pQue.out = que.pQue.out.prev
@@ -103,8 +101,7 @@ func (que *ConcurrentProcessQueue) Size() uint32 {
 }
 
 func (que *ConcurrentProcessQueue) Print() {
-	log.Println()
-	fmt.Print("[ ")
+	log.Print("[ ")
 	curr := que.pQue.in
 	for curr != nil {
 		fmt.Printf("%v, ", curr.job.GetJobName())
