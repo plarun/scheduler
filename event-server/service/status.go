@@ -36,7 +36,7 @@ func (updStatus UpdateStatusService) Update(ctx context.Context, req *pb.UpdateS
 
 	dbTxn, err := updStatus.Database.DB.Begin()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("updateStatusService.Update: %v", err)
 	}
 
 	var status pb.Status
@@ -51,7 +51,7 @@ func (updStatus UpdateStatusService) Update(ctx context.Context, req *pb.UpdateS
 	} else if exitCode == pb.NewStatus_CHANGE_RUNNING {
 		status = pb.Status_RUNNING
 	} else {
-		return nil, fmt.Errorf("invalid exit code type")
+		return nil, fmt.Errorf("updateStatusService.Update: invalid exit code type")
 	}
 
 	if err = updStatus.Database.ChangeStatus(dbTxn, jobName, status); err != nil {

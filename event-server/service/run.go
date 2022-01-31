@@ -20,7 +20,7 @@ func (server StatusServer) GetJobRunStatus(ctx context.Context, req *pb.GetJobRu
 	if err != nil {
 		return nil, err
 	}
-	defer dbTxn.Rollback()
+	defer dbTxn.Commit()
 
 	startTime, endTime, status, err := server.Database.LastRun(dbTxn, jobName)
 	if err != nil {
@@ -42,18 +42,13 @@ func (server StatusServer) GetJobDefinition(ctx context.Context, req *pb.GetJilR
 
 	dbTxn, err := server.Database.DB.BeginTx(ctx, nil)
 	if err != nil {
-		return nil, err
+		return &pb.GetJilRes{}, err
 	}
-	defer func() {
-		if err != nil {
-			dbTxn.Rollback()
-		}
-		dbTxn.Commit()
-	}()
+	defer dbTxn.Commit()
 
 	res, err := server.Database.GetJobData(dbTxn, jobName)
 	if err != nil {
-		return nil, err
+		return &pb.GetJilRes{}, err
 	}
 
 	return res, nil

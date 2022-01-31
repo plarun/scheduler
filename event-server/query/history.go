@@ -7,13 +7,14 @@ import (
 
 func (database *Database) LastRun(dbTxn *sql.Tx, jobName string) (string, string, string, error) {
 	var startTime, endTime, status string
-
 	database.lock.Lock()
+
 	rows := dbTxn.QueryRow(
 		`select last_start_time, last_end_time, status 
 		from job
 		where job_name=?`,
 		jobName)
+
 	database.lock.Unlock()
 
 	err := rows.Scan(&startTime, &endTime, &status)

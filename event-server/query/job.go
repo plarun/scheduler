@@ -9,8 +9,6 @@ import (
 	"github.com/plarun/scheduler/event-server/model"
 )
 
-// const timeGap = "00:00:05"
-
 // CheckJob checks whether a job is available in job table
 func (database *Database) CheckJob(jobName string) bool {
 	var job string
@@ -57,12 +55,12 @@ func (database *Database) InsertJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 	jobSeqId, _ := result.LastInsertId()
 	dependentJobSeqIds, err := database.GetJobIdList(dbTxn, jobData.Data.Conditions)
 	if err != nil {
-		return err
+		return fmt.Errorf("insertJob: %v", err)
 	}
 
 	if jobData.AttributeFlag&model.CONDITIONS != 0 {
 		if err := database.InsertJobDependent(dbTxn, jobSeqId, dependentJobSeqIds); err != nil {
-			return err
+			return fmt.Errorf("insertJob: %v", err)
 		}
 	}
 
@@ -89,7 +87,7 @@ func (database *Database) GetJobId(dbTxn *sql.Tx, jobName string) (int64, error)
 		if err == sql.ErrNoRows {
 			return jobSeqId, fmt.Errorf("job not found")
 		}
-		return jobSeqId, err
+		return jobSeqId, fmt.Errorf("getJobId: %v", err)
 	}
 
 	if database.verbose {
@@ -147,7 +145,7 @@ func (database *Database) DeleteJob(dbTxn *sql.Tx, jobName string) error {
 	database.lock.Unlock()
 
 	if err != nil {
-		return fmt.Errorf("deleteJobByJobName: %v", err)
+		return fmt.Errorf("deleteJob: %v", err)
 	}
 
 	if database.verbose {
@@ -176,7 +174,7 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 	}
 	if jobData.AttributeFlag&model.CONDITIONS != 0 {
 		if err := database.UpdateJobDependents(dbTxn, jobData.Data.JobName, jobData.Data.Conditions); err != nil {
-			return err
+			return fmt.Errorf("updateJob: %v", err)
 		}
 	}
 
@@ -212,13 +210,16 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 	for rows.Next() {
 		var jobName, command, machine, stdOut, stdErr string
 		var jobSeqId int64
+
 		if err := rows.Scan(&jobSeqId, &jobName, &command, &machine, &stdOut, &stdErr); err != nil {
 			return nil, fmt.Errorf("GetNextRunJobs scanning: %v", err)
 		}
+
 		conditionSatisfied, err := database.CheckConditions(dbTxn, jobSeqId)
 		if err != nil {
 			return nil, fmt.Errorf("GetNextRunJobs CheckConditions: %v", err)
 		}
+
 		job := &pb.ReadyJob{
 			JobName:            jobName,
 			Command:            command,
@@ -268,12 +269,12 @@ func (database *Database) GetJobData(dbTxn *sql.Tx, jobName string) (*pb.GetJilR
 		&res.RunDays,
 		&res.StartTimes)
 	if err != nil {
-		return nil, err
+		return &pb.GetJilRes{}, fmt.Errorf("getJobData: %v", err)
 	}
 
 	res.Conditions, err = database.GetPreceders(dbTxn, jobSeqId)
 	if err != nil {
-		return nil, err
+		return &pb.GetJilRes{}, fmt.Errorf("getJobData: %v", err)
 	}
 
 	if database.verbose {
@@ -302,7 +303,7 @@ func (database *Database) GetStatus(dbTxn *sql.Tx, jobName string) (pb.Status, e
 		if err == sql.ErrNoRows {
 			return status, fmt.Errorf("job not found")
 		}
-		return status, err
+		return status, fmt.Errorf("getStatus: %v", err)
 	}
 
 	if database.verbose {
@@ -318,7 +319,6 @@ func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.
 	database.lock.Lock()
 
 	columns := buildJobStatusUpdateQuery(jobName, status)
-
 	_, err := dbTxn.Exec(
 		"update job set "+
 			columns+
