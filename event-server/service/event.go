@@ -13,7 +13,7 @@ type SendEventServer struct {
 	pb.UnimplementedSendEventServer
 }
 
-func (server SendEventServer) Send(ctx context.Context, req *pb.SendEventReq) (*pb.SendEventRes, error) {
+func (server SendEventServer) Event(ctx context.Context, req *pb.SendEventReq) (*pb.SendEventRes, error) {
 	jobName := req.GetJobName()
 	eventType := req.GetEventType()
 	res := &pb.SendEventRes{
@@ -75,7 +75,6 @@ func (server SendEventServer) markAsSuccess(dbTxn *sql.Tx, jobName string, currS
 		if err != nil {
 			return err
 		}
-
 		res.EventChanged = true
 	}
 
@@ -88,7 +87,6 @@ func (server SendEventServer) freeze(dbTxn *sql.Tx, jobName string, currStatus p
 		if err != nil {
 			return err
 		}
-
 		res.EventChanged = true
 	}
 
@@ -101,7 +99,6 @@ func (server SendEventServer) reset(dbTxn *sql.Tx, jobName string, currStatus pb
 		if err != nil {
 			return err
 		}
-
 		res.EventChanged = true
 	}
 

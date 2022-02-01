@@ -17,12 +17,12 @@ const (
 
 // Job Status Number to string
 var StatusTypeConv = map[string]pb.Status{
-	"ID": pb.Status_IDLE,
-	"QU": pb.Status_QUEUED,
-	"RE": pb.Status_READY,
-	"RU": pb.Status_RUNNING,
-	"SU": pb.Status_SUCCESS,
-	"FA": pb.Status_FAILED,
-	"AB": pb.Status_ABORTED,
-	"FZ": pb.Status_FROZEN,
+	"IDLE":    pb.Status_IDLE,
+	"QUEUED":  pb.Status_QUEUED,
+	"READY":   pb.Status_READY,
+	"RUNNING": pb.Status_RUNNING,
+	"SUCCESS": pb.Status_SUCCESS,
+	"FAILED":  pb.Status_FAILED,
+	"ABORTED": pb.Status_ABORTED,
+	"FROZEN":  pb.Status_FROZEN,
 }
