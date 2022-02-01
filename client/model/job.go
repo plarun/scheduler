@@ -63,18 +63,6 @@ const (
 	SA int8 = 1 << iota
 )
 
-// Job Status Number to string
-var StatusTypeConv = map[string]string{
-	"IDLE":    "ID",
-	"QUEUED":  "QU",
-	"READY":   "RE",
-	"RUNNING": "RU",
-	"SUCCESS": "SU",
-	"FAILED":  "FA",
-	"ABORTED": "AB",
-	"FROZEN":  "FZ",
-}
-
 // String to Job Event type
 var EventTypeConv = map[string]pb.Event{
 	"start":  pb.Event_START,

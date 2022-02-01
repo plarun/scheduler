@@ -5,7 +5,6 @@ import (
 	"time"
 
 	pb "github.com/plarun/scheduler/client/data"
-	"github.com/plarun/scheduler/client/model"
 	"golang.org/x/net/context"
 )
 
@@ -36,7 +35,7 @@ func (controller JobStatusController) PrintJobStatus(jobName string) error {
 		jobStatusRes.GetJobName(),
 		jobStatusRes.GetStartTime(),
 		jobStatusRes.GetEndTime(),
-		model.StatusTypeConv[jobStatusRes.GetStatusType().String()])
+		jobStatusRes.GetStatusType().String())
 
 	return nil
 }

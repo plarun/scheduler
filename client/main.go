@@ -53,7 +53,7 @@ func startClient() {
 // sendevent is a subcommand to send a job action event request
 func sendEvent(client pb.SendEventClient) error {
 	if flag.NArg() != 3 {
-		return fmt.Errorf("invalid argument\nusage:\n\tevent <job_name> <event_type>")
+		return fmt.Errorf("invalid argument\nusage:\n\tevent <job_name> <event_type = start,abort,freeze,reset,green>")
 	}
 
 	jobName := flag.Arg(1)
@@ -128,7 +128,7 @@ func dependents(subcommand string, client pb.JobDependsClient) error {
 func printHelp() {
 	helpStr := `Usage:
 	submit <file>
-	event <job_name> <event_type>
+	event <job_name> <event_type = start,abort,freeze,reset,green>
 	status <job_name>
 	job <job_name>
 	history <job_name>

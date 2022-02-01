@@ -1,6 +1,7 @@
 package job
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -20,6 +21,10 @@ func NewEventController(client pb.SendEventClient) *EventController {
 }
 
 func (controller EventController) Event(jobName string, event string) error {
+	if event != "start" && event != "abort" && event != "freeze" && event != "reset" && event != "green" {
+		return fmt.Errorf("invalid event type")
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
