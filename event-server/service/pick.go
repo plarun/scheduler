@@ -18,7 +18,7 @@ type NextJobsServer struct {
 // Next gets all the jobs which are ready for next run
 func (server NextJobsServer) Pick(ctx context.Context, req *pb.PickJobsReq) (*pb.PickJobsRes, error) {
 	start := time.Now()
-	end := start.Add(time.Second * 5)
+	end := start.Add(time.Second * 1)
 
 	var startTime string = strconv.Itoa(start.Hour()) + ":" + strconv.Itoa(start.Minute()) + ":" + strconv.Itoa(start.Second())
 	var endTime string = strconv.Itoa(end.Hour()) + ":" + strconv.Itoa(end.Minute()) + ":" + strconv.Itoa(end.Second())
