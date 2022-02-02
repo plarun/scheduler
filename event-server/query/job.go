@@ -318,6 +318,12 @@ func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.
 	statusName := pb.Status_name[int32(status.Number())]
 	database.lock.Lock()
 
+	if status == pb.Status_RUNNING {
+		if err := database.saveLastRun(dbTxn, jobName); err != nil {
+			return err
+		}
+	}
+
 	columns := buildJobStatusUpdateQuery(jobName, status)
 	_, err := dbTxn.Exec(
 		"update job set "+
