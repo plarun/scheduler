@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package data;
+
+option go_package = "./;data";
+
+// Message to represent job ready for next run
+message Job {
+	string JobName = 1;
+	string Command = 2;
+	string Machine = 3;
+	string OutFile = 4;
+	string ErrFile = 5;
+	bool ConditionSatisfied = 6;
+}
+
+// Request message to pass list of jobs
+message PassJobsReq {
+	Job ReadyJob = 1;
+}
+
+// Response message for pass jobs is empty
+message PassJobsRes {}
+
+// Service to handle pass jobs
+service PassJobs {
+	rpc Pass(PassJobsReq) returns (PassJobsRes) {}
+}

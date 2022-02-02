@@ -1,7 +1,17 @@
-/* insert job1 */
-insert: test_jobname
-command: test_command
-machine: test_machine
+update: job1
+start_times: 10:54
 
-start_times: 05:00
-run_days: mo,tu,th,fr,sa
+update: job2
+start_times: 10:54
+
+update: job3
+start_times: 10:54
+
+update: job4
+start_times: 10:54
+
+update: job5
+start_times: 10:54
+
+update: job6
+start_times: 10:54

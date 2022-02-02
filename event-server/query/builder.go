@@ -42,6 +42,7 @@ func buildJobStatusUpdateQuery(jobName string, status pb.Status) string {
 	columns = append(columns, fmt.Sprintf("status = '%s'", pb.Status_name[int32(status.Number())]))
 	if status == pb.Status_RUNNING {
 		columns = append(columns, "last_start_time = current_timestamp")
+		columns = append(columns, fmt.Sprintf("last_end_time = '%s'", defaultTime))
 	} else if status == pb.Status_FAILED || status == pb.Status_SUCCESS {
 		columns = append(columns, "last_end_time = current_timestamp")
 	}
