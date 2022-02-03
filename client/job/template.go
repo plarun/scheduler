@@ -20,11 +20,15 @@ func runStatus(jobName string, startTime string, endTime string, status string) 
 	fmt.Println(line1)
 }
 
-// func runHistory(jobName string, startTimes []string, endTimes []string, status []string) {
-// 	for i := 0; i < len(startTimes); i++ {
-// 		runStatus(jobName, startTimes[i], endTimes[i], status[i])
-// 	}
-// }
+func runHistory(jobName string, startTimes []string, endTimes []string, status []pb.Status) {
+	fmt.Println(line1)
+	fmt.Printf("| %-62s | %-19s | %-19s | %-7s |\n", "Job Name", "Start Time", "End Time", "Status")
+	fmt.Println(line1)
+	for i := 0; i < len(startTimes); i++ {
+		fmt.Printf("| %-62s | %-19s | %-19s | %-7s |\n", jobName, startTimes[i], endTimes[i], status[i].String())
+	}
+	fmt.Println(line1)
+}
 
 func jobDefinition(jobDef *pb.GetJilRes) {
 	fmt.Println(line2)

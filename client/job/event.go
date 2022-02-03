@@ -3,7 +3,6 @@ package job
 import (
 	"fmt"
 	"log"
-	"time"
 
 	pb "github.com/plarun/scheduler/client/data"
 	"github.com/plarun/scheduler/client/model"
@@ -25,8 +24,7 @@ func (controller EventController) Event(jobName string, event string) error {
 		return fmt.Errorf("invalid event type")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+	ctx := context.Background()
 
 	eventReq := &pb.SendEventReq{
 		JobName:   jobName,

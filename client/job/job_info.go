@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	pb "github.com/plarun/scheduler/client/data"
 	"github.com/plarun/scheduler/client/model"
@@ -59,8 +58,7 @@ func (controller JobInfoController) SubmitJil(inputFilename string) error {
 		jilList = append(jilList, jil)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+	ctx := context.Background()
 
 	submitReq := &pb.SubmitJilReq{
 		Jil: jilList,

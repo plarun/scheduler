@@ -1,9 +1,6 @@
 package job
 
 import (
-	"log"
-	"time"
-
 	pb "github.com/plarun/scheduler/client/data"
 	"golang.org/x/net/context"
 )
@@ -19,8 +16,7 @@ func NewJobStatusController(client pb.JobStatusClient) *JobStatusController {
 }
 
 func (controller JobStatusController) PrintJobStatus(jobName string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+	ctx := context.Background()
 
 	jobStatusReq := &pb.GetJobRunStatusReq{
 		JobName: jobName,
@@ -41,14 +37,11 @@ func (controller JobStatusController) PrintJobStatus(jobName string) error {
 }
 
 func (controller JobStatusController) PrintJobDefinition(jobName string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+	ctx := context.Background()
 
 	jobDefinitionReq := &pb.GetJilReq{
 		JobName: jobName,
 	}
-
-	log.Println(jobDefinitionReq.JobName)
 
 	jobDefinitionRes, err := controller.client.GetJobDefinition(ctx, jobDefinitionReq)
 	if err != nil {
@@ -61,5 +54,18 @@ func (controller JobStatusController) PrintJobDefinition(jobName string) error {
 }
 
 func (controller JobStatusController) PrintJobHistory(jobName string) error {
+	ctx := context.Background()
+
+	jobRunHistoryReq := &pb.GetJobRunHistoryReq{
+		JobName: jobName,
+	}
+
+	jobRunHistoryRes, err := controller.client.GetJobRunHistory(ctx, jobRunHistoryReq)
+	if err != nil {
+		return err
+	}
+
+	runHistory(jobName, jobRunHistoryRes.StartTime, jobRunHistoryRes.EndTime, jobRunHistoryRes.StatusType)
+
 	return nil
 }
