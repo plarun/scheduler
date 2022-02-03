@@ -60,8 +60,7 @@ func (picker JobPicker) PickJobs() error {
 
 // PassJobs passes the jobs in queue to controller
 func PassJobs(job *pb.ReadyJob) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+	ctx := context.Background()
 
 	// Already initialized
 	picker := GetPickPass()
