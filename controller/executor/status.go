@@ -3,7 +3,6 @@ package executor
 import (
 	"context"
 	"fmt"
-	"time"
 
 	pb "github.com/plarun/scheduler/controller/data"
 )
@@ -21,8 +20,7 @@ func InitUpdateStatusClient(client pb.UpdateStatusClient) {
 }
 
 func updateStatus(jobName string, status pb.NewStatus) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
+	ctx := context.Background()
 
 	updateJobStatusReq := &pb.UpdateStatusReq{
 		JobName: jobName,
