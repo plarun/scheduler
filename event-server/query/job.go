@@ -316,15 +316,10 @@ func (database *Database) GetStatus(dbTxn *sql.Tx, jobName string) (pb.Status, e
 // ChangeStatus updates the status of job
 func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.Status) error {
 	statusName := pb.Status_name[int32(status.Number())]
-	database.lock.Lock()
-
-	if status == pb.Status_RUNNING {
-		if err := database.saveLastRun(dbTxn, jobName); err != nil {
-			return err
-		}
-	}
 
 	columns := buildJobStatusUpdateQuery(jobName, status)
+	database.lock.Lock()
+
 	_, err := dbTxn.Exec(
 		"update job set "+
 			columns+
@@ -335,6 +330,12 @@ func (database *Database) ChangeStatus(dbTxn *sql.Tx, jobName string, status pb.
 
 	if err != nil {
 		return fmt.Errorf("ChangeStatus: %v", err)
+	}
+
+	if status == pb.Status_SUCCESS || status == pb.Status_FAILED || status == pb.Status_ABORTED || status == pb.Status_FROZEN {
+		if err := database.saveLastRun(dbTxn, jobName); err != nil {
+			return err
+		}
 	}
 
 	if database.verbose {
