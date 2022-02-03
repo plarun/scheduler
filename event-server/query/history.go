@@ -76,14 +76,22 @@ func (database *Database) saveLastRun(dbTxn *sql.Tx, jobName string) error {
 
 	log.Println("check max row count")
 	if count == 10 {
+		var runSeqId int
+		row := dbTxn.QueryRow(
+			`select min(run_seq_id)
+			from job_run_history
+			where job_id=?`,
+			jobSeqId)
+
+		if err := row.Scan(&runSeqId); err != nil {
+			return fmt.Errorf("saveLastRun: %v", err)
+		}
+
 		_, err := dbTxn.Exec(
 			`delete from job_run_history
-			where run_seq_id = (
-				select max(run_seq_id)
-				from job_run_history
-				where job_id = ?
-			)`,
-			jobSeqId)
+			where run_seq_id = ?`,
+			runSeqId)
+
 		if err != nil {
 			return fmt.Errorf("saveLastRun: %v", err)
 		}
@@ -138,4 +146,21 @@ func (database *Database) GetRunHistory(dbTxn *sql.Tx, jobName string) ([]string
 	}
 
 	return startTimes, endTimes, statuses, nil
+}
+
+// ClearJobRunHistory removes all the run history of a given job_seq_id
+func (database *Database) ClearJobRunHistory(dbTxn *sql.Tx, jobSeqId int64) error {
+	database.lock.Lock()
+
+	_, err := dbTxn.Exec(
+		`delete from job_run_history
+		where job_id=?`,
+		jobSeqId)
+
+	if err != nil {
+		return fmt.Errorf("clearJobRunHistory: %v", err)
+	}
+
+	database.lock.Unlock()
+	return nil
 }

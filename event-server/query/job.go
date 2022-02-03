@@ -126,13 +126,14 @@ func (database *Database) DeleteJob(dbTxn *sql.Tx, jobName string) error {
 	}
 
 	// remove all the relations of job
-	err = database.DeleteJobRelation(dbTxn, jobSeqId)
-	if err != nil {
+	if err := database.DeleteJobRelation(dbTxn, jobSeqId); err != nil {
 		return err
 	}
 
 	// remove all the run history of job
-	// todo
+	if err := database.ClearJobRunHistory(dbTxn, jobSeqId); err != nil {
+		return err
+	}
 
 	// remove the definition of job
 	database.lock.Lock()
