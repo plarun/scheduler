@@ -22,6 +22,7 @@ type Database struct {
 	verbose bool
 }
 
+// GetDatabase returns the singleton DB instance
 func GetDatabase() *Database {
 	if DB == nil {
 		DB = &Database{
@@ -36,6 +37,7 @@ func (db *Database) SetVerbose() {
 	db.verbose = true
 }
 
+// ConnectDB connects to the Database
 func ConnectDB() {
 	log.Println("DB connecting...")
 

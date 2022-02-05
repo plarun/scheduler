@@ -41,8 +41,6 @@ func (database *Database) saveLastRun(dbTxn *sql.Tx, jobName string) error {
 	var count int8
 	var lastStartTime, lastEndTime, status string
 
-	log.Println("Saving last run status")
-
 	jobSeqId, err := database.GetJobId(dbTxn, jobName)
 	if err != nil {
 		return fmt.Errorf("saveLastRun: %v", err)
@@ -50,7 +48,6 @@ func (database *Database) saveLastRun(dbTxn *sql.Tx, jobName string) error {
 
 	database.lock.Lock()
 
-	log.Println("check row count in job_run_history")
 	row := dbTxn.QueryRow(
 		`select count(*) 
 		from job_run_history
@@ -61,7 +58,6 @@ func (database *Database) saveLastRun(dbTxn *sql.Tx, jobName string) error {
 		return fmt.Errorf("saveLastRun: %v", err)
 	}
 
-	log.Println("get last_start_time, last_end_time, status from job")
 	row2 := dbTxn.QueryRow(
 		`select last_start_time, last_end_time, status
 		from job
@@ -72,9 +68,6 @@ func (database *Database) saveLastRun(dbTxn *sql.Tx, jobName string) error {
 		return fmt.Errorf("saveLastRun: %v", err)
 	}
 
-	log.Println(count, lastStartTime, lastEndTime, status)
-
-	log.Println("check max row count")
 	if count == 10 {
 		var runSeqId int
 		row := dbTxn.QueryRow(
@@ -97,7 +90,6 @@ func (database *Database) saveLastRun(dbTxn *sql.Tx, jobName string) error {
 		}
 	}
 
-	log.Println("going to insert entry into job_run_history")
 	_, err = dbTxn.Exec(
 		`insert into job_run_history
 		(job_id, start_time, end_time, status)
@@ -140,7 +132,11 @@ func (database *Database) GetRunHistory(dbTxn *sql.Tx, jobName string) ([]string
 		if err := rows.Scan(&startTime, &endTime, &status); err != nil {
 			return nil, nil, nil, err
 		}
+
 		startTimes = append(startTimes, startTime)
+		if endTime == defaultTime {
+			endTime = "----:--:-- --:--:--"
+		}
 		endTimes = append(endTimes, endTime)
 		statuses = append(statuses, status)
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/plarun/scheduler/event-server/model"
 )
 
+// buildJobUpdateQuery builds the update query for JIL
 func buildJobUpdateQuery(jobData *pb.Jil) string {
 	var data *pb.JilData = jobData.Data
 
@@ -36,10 +37,12 @@ func buildJobUpdateQuery(jobData *pb.Jil) string {
 	return columnStr
 }
 
+// buildJobStatusUpdateQuery builds the job's status update query
 func buildJobStatusUpdateQuery(jobName string, status pb.Status) string {
 	var columns []string
 
 	columns = append(columns, fmt.Sprintf("status = '%s'", pb.Status_name[int32(status.Number())]))
+
 	if status == pb.Status_RUNNING {
 		columns = append(columns, "last_start_time = current_timestamp")
 		columns = append(columns, fmt.Sprintf("last_end_time = '%s'", defaultTime))

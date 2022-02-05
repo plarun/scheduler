@@ -18,6 +18,7 @@ type UpdateStatusService struct {
 	MonitorClient pb.ConditionClient
 }
 
+// InitUpdateStatusService initiates the UpdateStatusService
 func InitUpdateStatusService(monitorClient *grpc.ClientConn) {
 	updateStatusService = &UpdateStatusService{
 		Database:      query.GetDatabase(),
@@ -25,39 +26,40 @@ func InitUpdateStatusService(monitorClient *grpc.ClientConn) {
 	}
 }
 
+// GetUpdateStatusService returns the already initiated UpdateStatusService
 func GetUpdateStatusService() *UpdateStatusService {
 	return updateStatusService
 }
 
-// Update updates the status of job by exitcode from controller
+// Update updates the status of job from controller
 func (updStatus UpdateStatusService) Update(ctx context.Context, req *pb.UpdateStatusReq) (*pb.UpdateStatusRes, error) {
 	jobName := req.GetJobName()
-	exitCode := req.GetStatus()
+	newStatus := req.GetStatus()
 
 	var status pb.Status
-	if exitCode == pb.NewStatus_CHANGE_SUCCESS {
+	if newStatus == pb.NewStatus_CHANGE_SUCCESS {
 		status = pb.Status_SUCCESS
-	} else if exitCode == pb.NewStatus_CHANGE_FAILED {
+	} else if newStatus == pb.NewStatus_CHANGE_FAILED {
 		status = pb.Status_FAILED
-	} else if exitCode == pb.NewStatus_CHANGE_ABORTED {
+	} else if newStatus == pb.NewStatus_CHANGE_ABORTED {
 		status = pb.Status_ABORTED
-	} else if exitCode == pb.NewStatus_CHANGE_READY {
+	} else if newStatus == pb.NewStatus_CHANGE_READY {
 		status = pb.Status_READY
-	} else if exitCode == pb.NewStatus_CHANGE_RUNNING {
+	} else if newStatus == pb.NewStatus_CHANGE_RUNNING {
 		status = pb.Status_RUNNING
 	} else {
 		return nil, fmt.Errorf("updateStatusService.Update: invalid exit code type")
 	}
 
-	dbTxn, err := updStatus.Database.DB.Begin()
+	dbTxn1, err := updStatus.Database.DB.Begin()
 	if err != nil {
 		return nil, fmt.Errorf("updateStatusService.Update: %v", err)
 	}
 
-	if err = updStatus.Database.ChangeStatus(dbTxn, jobName, status); err != nil {
+	if err = updStatus.Database.ChangeStatus(dbTxn1, jobName, status); err != nil {
 		return nil, err
 	}
-	dbTxn.Commit()
+	dbTxn1.Commit()
 
 	dbTxn2, err := updStatus.Database.DB.Begin()
 	if err != nil {
@@ -65,6 +67,7 @@ func (updStatus UpdateStatusService) Update(ctx context.Context, req *pb.UpdateS
 	}
 	defer dbTxn2.Commit()
 
+	// Successful job run should notify its successors waiting in the picker
 	if status == pb.Status_SUCCESS {
 		jobSeqId, err := updStatus.Database.GetJobId(dbTxn2, jobName)
 		if err != nil {

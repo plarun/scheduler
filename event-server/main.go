@@ -30,6 +30,7 @@ func main() {
 	serve()
 }
 
+// serve serves the requests
 func serve() {
 	addr := fmt.Sprintf(":%d", port)
 	// Server listens on tcp port

@@ -100,6 +100,7 @@ func (database *Database) GetJobId(dbTxn *sql.Tx, jobName string) (int64, error)
 // GetJobIdList gets list of job sequence ID for list of jobs by job name
 func (database *Database) GetJobIdList(dbTxn *sql.Tx, jobNameList []string) ([]int64, error) {
 	var jobSeqIdList []int64 = make([]int64, 0)
+
 	for _, jobName := range jobNameList {
 		if jobSeqId, err := database.GetJobId(dbTxn, jobName); err != nil {
 			return jobSeqIdList, err
@@ -159,6 +160,7 @@ func (database *Database) DeleteJob(dbTxn *sql.Tx, jobName string) error {
 // UpdateJob updates one or more columns in job table by job name
 func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 	columns := buildJobUpdateQuery(jobData)
+
 	if len(columns) != 0 {
 		database.lock.Lock()
 
@@ -173,6 +175,7 @@ func (database *Database) UpdateJob(dbTxn *sql.Tx, jobData *pb.Jil) error {
 			return fmt.Errorf("updateJob: %v", err)
 		}
 	}
+
 	if jobData.AttributeFlag&model.CONDITIONS != 0 {
 		if err := database.UpdateJobDependents(dbTxn, jobData.Data.JobName, jobData.Data.Conditions); err != nil {
 			return fmt.Errorf("updateJob: %v", err)
@@ -233,8 +236,7 @@ func (database *Database) GetNextRunJobs(dbTxn *sql.Tx, startTime string, endTim
 	}
 
 	for _, job := range nextJobs {
-		err := database.ChangeStatus(dbTxn, job.JobName, pb.Status_QUEUED)
-		if err != nil {
+		if err := database.ChangeStatus(dbTxn, job.JobName, pb.Status_QUEUED); err != nil {
 			return nil, fmt.Errorf("GetNextRunJobs ChangeStatus: %v", err)
 		}
 	}

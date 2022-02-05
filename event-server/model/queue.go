@@ -4,11 +4,13 @@ import (
 	pb "github.com/plarun/scheduler/event-server/data"
 )
 
+// QueryQueue stores and iterates list of job defintions to be processed
 type QueryQueue struct {
 	queries []*pb.Jil
 	index   int
 }
 
+// NewQueryQueue returns new instance of QueryQueue
 func NewQueryQueue() *QueryQueue {
 	return &QueryQueue{
 		queries: make([]*pb.Jil, 0),

@@ -13,6 +13,7 @@ type StatusServer struct {
 	pb.UnimplementedJobStatusServer
 }
 
+// GetJobRunStatus gets the latest run status of job
 func (server StatusServer) GetJobRunStatus(ctx context.Context, req *pb.GetJobRunStatusReq) (*pb.GetJobRunStatusRes, error) {
 	jobName := req.GetJobName()
 
@@ -37,6 +38,7 @@ func (server StatusServer) GetJobRunStatus(ctx context.Context, req *pb.GetJobRu
 	return res, nil
 }
 
+// GetJobDefinition gets the job definition
 func (server StatusServer) GetJobDefinition(ctx context.Context, req *pb.GetJilReq) (*pb.GetJilRes, error) {
 	jobName := req.GetJobName()
 
@@ -54,6 +56,7 @@ func (server StatusServer) GetJobDefinition(ctx context.Context, req *pb.GetJilR
 	return res, nil
 }
 
+// GetJobRunHistory gets the previous runs of job
 func (server StatusServer) GetJobRunHistory(ctx context.Context, req *pb.GetJobRunHistoryReq) (*pb.GetJobRunHistoryRes, error) {
 	jobName := req.GetJobName()
 	res := &pb.GetJobRunHistoryRes{}

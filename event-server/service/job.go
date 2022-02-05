@@ -41,7 +41,7 @@ func (server JilServer) Submit(ctx context.Context, req *pb.SubmitJilReq) (*pb.S
 
 	// database transaction helps to execute list of queries
 	// after all queries are success then commits otherwise rollbacks
-	res, err := server.TransactionJobQuery(ctx, &processQueue)
+	res, err := server.transactionJobQuery(ctx, &processQueue)
 	if err != nil {
 		return res, err
 	}
@@ -80,7 +80,7 @@ func (server JilServer) validateJils(jils []*pb.Jil) error {
 }
 
 // DB transaction executes all the queries then commits or nothing.
-func (server JilServer) TransactionJobQuery(ctx context.Context, queries *model.QueryQueue) (*pb.SubmitJilRes, error) {
+func (server JilServer) transactionJobQuery(ctx context.Context, queries *model.QueryQueue) (*pb.SubmitJilRes, error) {
 	var inserted, updated, deleted int32 = 0, 0, 0
 	res := &pb.SubmitJilRes{
 		Created: 0,
