@@ -21,6 +21,7 @@ type Executor struct {
 	name      string
 }
 
+// newExecutor returns new instance of Executor
 func newExecutor(id int) *Executor {
 	return &Executor{
 		executing: false,
@@ -77,6 +78,7 @@ func (exe *Executor) execute(processJob *pb.Job) {
 	}
 }
 
+// singleton instance of ExecutorPool
 var executorPool *ExecutorPool = nil
 
 type ExecutorPool struct {
@@ -84,6 +86,7 @@ type ExecutorPool struct {
 	lock      *sync.Mutex
 }
 
+// GetExecutorPool returns singleton instance of ExecutorPool
 func GetExecutorPool() *ExecutorPool {
 	if executorPool == nil {
 		var executors []*Executor = make([]*Executor, 0)
@@ -99,6 +102,7 @@ func GetExecutorPool() *ExecutorPool {
 	return executorPool
 }
 
+// getFreeExecutor returns any free executor if available
 func (epool *ExecutorPool) getFreeExecutor() *Executor {
 	var freeExecutor *Executor = nil
 	epool.lock.Lock()
@@ -115,6 +119,7 @@ func (epool *ExecutorPool) getFreeExecutor() *Executor {
 	return freeExecutor
 }
 
+// Start starts the executorPool
 func (epool *ExecutorPool) Start() error {
 	que := queue.GetProcessQueue()
 

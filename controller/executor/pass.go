@@ -13,12 +13,14 @@ type PassJobsServer struct {
 	queue *queue.ConcurrentProcessQueue
 }
 
+// NewPassJobsServer returns new instance of PassJobsServer
 func NewPassJobsServer() *PassJobsServer {
 	return &PassJobsServer{
 		queue: queue.GetProcessQueue(),
 	}
 }
 
+// Pass receives the jobs from Picker
 func (pass PassJobsServer) Pass(ctx context.Context, req *pb.PassJobsReq) (*pb.PassJobsRes, error) {
 	job := req.GetReadyJob()
 	if err := updateStatus(job.GetJobName(), pb.NewStatus_CHANGE_READY); err != nil {

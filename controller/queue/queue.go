@@ -79,12 +79,16 @@ func (que *ConcurrentProcessQueue) Pop() (*ProcessJob, error) {
 	if que.pQue.size == 0 {
 		return nil, fmt.Errorf("process queue is empty")
 	}
+
 	var node *ProcessJob = que.pQue.out
 	que.pQue.out = que.pQue.out.prev
+
 	if que.pQue.out != nil {
 		que.pQue.out.next = nil
 	}
+
 	que.pQue.size--
+
 	if que.pQue.size == 0 {
 		que.pQue.in, que.pQue.out = nil, nil
 	}
