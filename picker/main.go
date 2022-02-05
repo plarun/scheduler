@@ -16,8 +16,6 @@ import (
 const port = 5556
 
 func main() {
-	log.Println("Picker started...")
-
 	// pick client
 	pickConn, err := grpc.Dial("localhost:5555", grpc.WithInsecure())
 	if err != nil {
@@ -39,20 +37,22 @@ func main() {
 	// pick jobs from event-server
 	pickErrChan := make(chan error)
 	go func() {
-		log.Println("client services starting...")
+		log.Println("Picker started...")
+
 		for ; true; time.Sleep(time.Second * 2) {
 			if err := jobPickPass.PickJobs(); err != nil {
 				pickErrChan <- err
+				log.Println(<-pickErrChan, "retrying...")
+				time.Sleep(time.Second * 5)
 			}
 		}
 	}()
 
 	// server service to communicate with controller
 	serve()
-
-	log.Fatal(<-pickErrChan)
 }
 
+// serve serves the requests
 func serve() {
 	addr := fmt.Sprintf(":%d", port)
 	// Server listens on tcp port

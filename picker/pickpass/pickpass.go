@@ -2,13 +2,13 @@ package pickpass
 
 import (
 	"log"
-	"time"
 
 	pb "github.com/plarun/scheduler/picker/data"
 	"github.com/plarun/scheduler/picker/wait"
 	"golang.org/x/net/context"
 )
 
+// Singleton JobPicker instance
 var pickPass *JobPicker = nil
 
 // JobPicker wraps the NextJobsClient and queues the next run jobs
@@ -18,6 +18,7 @@ type JobPicker struct {
 	Holder     *wait.ConcurrentHolder
 }
 
+// InitPickPass initiates the JobPicker
 func InitPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *JobPicker {
 	if pickPass == nil {
 		pickPass = &JobPicker{
@@ -30,17 +31,15 @@ func InitPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *J
 	return pickPass
 }
 
+// GetPickPass returns the already initiated singleton JobPicker
 func GetPickPass() *JobPicker {
 	return pickPass
 }
 
 // NextJobs get and pushes the next run jobs to waiting queue
 func (picker JobPicker) PickJobs() error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
 	pickJobReq := &pb.PickJobsReq{}
-	pickJobRes, err := picker.PickClient.Pick(ctx, pickJobReq)
+	pickJobRes, err := picker.PickClient.Pick(context.Background(), pickJobReq)
 	if err != nil {
 		return err
 	}
@@ -54,24 +53,20 @@ func (picker JobPicker) PickJobs() error {
 	}
 
 	picker.Holder.Print()
-
 	return nil
 }
 
 // PassJobs passes the jobs in queue to controller
 func PassJobs(job *pb.ReadyJob) error {
-	ctx := context.Background()
-
 	// Already initialized
 	picker := GetPickPass()
-
 	passJobReq := &pb.PassJobsReq{
 		Job: job,
 	}
 
 	log.Printf("Job: %s is passed to controller\n", job.GetJobName())
 
-	_, err := picker.PassClient.Pass(ctx, passJobReq)
+	_, err := picker.PassClient.Pass(context.Background(), passJobReq)
 	if err != nil {
 		return err
 	}

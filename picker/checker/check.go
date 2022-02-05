@@ -13,12 +13,14 @@ type HoldChecker struct {
 	Holder *wait.ConcurrentHolder
 }
 
+// NewHolderChecker returns new instance of HolderChecker
 func NewHoldChecker() *HoldChecker {
 	return &HoldChecker{
 		Holder: wait.NewConcurrentHolder(),
 	}
 }
 
+// ConditionStatus checks on the successors of the successfully completed job
 func (checker HoldChecker) ConditionStatus(ctx context.Context, req *pb.JobConditionReq) (*pb.JobConditionRes, error) {
 	for _, dependentJob := range req.GetSatisfiedSuccessors() {
 		if checker.Holder.Contains(dependentJob) {
