@@ -9,63 +9,58 @@ type JobStatusController struct {
 	client pb.JobStatusClient
 }
 
+// NewJobStatusController returns new instance of JobStatusController
 func NewJobStatusController(client pb.JobStatusClient) *JobStatusController {
 	return &JobStatusController{
 		client: client,
 	}
 }
 
+// PrintJobStatus controls on printing the last run status of job
 func (controller JobStatusController) PrintJobStatus(jobName string) error {
-	ctx := context.Background()
-
 	jobStatusReq := &pb.GetJobRunStatusReq{
 		JobName: jobName,
 	}
 
-	jobStatusRes, err := controller.client.GetJobRunStatus(ctx, jobStatusReq)
+	jobStatusRes, err := controller.client.GetJobRunStatus(context.Background(), jobStatusReq)
 	if err != nil {
 		return err
 	}
 
-	runStatus(
+	printRunStatus(
 		jobStatusRes.GetJobName(),
 		jobStatusRes.GetStartTime(),
 		jobStatusRes.GetEndTime(),
 		jobStatusRes.GetStatusType().String())
-
 	return nil
 }
 
+// PrintJobDefinition controls on printing the job definition
 func (controller JobStatusController) PrintJobDefinition(jobName string) error {
-	ctx := context.Background()
-
 	jobDefinitionReq := &pb.GetJilReq{
 		JobName: jobName,
 	}
 
-	jobDefinitionRes, err := controller.client.GetJobDefinition(ctx, jobDefinitionReq)
+	jobDefinitionRes, err := controller.client.GetJobDefinition(context.Background(), jobDefinitionReq)
 	if err != nil {
 		return err
 	}
 
-	jobDefinition(jobDefinitionRes)
-
+	printJobDefinition(jobDefinitionRes)
 	return nil
 }
 
+// PrintJobHistory controls on printing previous run history of job
 func (controller JobStatusController) PrintJobHistory(jobName string) error {
-	ctx := context.Background()
-
 	jobRunHistoryReq := &pb.GetJobRunHistoryReq{
 		JobName: jobName,
 	}
 
-	jobRunHistoryRes, err := controller.client.GetJobRunHistory(ctx, jobRunHistoryReq)
+	jobRunHistoryRes, err := controller.client.GetJobRunHistory(context.Background(), jobRunHistoryReq)
 	if err != nil {
 		return err
 	}
 
-	runHistory(jobName, jobRunHistoryRes.StartTime, jobRunHistoryRes.EndTime, jobRunHistoryRes.StatusType)
-
+	printRunHistory(jobName, jobRunHistoryRes.StartTime, jobRunHistoryRes.EndTime, jobRunHistoryRes.StatusType)
 	return nil
 }

@@ -32,9 +32,9 @@ func (controller JobInfoController) SubmitJil(inputFilename string) error {
 
 	jilList := []*pb.Jil{}
 	for _, parsedJil := range parsedJils {
-
 		jil := &pb.Jil{}
 		jil.Data = &pb.JilData{}
+
 		if parsedJil.Action == model.DELETE {
 			jil.Action = pb.JilAction_DELETE
 			jil.Data.JobName = parsedJil.JobName
@@ -44,6 +44,7 @@ func (controller JobInfoController) SubmitJil(inputFilename string) error {
 			} else if parsedJil.Action == model.UPDATE {
 				jil.Action = pb.JilAction_UPDATE
 			}
+
 			jil.Data.JobName = parsedJil.JobName
 			jil.Data.Command = parsedJil.Command
 			jil.Data.Conditions = parsedJil.Conditions
@@ -58,8 +59,6 @@ func (controller JobInfoController) SubmitJil(inputFilename string) error {
 		jilList = append(jilList, jil)
 	}
 
-	ctx := context.Background()
-
 	submitReq := &pb.SubmitJilReq{
 		Jil: jilList,
 	}
@@ -68,24 +67,16 @@ func (controller JobInfoController) SubmitJil(inputFilename string) error {
 		log.Println(jil.Action, jil.Data)
 	}
 
-	res, err := controller.client.Submit(ctx, submitReq)
+	res, err := controller.client.Submit(context.Background(), submitReq)
 	if err != nil {
 		return err
 	}
 
-	// logging
 	log.Println(res)
 	return nil
 }
 
 // Parse parses the content in file at path inputFile
-// Generates list of parsed JIL data
-// How JIL parser works
-// 1. Input file can contain data for multiple jobs
-// 2. For a job, first key should be action(insert, update, delete) with jobName as value
-// 3. Then other keys followed by action key without any empty line
-// 4. Single line comments can be added as c style comments
-// 5. Empty line represents the end of one job data
 func (controller JobInfoController) Parse(inputFile string) ([]model.JilData, error) {
 	file, err := os.Open(inputFile)
 	if err != nil {

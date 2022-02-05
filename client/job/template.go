@@ -12,7 +12,8 @@ const (
 	line2 = "+----------------+----------------------------------------------------------------------------------------------+"
 )
 
-func runStatus(jobName string, startTime string, endTime string, status string) {
+// printRunStatus prints the last run status of job
+func printRunStatus(jobName string, startTime string, endTime string, status string) {
 	fmt.Println(line1)
 	fmt.Printf("| %-62s | %-19s | %-19s | %-7s |\n", "Job Name", "Start Time", "End Time", "Status")
 	fmt.Println(line1)
@@ -20,7 +21,8 @@ func runStatus(jobName string, startTime string, endTime string, status string) 
 	fmt.Println(line1)
 }
 
-func runHistory(jobName string, startTimes []string, endTimes []string, status []pb.Status) {
+// printRunHistory prints the previous run history of job
+func printRunHistory(jobName string, startTimes []string, endTimes []string, status []pb.Status) {
 	fmt.Println(line1)
 	fmt.Printf("| %-62s | %-19s | %-19s | %-7s |\n", "Job Name", "Start Time", "End Time", "Status")
 	fmt.Println(line1)
@@ -30,7 +32,8 @@ func runHistory(jobName string, startTimes []string, endTimes []string, status [
 	fmt.Println(line1)
 }
 
-func jobDefinition(jobDef *pb.GetJilRes) {
+// printJobDefinition prints the job definition
+func printJobDefinition(jobDef *pb.GetJilRes) {
 	fmt.Println(line2)
 	fmt.Printf("| %-14s | %-92s |\n", "Job Name", jobDef.GetJobName())
 	fmt.Printf("| %-14s | %-92s |\n", "Command", jobDef.GetCommand())

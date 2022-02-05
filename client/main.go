@@ -21,9 +21,11 @@ func startClient() {
 	flag.Parse()
 	if flag.NArg() < 1 {
 		fmt.Fprintln(os.Stderr, "missing subcommand")
+		printHelp()
 		os.Exit(1)
 	}
 
+	// client conn to event-server
 	conn, err := grpc.Dial("localhost:5555", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("connection failed: %v", err)
@@ -41,7 +43,9 @@ func startClient() {
 	} else if cmd == "assoc" || cmd == "future" {
 		err = dependents(cmd, pb.NewJobDependsClient(conn))
 	} else {
+		fmt.Fprintln(os.Stderr, "invalid subcommand")
 		printHelp()
+		os.Exit(1)
 	}
 
 	if err != nil {
@@ -67,7 +71,7 @@ func sendEvent(client pb.SendEventClient) error {
 	return nil
 }
 
-// submitjil is a subcommand to parse and request the job definitions
+// submitjil is a subcommand to insert, update or delete the job definitions
 func submitJil(client pb.SubmitJilClient) error {
 	if flag.NArg() != 2 {
 		return fmt.Errorf("invalid argument\nusage:\n\tsubmit <file_path>")
@@ -93,8 +97,8 @@ func status(subCommand string, client pb.JobStatusClient) error {
 		}
 
 		jobName := flag.Arg(1)
-		err := controller.PrintJobStatus(jobName)
-		if err != nil {
+
+		if err := controller.PrintJobStatus(jobName); err != nil {
 			return err
 		}
 	} else if subCommand == "job" {
@@ -103,8 +107,8 @@ func status(subCommand string, client pb.JobStatusClient) error {
 		}
 
 		jobName := flag.Arg(1)
-		err := controller.PrintJobDefinition(jobName)
-		if err != nil {
+
+		if err := controller.PrintJobDefinition(jobName); err != nil {
 			return err
 		}
 	} else if subCommand == "history" {
@@ -113,7 +117,10 @@ func status(subCommand string, client pb.JobStatusClient) error {
 		}
 
 		jobName := flag.Arg(1)
-		controller.PrintJobHistory(jobName)
+
+		if err := controller.PrintJobHistory(jobName); err != nil {
+			return err
+		}
 	}
 
 	return nil
