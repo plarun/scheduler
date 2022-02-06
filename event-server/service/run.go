@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/plarun/scheduler/event-server/data"
 	"github.com/plarun/scheduler/event-server/model"
@@ -66,6 +67,10 @@ func (server StatusServer) GetJobRunHistory(ctx context.Context, req *pb.GetJobR
 		return res, err
 	}
 	defer dbTxn.Commit()
+
+	if found := server.Database.CheckJob(jobName); !found {
+		return &pb.GetJobRunHistoryRes{}, fmt.Errorf("job not found")
+	}
 
 	startTimes, endTimes, statuses, err := server.Database.GetRunHistory(dbTxn, jobName)
 	if err != nil {

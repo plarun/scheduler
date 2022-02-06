@@ -1,6 +1,8 @@
 package job
 
 import (
+	"fmt"
+
 	pb "github.com/plarun/scheduler/client/data"
 	"golang.org/x/net/context"
 )
@@ -24,7 +26,7 @@ func (controller JobStatusController) PrintJobStatus(jobName string) error {
 
 	jobStatusRes, err := controller.client.GetJobRunStatus(context.Background(), jobStatusReq)
 	if err != nil {
-		return err
+		return fmt.Errorf("job not found")
 	}
 
 	printRunStatus(
@@ -43,7 +45,7 @@ func (controller JobStatusController) PrintJobDefinition(jobName string) error {
 
 	jobDefinitionRes, err := controller.client.GetJobDefinition(context.Background(), jobDefinitionReq)
 	if err != nil {
-		return err
+		return fmt.Errorf("job not found")
 	}
 
 	printJobDefinition(jobDefinitionRes)
@@ -58,7 +60,7 @@ func (controller JobStatusController) PrintJobHistory(jobName string) error {
 
 	jobRunHistoryRes, err := controller.client.GetJobRunHistory(context.Background(), jobRunHistoryReq)
 	if err != nil {
-		return err
+		return fmt.Errorf("job not found")
 	}
 
 	printRunHistory(jobName, jobRunHistoryRes.StartTime, jobRunHistoryRes.EndTime, jobRunHistoryRes.StatusType)

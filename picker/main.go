@@ -35,14 +35,12 @@ func main() {
 	jobPickPass := pickpass.InitPickPass(pickClient, passClient)
 
 	// pick jobs from event-server
-	pickErrChan := make(chan error)
 	go func() {
 		log.Println("Picker started...")
 
 		for ; true; time.Sleep(time.Second * 2) {
 			if err := jobPickPass.PickJobs(); err != nil {
-				pickErrChan <- err
-				log.Println(<-pickErrChan, "retrying...")
+				log.Println("Unable to connect to event-server", "retrying...")
 				time.Sleep(time.Second * 5)
 			}
 		}

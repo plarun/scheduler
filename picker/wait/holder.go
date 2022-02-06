@@ -9,7 +9,7 @@ import (
 
 var holder *ConcurrentHolder = nil
 
-// ConcurrentHolder contains the jobs whose conditions are not yet met
+// ConcurrentHolder contains the jobs whose conditions are not yet satisfied
 type ConcurrentHolder struct {
 	lock   *sync.Mutex
 	Holder map[string]*pb.ReadyJob
