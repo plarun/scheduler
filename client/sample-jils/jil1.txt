@@ -1,11 +1,11 @@
 /* insert job1 */
 insert: job1
-command: test_command1
-std_out_log: test_std_out1
-std_err_log: test_std_err1
+command: "C:\Users\arunp\OneDrive\Desktop\scheduler\job1\job1.bat"
+std_out_log: "C:\Users\arunp\OneDrive\Desktop\scheduler\job1\out.txt"
+std_err_log: "C:\Users\arunp\OneDrive\Desktop\scheduler\job1\out.txt"
 machine: test_machine
-start_times: 05:00
-run_days: mo,tu,th,fr,sa
+start_times: 15:35
+run_days: su,mo,tu,we,th,fr,sa
 
 /* insert job2 */
 insert: job2
