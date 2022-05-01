@@ -12,11 +12,21 @@ import (
 	"github.com/plarun/scheduler/client/job"
 )
 
+const (
+	sendEventUsage = "event <job_name> <event_type = start,abort,freeze,reset,green>"
+	submitJilUsage = "submit <file_path>"
+	statusUsage    = "status <job_name>"
+	jobUsage       = "job <job_name>"
+	historyUsage   = "history <job_name>"
+	// assocUsage     = "assoc <job_name>"
+	// futureUsage    = "future <job_name>"
+)
+
 func main() {
 	startClient()
 }
 
-// startClient Starts and creates all required client services.
+// startClient starts and creates all required client services.
 func startClient() {
 	flag.Parse()
 	if flag.NArg() < 1 {
@@ -57,7 +67,7 @@ func startClient() {
 // sendevent is a subcommand to send a job action event request
 func sendEvent(client pb.SendEventClient) error {
 	if flag.NArg() != 3 {
-		return fmt.Errorf("invalid argument\nusage:\n\tevent <job_name> <event_type = start,abort,freeze,reset,green>")
+		return fmt.Errorf("invalid argument\nusage:\n\t%s", sendEventUsage)
 	}
 
 	jobName := flag.Arg(1)
@@ -74,7 +84,7 @@ func sendEvent(client pb.SendEventClient) error {
 // submitjil is a subcommand to insert, update or delete the job definitions
 func submitJil(client pb.SubmitJilClient) error {
 	if flag.NArg() != 2 {
-		return fmt.Errorf("invalid argument\nusage:\n\tsubmit <file_path>")
+		return fmt.Errorf("invalid argument\nusage:\n\t%s", submitJilUsage)
 	}
 
 	inputFilename := flag.Arg(1)
@@ -93,7 +103,7 @@ func status(subCommand string, client pb.JobStatusClient) error {
 
 	if subCommand == "status" {
 		if flag.NArg() != 2 {
-			return fmt.Errorf("invalid argument\nusage:\n\tstatus <job_name>")
+			return fmt.Errorf("invalid argument\nusage:\n\t%s", statusUsage)
 		}
 
 		jobName := flag.Arg(1)
@@ -103,7 +113,7 @@ func status(subCommand string, client pb.JobStatusClient) error {
 		}
 	} else if subCommand == "job" {
 		if flag.NArg() != 2 {
-			return fmt.Errorf("invalid argument\nusage:\n\tjob <job_name>")
+			return fmt.Errorf("invalid argument\nusage:\n\t%s", jobUsage)
 		}
 
 		jobName := flag.Arg(1)
@@ -113,7 +123,7 @@ func status(subCommand string, client pb.JobStatusClient) error {
 		}
 	} else if subCommand == "history" {
 		if flag.NArg() != 2 {
-			return fmt.Errorf("invalid argument\nusage:\n\thistory <job_name>")
+			return fmt.Errorf("invalid argument\nusage:\n\t%s", historyUsage)
 		}
 
 		jobName := flag.Arg(1)
@@ -133,14 +143,10 @@ func dependents(subcommand string, client pb.JobDependsClient) error {
 
 // printHelp prints subcommand usage
 func printHelp() {
-	helpStr := `Usage:
-	submit <file>
-	event <job_name> <event_type = start,abort,freeze,reset,green>
-	status <job_name>
-	job <job_name>
-	history <job_name>
-	assoc <job_name>
-	future <job_name>`
-
-	fmt.Println(helpStr)
+	fmt.Printf("Usage:\n\t%s\n\t%s\n\t%s\n\t%s\n\t%s\n",
+		submitJilUsage,
+		sendEventUsage,
+		statusUsage,
+		jobUsage,
+		historyUsage)
 }
