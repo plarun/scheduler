@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/plarun/scheduler/client/job/send_event"
 	"log"
 	"os"
 
@@ -30,7 +31,10 @@ func main() {
 func startClient() {
 	flag.Parse()
 	if flag.NArg() < 1 {
-		fmt.Fprintln(os.Stderr, "missing subcommand")
+		_, err := fmt.Fprintln(os.Stderr, "missing subcommand")
+		if err != nil {
+			panic(err.Error())
+		}
 		printHelp()
 		os.Exit(1)
 	}
@@ -40,7 +44,12 @@ func startClient() {
 	if err != nil {
 		log.Fatalf("connection failed: %v", err)
 	}
-	defer conn.Close()
+	defer func(conn *grpc.ClientConn) {
+		err := conn.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(conn)
 
 	cmd := flag.Arg(0)
 
@@ -62,12 +71,15 @@ func startClient() {
 	}
 
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		_, err := fmt.Fprintln(os.Stderr, err)
+		if err != nil {
+			panic(err.Error())
+		}
 		os.Exit(1)
 	}
 }
 
-// sendevent is a subcommand to send a job action event request
+// sendEvent is a subcommand to send a job action event request
 func sendEvent(client pb.SendEventClient) error {
 	if flag.NArg() != 3 {
 		return fmt.Errorf("invalid argument\nusage:\n\t%s", sendEventUsage)
@@ -76,7 +88,7 @@ func sendEvent(client pb.SendEventClient) error {
 	jobName := flag.Arg(1)
 	eventType := flag.Arg(2)
 
-	controller := job.NewEventController(client)
+	controller := send_event.NewEventController(client)
 	if err := controller.Event(jobName, eventType); err != nil {
 		return err
 	}
@@ -84,7 +96,7 @@ func sendEvent(client pb.SendEventClient) error {
 	return nil
 }
 
-// submitjil is a subcommand to insert, update or delete the job definitions
+// submitJil is a subcommand to insert, update or delete the job definitions
 func submitJil(client pb.SubmitJilClient) error {
 	if flag.NArg() != 2 {
 		return fmt.Errorf("invalid argument\nusage:\n\t%s", submitJilUsage)
