@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	builder2 "github.com/plarun/scheduler/client/job/builder"
 	"log"
 	"os"
 	"strings"
@@ -22,7 +23,7 @@ func NewJobInfoController(client pb.SubmitJilClient) *InfoController {
 }
 
 // SubmitJil submits the JIL to grpc server after parsing and building the Job info from JIL
-func (controller InfoController) SubmitJil(inputFilename string) error {
+func (controller *InfoController) SubmitJil(inputFilename string) error {
 	log.Println("jil submitted for parsing...")
 	// parse the raw JIL
 	parsedJil, err := controller.Parse(inputFilename)
@@ -77,7 +78,7 @@ func (controller InfoController) SubmitJil(inputFilename string) error {
 }
 
 // Parse parses the content in file at path inputFile
-func (controller InfoController) Parse(inputFile string) ([]model.JilData, error) {
+func (controller *InfoController) Parse(inputFile string) ([]model.JilData, error) {
 	file, err := os.Open(inputFile)
 	if err != nil {
 		return nil, fmt.Errorf("file: %s doesn't exist", inputFile)
@@ -165,8 +166,8 @@ func (controller InfoController) Parse(inputFile string) ([]model.JilData, error
 
 	var jilList []model.JilData
 	for _, parsedJil := range parsedJil {
-		builder := JobInfoBuilder{parsedJil: parsedJil}
-		jil, err := builder.buildJil()
+		builder := builder2.InfoBuilder{ParsedJil: parsedJil}
+		jil, err := builder.BuildJil()
 		if err != nil {
 			return nil, err
 		}
@@ -177,12 +178,12 @@ func (controller InfoController) Parse(inputFile string) ([]model.JilData, error
 }
 
 // logErr returns error with line number, line content and error message
-func (InfoController) logErr(lineNum int64, line string, errMsg string) error {
+func (*InfoController) logErr(lineNum int64, line string, errMsg string) error {
 	return fmt.Errorf("line no: %d\nline: %s\nerror: %s", lineNum, line, errMsg)
 }
 
 // actionAttribute checks if attribute is one of valid JIL action
-func (InfoController) actionAttribute(attribute string) (string, bool) {
+func (*InfoController) actionAttribute(attribute string) (string, bool) {
 	if attribute == "insert" {
 		return "insert", true
 	} else if attribute == "update" {
@@ -195,7 +196,7 @@ func (InfoController) actionAttribute(attribute string) (string, bool) {
 }
 
 // valueAttribute checks if attribute is not actionAttribute but one of the valid JIL attributes
-func (controller InfoController) valueAttribute(attribute string) bool {
+func (controller *InfoController) valueAttribute(attribute string) bool {
 	_, ok := controller.actionAttribute(attribute)
 	if ok {
 		return true

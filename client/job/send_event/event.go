@@ -1,4 +1,4 @@
-package job
+package send_event
 
 import (
 	"fmt"

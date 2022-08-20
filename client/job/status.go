@@ -7,19 +7,19 @@ import (
 	"golang.org/x/net/context"
 )
 
-type JobStatusController struct {
+type StatusController struct {
 	client pb.JobStatusClient
 }
 
 // NewJobStatusController returns new instance of JobStatusController
-func NewJobStatusController(client pb.JobStatusClient) *JobStatusController {
-	return &JobStatusController{
+func NewJobStatusController(client pb.JobStatusClient) *StatusController {
+	return &StatusController{
 		client: client,
 	}
 }
 
 // PrintJobStatus controls on printing the last run status of job
-func (controller JobStatusController) PrintJobStatus(jobName string) error {
+func (controller StatusController) PrintJobStatus(jobName string) error {
 	jobStatusReq := &pb.GetJobRunStatusReq{
 		JobName: jobName,
 	}
@@ -38,7 +38,7 @@ func (controller JobStatusController) PrintJobStatus(jobName string) error {
 }
 
 // PrintJobDefinition controls on printing the job definition
-func (controller JobStatusController) PrintJobDefinition(jobName string) error {
+func (controller StatusController) PrintJobDefinition(jobName string) error {
 	jobDefinitionReq := &pb.GetJilReq{
 		JobName: jobName,
 	}
@@ -53,7 +53,7 @@ func (controller JobStatusController) PrintJobDefinition(jobName string) error {
 }
 
 // PrintJobHistory controls on printing previous run history of job
-func (controller JobStatusController) PrintJobHistory(jobName string) error {
+func (controller StatusController) PrintJobHistory(jobName string) error {
 	jobRunHistoryReq := &pb.GetJobRunHistoryReq{
 		JobName: jobName,
 	}
