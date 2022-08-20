@@ -4,7 +4,7 @@ import (
 	pb "github.com/plarun/scheduler/client/data"
 )
 
-// List of attributes for jil
+// StaticAttributes List of attributes for jil
 var StaticAttributes = []string{
 	"command",
 	"conditions",
@@ -22,10 +22,10 @@ const (
 	UPDATE JilAction = iota
 	INSERT
 	DELETE
-	NO_ACTION
+	//NO_ACTION
 )
 
-// Attributes available in JIL data
+// JilData Attributes available in JIL data
 type JilData struct {
 	Action        JilAction
 	JobName       string
@@ -42,14 +42,14 @@ type JilData struct {
 // Represents the attribute flag
 // If corresponding bit is set then that attribute has been set in JIL
 const (
-	JOB_NAME    int32 = 1 << iota
-	COMMAND     int32 = 1 << iota
-	CONDITIONS  int32 = 1 << iota
-	STD_OUT     int32 = 1 << iota
-	STD_ERR     int32 = 1 << iota
-	MACHINE     int32 = 1 << iota
-	START_TIMES int32 = 1 << iota
-	RUN_DAYS    int32 = 1 << iota
+	JobName    int32 = 1 << iota
+	Command    int32 = 1 << iota
+	Conditions int32 = 1 << iota
+	StdOut     int32 = 1 << iota
+	StdErr     int32 = 1 << iota
+	Machine    int32 = 1 << iota
+	StartTimes int32 = 1 << iota
+	RunDays    int32 = 1 << iota
 )
 
 // Represents the week days
@@ -63,7 +63,7 @@ const (
 	SA int8 = 1 << iota
 )
 
-// String to Job Event type
+// EventTypeConv String to Job Event type
 var EventTypeConv = map[string]pb.Event{
 	"start":  pb.Event_START,
 	"abort":  pb.Event_ABORT,
