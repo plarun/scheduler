@@ -20,7 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Type to represent different events
+// Type to represent different send_event
 type Event int32
 
 const (
@@ -76,7 +76,7 @@ func (Event) EnumDescriptor() ([]byte, []int) {
 	return file_event_proto_rawDescGZIP(), []int{0}
 }
 
-// Request message to send one of the events of type Event
+// Request message to send one of the send_event of type Event
 type SendEventReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
