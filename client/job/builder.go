@@ -16,11 +16,10 @@ type JobInfoBuilder struct {
 // buildJil builds the jil data from parsed jil
 // validates the data type of values in the jil
 func (builder JobInfoBuilder) buildJil() (model.JilData, error) {
-	var jilData model.JilData = model.JilData{}
+	var jilData = model.JilData{}
 	var err error
 
 	// Jil Action
-	// Jil action should be a valid action
 	if builder.parsedJil["action"] == "insert" || builder.parsedJil["action"] == "update" {
 		jilData, err = builder.buildInsertOrUpdateJil()
 		if err != nil {
@@ -38,7 +37,7 @@ func (builder JobInfoBuilder) buildJil() (model.JilData, error) {
 
 // buildInsertJil builds JIL of action type insert. Also validates the syntax for action type insert.
 func (builder JobInfoBuilder) buildInsertOrUpdateJil() (model.JilData, error) {
-	var jilData model.JilData = model.JilData{}
+	var jilData = model.JilData{}
 	var attributeFlag int32 = 0
 
 	// JIL Action
@@ -49,13 +48,12 @@ func (builder JobInfoBuilder) buildInsertOrUpdateJil() (model.JilData, error) {
 	}
 
 	// Job name
-	// Job name should not be empty
 	if jobName, ok := (builder.parsedJil)["job_name"]; ok {
 		if len(jobName) > 64 {
 			return jilData, fmt.Errorf("length of the job_name should not be more than 64")
 		}
 		jilData.JobName = jobName
-		attributeFlag = model.JOB_NAME | attributeFlag
+		attributeFlag = model.JobName | attributeFlag
 	} else {
 		return jilData, fmt.Errorf("job_name should not be empty")
 	}
@@ -63,7 +61,7 @@ func (builder JobInfoBuilder) buildInsertOrUpdateJil() (model.JilData, error) {
 	// Job Command
 	if command, ok := (builder.parsedJil)["command"]; ok {
 		jilData.Command = command
-		attributeFlag = model.COMMAND | attributeFlag
+		attributeFlag = model.Command | attributeFlag
 	} else if jilData.Action == model.INSERT {
 		return jilData, fmt.Errorf("job command should not be empty")
 	}
@@ -80,35 +78,34 @@ func (builder JobInfoBuilder) buildInsertOrUpdateJil() (model.JilData, error) {
 			}
 			jilData.Conditions = conditionJobs
 		}
-		attributeFlag = model.CONDITIONS | attributeFlag
+		attributeFlag = model.Conditions | attributeFlag
 	}
 
 	// Job Standard output log path
 	if stdOut, ok := (builder.parsedJil)["std_out_log"]; ok {
 		jilData.StdOutLog = stdOut
-		attributeFlag = model.STD_OUT | attributeFlag
+		attributeFlag = model.StdOut | attributeFlag
 	}
 
 	// Job Standard error log path
 	if stdErr, ok := (builder.parsedJil)["std_err_log"]; ok {
 		jilData.StdErrLog = stdErr
-		attributeFlag = model.STD_ERR | attributeFlag
+		attributeFlag = model.StdErr | attributeFlag
 	}
 
 	// Machine
 	if machine, ok := (builder.parsedJil)["machine"]; ok {
 		jilData.Machine = machine
-		attributeFlag = model.MACHINE | attributeFlag
+		attributeFlag = model.Machine | attributeFlag
 	}
 
 	// Start time
-	// It is allowed only when date condition is true
 	if startTimes, ok := (builder.parsedJil)["start_times"]; ok {
 		times := strings.Split(startTimes, ",")
 		for _, time := range times {
 			if err := parseTime(time); err == nil {
 				jilData.StartTimes = startTimes
-				attributeFlag = model.START_TIMES | attributeFlag
+				attributeFlag = model.StartTimes | attributeFlag
 			} else {
 				return jilData, fmt.Errorf("start_time: %v is not allowed, only hh:mm format is allowed", startTimes)
 			}
@@ -116,22 +113,20 @@ func (builder JobInfoBuilder) buildInsertOrUpdateJil() (model.JilData, error) {
 	} else {
 		// default start time
 		jilData.StartTimes = "00:00:00"
-		attributeFlag = model.START_TIMES | attributeFlag
+		attributeFlag = model.StartTimes | attributeFlag
 	}
 
 	// Run Days
-	// run days should be in format of su,mo,tu,we,th,fr,sa
-	// order doesn't matter
 	if runDays, ok := (builder.parsedJil)["run_days"]; ok {
 		days := strings.Split(runDays, ",")
 		if err := validRunDays(days); err != nil {
 			return jilData, err
 		}
 		jilData.RunDays = runDays
-		attributeFlag = model.RUN_DAYS | attributeFlag
+		attributeFlag = model.RunDays | attributeFlag
 	} else {
 		jilData.RunDays = "su,mo,tu,we,th,fr,sa"
-		attributeFlag = model.RUN_DAYS | attributeFlag
+		attributeFlag = model.RunDays | attributeFlag
 	}
 
 	jilData.AttributeFlag = attributeFlag
@@ -149,7 +144,7 @@ func (builder JobInfoBuilder) buildDeleteJil() (model.JilData, error) {
 	// Job name
 	if jobName, ok := (builder.parsedJil)["job_name"]; ok {
 		jilData.JobName = jobName
-		attributeFlag = model.JOB_NAME | attributeFlag
+		attributeFlag = model.JobName | attributeFlag
 	} else {
 		return jilData, fmt.Errorf("buildDeleteJil: job name is empty")
 	}
