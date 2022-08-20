@@ -12,26 +12,26 @@ import (
 	"github.com/plarun/scheduler/client/model"
 )
 
-// JobInfo wraps the SubmitJilClient and manages parsing and prevalidation on JIL
-type JobInfoController struct {
+// InfoController wraps the SubmitJilClient and manages parsing and pre validation on JIL
+type InfoController struct {
 	client pb.SubmitJilClient
 }
 
-func NewJobInfoController(client pb.SubmitJilClient) *JobInfoController {
-	return &JobInfoController{client: client}
+func NewJobInfoController(client pb.SubmitJilClient) *InfoController {
+	return &InfoController{client: client}
 }
 
 // SubmitJil submits the JIL to grpc server after parsing and building the Job info from JIL
-func (controller JobInfoController) SubmitJil(inputFilename string) error {
+func (controller InfoController) SubmitJil(inputFilename string) error {
 	log.Println("jil submitted for parsing...")
 	// parse the raw JIL
-	parsedJils, err := controller.Parse(inputFilename)
+	parsedJil, err := controller.Parse(inputFilename)
 	if err != nil {
 		return err
 	}
 
-	jilList := []*pb.Jil{}
-	for _, parsedJil := range parsedJils {
+	var jilList []*pb.Jil
+	for _, parsedJil := range parsedJil {
 		jil := &pb.Jil{}
 		jil.Data = &pb.JilData{}
 
@@ -77,17 +77,22 @@ func (controller JobInfoController) SubmitJil(inputFilename string) error {
 }
 
 // Parse parses the content in file at path inputFile
-func (controller JobInfoController) Parse(inputFile string) ([]model.JilData, error) {
+func (controller InfoController) Parse(inputFile string) ([]model.JilData, error) {
 	file, err := os.Open(inputFile)
 	if err != nil {
 		return nil, fmt.Errorf("file: %s doesn't exist", inputFile)
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			panic(err.Error())
+		}
+	}(file)
 
 	// singleParseInProgress indicates whether parser is parsing a job
 	singleParseInProgress := false
 
-	var parsedJils []map[string]string
+	var parsedJil []map[string]string
 	chunk := make(map[string]string)
 
 	// lineNum tracks current line number of file
@@ -101,7 +106,7 @@ func (controller JobInfoController) Parse(inputFile string) ([]model.JilData, er
 		if line == "" {
 			if singleParseInProgress {
 				singleParseInProgress = false
-				parsedJils = append(parsedJils, chunk)
+				parsedJil = append(parsedJil, chunk)
 				chunk = make(map[string]string)
 			}
 			continue // ignore spaces between different jil data
@@ -112,7 +117,7 @@ func (controller JobInfoController) Parse(inputFile string) ([]model.JilData, er
 			commentClose := commentLine[len(commentLine)-2:]
 			if commentClose == "*/" {
 				if singleParseInProgress {
-					return nil, controller.logErr(lineNum, line, "comment should only be mentioned in begining of attribures")
+					return nil, controller.logErr(lineNum, line, "comment should only be mentioned in beginning of attributes")
 				}
 				continue // ignore comment on top of each jil data
 			}
@@ -121,7 +126,7 @@ func (controller JobInfoController) Parse(inputFile string) ([]model.JilData, er
 		if len(line) != 0 {
 			parsedLine := strings.SplitN(line, ":", 2)
 			if len(parsedLine) < 2 {
-				return nil, controller.logErr(lineNum, line, "line unparsable")
+				return nil, controller.logErr(lineNum, line, "line is not parsable")
 			}
 
 			attribute := parsedLine[0]
@@ -155,11 +160,11 @@ func (controller JobInfoController) Parse(inputFile string) ([]model.JilData, er
 	}
 
 	if singleParseInProgress {
-		parsedJils = append(parsedJils, chunk)
+		parsedJil = append(parsedJil, chunk)
 	}
 
 	var jilList []model.JilData
-	for _, parsedJil := range parsedJils {
+	for _, parsedJil := range parsedJil {
 		builder := JobInfoBuilder{parsedJil: parsedJil}
 		jil, err := builder.buildJil()
 		if err != nil {
@@ -172,12 +177,12 @@ func (controller JobInfoController) Parse(inputFile string) ([]model.JilData, er
 }
 
 // logErr returns error with line number, line content and error message
-func (JobInfoController) logErr(lineNum int64, line string, errMsg string) error {
+func (InfoController) logErr(lineNum int64, line string, errMsg string) error {
 	return fmt.Errorf("line no: %d\nline: %s\nerror: %s", lineNum, line, errMsg)
 }
 
 // actionAttribute checks if attribute is one of valid JIL action
-func (JobInfoController) actionAttribute(attribute string) (string, bool) {
+func (InfoController) actionAttribute(attribute string) (string, bool) {
 	if attribute == "insert" {
 		return "insert", true
 	} else if attribute == "update" {
@@ -190,7 +195,7 @@ func (JobInfoController) actionAttribute(attribute string) (string, bool) {
 }
 
 // valueAttribute checks if attribute is not actionAttribute but one of the valid JIL attributes
-func (controller JobInfoController) valueAttribute(attribute string) bool {
+func (controller InfoController) valueAttribute(attribute string) bool {
 	_, ok := controller.actionAttribute(attribute)
 	if ok {
 		return true
