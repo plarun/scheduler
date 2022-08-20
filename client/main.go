@@ -53,7 +53,10 @@ func startClient() {
 	} else if cmd == "assoc" || cmd == "future" {
 		err = dependents(cmd, pb.NewJobDependsClient(conn))
 	} else {
-		fmt.Fprintln(os.Stderr, "invalid subcommand")
+		_, err := fmt.Fprintln(os.Stderr, "invalid subcommand")
+		if err != nil {
+			return
+		}
 		printHelp()
 		os.Exit(1)
 	}
@@ -97,7 +100,7 @@ func submitJil(client pb.SubmitJilClient) error {
 	return nil
 }
 
-// status is a subcommand to view latest runs, jobs definition and run history
+// status is a subcommand to view the latest runs, jobs definition and run history
 func status(subCommand string, client pb.JobStatusClient) error {
 	controller := job.NewJobStatusController(client)
 
