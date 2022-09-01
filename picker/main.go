@@ -21,7 +21,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("connection failed: %v", err)
 	}
-	defer pickConn.Close()
+
+	defer func(pickConn *grpc.ClientConn) {
+		err := pickConn.Close()
+		if err != nil {
+
+		}
+	}(pickConn)
+
 	pickClient := pb.NewPickJobsClient(pickConn)
 
 	// pass client
@@ -29,10 +36,17 @@ func main() {
 	if err != nil {
 		log.Fatalf("connection failed: %v", err)
 	}
-	defer passConn.Close()
+
+	defer func(passConn *grpc.ClientConn) {
+		err := passConn.Close()
+		if err != nil {
+
+		}
+	}(passConn)
+
 	passClient := pb.NewPassJobsClient(passConn)
 
-	jobPickPass := pickpass.GetPickPass(pickClient, passClient)
+	jobPickPass := pickpass.InitPickPasser(pickClient, passClient)
 
 	// pick jobs from event-server
 	go func() {
@@ -46,11 +60,10 @@ func main() {
 		}
 	}()
 
-	// server service to communicate with controller
 	serve()
 }
 
-// serve serves the requests
+// serve requests
 func serve() {
 	addr := fmt.Sprintf(":%d", port)
 	// Server listens on tcp port
