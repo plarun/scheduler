@@ -27,46 +27,41 @@ func NewConcurrentHolder() *ConcurrentHolder {
 
 func (holder *ConcurrentHolder) Hold(job *pb.ReadyJob) {
 	holder.lock.Lock()
+	defer holder.lock.Unlock()
 
 	if _, ok := holder.Holder[job.GetJobName()]; !ok && !job.ConditionSatisfied {
 		holder.Holder[job.GetJobName()] = job
 	}
-
-	holder.lock.Unlock()
 }
 
 func (holder *ConcurrentHolder) Free(jobName string) *pb.ReadyJob {
 	holder.lock.Lock()
+	defer holder.lock.Unlock()
 
 	var job *pb.ReadyJob = nil
 	if _, ok := holder.Holder[jobName]; ok {
 		job = holder.Holder[jobName]
 	}
 	delete(holder.Holder, jobName)
-
-	holder.lock.Unlock()
 	return job
 }
 
 func (holder *ConcurrentHolder) Contains(jobName string) bool {
 	holder.lock.Lock()
+	defer holder.lock.Unlock()
 
-	var found bool = false
+	var found = false
 	if _, ok := holder.Holder[jobName]; ok {
 		found = true
 	}
-
-	holder.lock.Unlock()
 	return found
 }
 
 func (holder *ConcurrentHolder) Print() {
 	holder.lock.Lock()
+	defer holder.lock.Unlock()
 
-	log.Println("Holder")
 	for key, value := range holder.Holder {
-		log.Printf("[%v]: {%v, %v, %v}\n", key, value.GetJobName(), value.GetCommand(), value.GetConditionSatisfied())
+		log.Printf("%s [%v]: {%v, %v, %v}\n", "Holder", key, value.GetJobName(), value.GetCommand(), value.GetConditionSatisfied())
 	}
-
-	holder.lock.Unlock()
 }
