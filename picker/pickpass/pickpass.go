@@ -18,8 +18,8 @@ type JobPickPasser struct {
 	Holder     *wait.ConcurrentHolder
 }
 
-// GetPickPass initiates the JobPickPasser
-func GetPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *JobPickPasser {
+// InitPickPasser initiates the JobPickPasser
+func InitPickPasser(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *JobPickPasser {
 	if pickPass == nil {
 		pickPass = &JobPickPasser{
 			PickClient: pickClient,
@@ -28,6 +28,10 @@ func GetPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *Jo
 		}
 	}
 
+	return pickPass
+}
+
+func GetPickPasser() *JobPickPasser {
 	return pickPass
 }
 
