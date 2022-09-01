@@ -24,7 +24,7 @@ func (checker HoldChecker) ConditionStatus(_ context.Context, req *pb.JobConditi
 	for _, dependentJob := range req.GetSatisfiedSuccessors() {
 		if checker.Holder.Contains(dependentJob) {
 			job := checker.Holder.Free(dependentJob)
-			err := pickpass.PassJobs(job)
+			err := pickpass.GetPickPasser().PassJobs(job)
 			if err != nil {
 				return nil, err
 			}
