@@ -11,14 +11,14 @@ var holder *ConcurrentHolder = nil
 
 // ConcurrentHolder contains the jobs whose conditions are not yet satisfied
 type ConcurrentHolder struct {
-	lock   *sync.Mutex
+	lock   *sync.RWMutex
 	Holder map[string]*pb.ReadyJob
 }
 
 func NewConcurrentHolder() *ConcurrentHolder {
 	if holder == nil {
 		holder = &ConcurrentHolder{
-			lock:   &sync.Mutex{},
+			lock:   &sync.RWMutex{},
 			Holder: make(map[string]*pb.ReadyJob),
 		}
 	}
@@ -47,8 +47,8 @@ func (holder *ConcurrentHolder) Free(jobName string) *pb.ReadyJob {
 }
 
 func (holder *ConcurrentHolder) Contains(jobName string) bool {
-	holder.lock.Lock()
-	defer holder.lock.Unlock()
+	holder.lock.RLock()
+	defer holder.lock.RUnlock()
 
 	var found = false
 	if _, ok := holder.Holder[jobName]; ok {
