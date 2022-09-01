@@ -13,7 +13,6 @@ type HoldChecker struct {
 	Holder *wait.ConcurrentHolder
 }
 
-// NewHolderChecker returns new instance of HolderChecker
 func NewHoldChecker() *HoldChecker {
 	return &HoldChecker{
 		Holder: wait.NewConcurrentHolder(),
@@ -25,7 +24,10 @@ func (checker HoldChecker) ConditionStatus(ctx context.Context, req *pb.JobCondi
 	for _, dependentJob := range req.GetSatisfiedSuccessors() {
 		if checker.Holder.Contains(dependentJob) {
 			job := checker.Holder.Free(dependentJob)
-			pickpass.PassJobs(job)
+			err := pickpass.PassJobs(job)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
