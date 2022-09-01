@@ -8,20 +8,20 @@ import (
 	"golang.org/x/net/context"
 )
 
-// Singleton JobPicker instance
-var pickPass *JobPicker = nil
+// Singleton JobPickPasser instance
+var pickPass *JobPickPasser = nil
 
-// JobPicker wraps the NextJobsClient and queues the next run jobs
-type JobPicker struct {
+// JobPickPasser wraps the NextJobsClient and queues the next run jobs
+type JobPickPasser struct {
 	PickClient pb.PickJobsClient
 	PassClient pb.PassJobsClient
 	Holder     *wait.ConcurrentHolder
 }
 
-// InitPickPass initiates the JobPicker
-func InitPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *JobPicker {
+// GetPickPass initiates the JobPickPasser
+func GetPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *JobPickPasser {
 	if pickPass == nil {
-		pickPass = &JobPicker{
+		pickPass = &JobPickPasser{
 			PickClient: pickClient,
 			PassClient: passClient,
 			Holder:     wait.NewConcurrentHolder(),
@@ -31,13 +31,8 @@ func InitPickPass(pickClient pb.PickJobsClient, passClient pb.PassJobsClient) *J
 	return pickPass
 }
 
-// GetPickPass returns the already initiated singleton JobPicker
-func GetPickPass() *JobPicker {
-	return pickPass
-}
-
 // PickJobs get and pushes the next run jobs to waiting queue
-func (picker JobPicker) PickJobs() error {
+func (picker *JobPickPasser) PickJobs() error {
 	pickJobReq := &pb.PickJobsReq{}
 	pickJobRes, err := picker.PickClient.Pick(context.Background(), pickJobReq)
 	if err != nil {
@@ -46,7 +41,7 @@ func (picker JobPicker) PickJobs() error {
 
 	for _, job := range pickJobRes.JobList {
 		if job.ConditionSatisfied {
-			err := PassJobs(job)
+			err := picker.PassJobs(job)
 			if err != nil {
 				return err
 			}
@@ -60,9 +55,7 @@ func (picker JobPicker) PickJobs() error {
 }
 
 // PassJobs passes the jobs in queue to controller
-func PassJobs(job *pb.ReadyJob) error {
-	// Already initialized
-	picker := GetPickPass()
+func (picker *JobPickPasser) PassJobs(job *pb.ReadyJob) error {
 	passJobReq := &pb.PassJobsReq{
 		Job: job,
 	}

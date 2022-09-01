@@ -32,7 +32,7 @@ func main() {
 	defer passConn.Close()
 	passClient := pb.NewPassJobsClient(passConn)
 
-	jobPickPass := pickpass.InitPickPass(pickClient, passClient)
+	jobPickPass := pickpass.GetPickPass(pickClient, passClient)
 
 	// pick jobs from event-server
 	go func() {
