@@ -36,7 +36,7 @@ func GetPickPass() *JobPicker {
 	return pickPass
 }
 
-// NextJobs get and pushes the next run jobs to waiting queue
+// PickJobs get and pushes the next run jobs to waiting queue
 func (picker JobPicker) PickJobs() error {
 	pickJobReq := &pb.PickJobsReq{}
 	pickJobRes, err := picker.PickClient.Pick(context.Background(), pickJobReq)
@@ -46,7 +46,10 @@ func (picker JobPicker) PickJobs() error {
 
 	for _, job := range pickJobRes.JobList {
 		if job.ConditionSatisfied {
-			PassJobs(job)
+			err := PassJobs(job)
+			if err != nil {
+				return err
+			}
 		} else {
 			picker.Holder.Hold(job)
 		}
