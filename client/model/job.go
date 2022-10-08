@@ -1,7 +1,7 @@
 package model
 
 import (
-	pb "github.com/plarun/scheduler/client/data"
+	pb "github.com/plarun/scheduler/client/proto"
 )
 
 // StaticAttributes List of attributes for jil

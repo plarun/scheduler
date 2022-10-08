@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	pb "github.com/plarun/scheduler/client/data"
+	pb "github.com/plarun/scheduler/client/proto"
 )
 
 const (

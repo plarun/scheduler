@@ -3,7 +3,7 @@ package job
 import (
 	"fmt"
 
-	pb "github.com/plarun/scheduler/client/data"
+	pb "github.com/plarun/scheduler/client/proto"
 	"golang.org/x/net/context"
 )
 

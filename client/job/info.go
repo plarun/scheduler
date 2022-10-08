@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	builder2 "github.com/plarun/scheduler/client/job/builder"
 	"log"
 	"os"
 	"strings"
 
-	pb "github.com/plarun/scheduler/client/data"
+	builder2 "github.com/plarun/scheduler/client/job/builder"
+
 	"github.com/plarun/scheduler/client/model"
+	pb "github.com/plarun/scheduler/client/proto"
 )
 
 // InfoController wraps the SubmitJilClient and manages parsing and pre validation on JIL

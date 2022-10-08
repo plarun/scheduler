@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package data;
+
+option go_package = "./;data";
+
+// Type to represent different events
+enum Event {
+	START = 0;
+	ABORT = 1;
+	FREEZE = 2;
+	RESET = 3;
+	GREEN = 4;
+}
+
+// Request message to send one of the events of type Event
+message SendEventReq {
+	string JobName = 1;
+	Event EventType = 2;
+}
+
+// Response message for event sent
+message SendEventRes {
+	string JobName = 1;
+	bool EventChanged = 2;
+	string CurrentStatus = 3;
+}
+
+// Service to handle send event actions
+service SendEvent {
+	rpc Event(SendEventReq) returns (SendEventRes) {}
+}

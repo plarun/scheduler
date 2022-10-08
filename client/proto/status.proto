@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package data;
+
+option go_package = "./;data";
+
+// Type to represent job status
+enum Status {
+	IDLE = 0;
+	QUEUED = 1;
+	READY = 2;
+	RUNNING = 3;
+	SUCCESS = 4;
+	FAILED = 5;
+	ABORTED = 6;
+	FROZEN = 7;
+}
+
+// Request message to get run status of job
+message GetJobRunStatusReq {
+	string JobName = 1;
+}
+
+// Response message for job run status
+message GetJobRunStatusRes {
+	string JobName = 1;
+	string StartTime = 2;
+	string EndTime = 3;
+	Status StatusType = 4;
+}
+
+// Request message to get run history of job
+message GetJobRunHistoryReq {
+	string JobName = 1;
+}
+
+// Response message for job run history
+message GetJobRunHistoryRes {
+	string JobName = 1;
+	repeated string StartTime = 2;
+	repeated string EndTime = 3;
+	repeated Status StatusType = 4;
+}
+
+// Request message to get jil
+message GetJilReq {
+	string JobName = 1;
+}
+
+// Response message of jil
+message GetJilRes {
+	string JobName = 1;
+	string Command = 2;
+	repeated string Conditions = 3;
+	string StdOut = 4;
+	string StdErr = 5;
+	string Machine = 6;
+	string RunDays = 7;
+	string StartTimes = 8;
+}
+
+// Service to handle status of jobs
+service JobStatus {
+	rpc GetJobRunStatus(GetJobRunStatusReq) returns (GetJobRunStatusRes) {}
+	rpc GetJobRunHistory(GetJobRunHistoryReq) returns (GetJobRunHistoryRes) {}
+	rpc GetJobDefinition(GetJilReq) returns (GetJilRes) {}
+}
