@@ -1,0 +1,25 @@
+# bundle window job
+insert_task: test_4_box_1
+type: bundle
+run_days: mo,tu,we,th,fr,sa
+run_window: 02:00-04:00
+start_mins: 10, 30, 50
+label: bundle batch job
+
+# callable job within bundle test_4_box_1
+insert_task: test_4_job_1
+type: callable
+parent: test_4_box_1
+label: callable job within bundle test_4_box_1
+command: /opt/work/scripts/test.sh 3
+out_log_file: /opt/work/logs/test_4_job_1.out
+err_log_file: /opt/work/logs/test_4_job_1.err
+
+# callable job within bundle test_3_box_1
+insert_task: test_4_job_2
+type: callable
+parent: test_4_box_1
+label: callable job within bundle test_4_box_1
+command: /opt/work/scripts/test.sh 3
+out_log_file: /opt/work/logs/test_4_job_2.out
+err_log_file: /opt/work/logs/test_4_job_2.err

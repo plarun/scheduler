@@ -1,0 +1,88 @@
+su(job1)&fa(job2)|(su(job3)&su(job4))|(fa(job5)&nr(job6))
+
+(g1,  ):
+	(c1, &): su, job1
+	(c2, |): fa, job2
+	(g2, |):
+		(c1, &): su, job3
+		(c2,  ): su, job4
+	(g3,  ):
+		(c1, &): fa, job5
+		(c2,  ): nr, job6
+
+type condition struct {
+	isWrapper bool
+	join string
+	status string
+	jobName string
+	conditions []condition
+}
+
+condition: {
+	isWrapper: true,
+	join: "",
+	status: "",
+	jobName: "",
+	condition: [{
+		isWrapper: false,
+		join: "&",
+		status: "su",
+		jobName: "job1",
+		condition: []
+	},
+	{
+		isWrapper: false,
+		join: "|",
+		status: "fa",
+		jobName: "job2",
+		condition: []
+	},
+	{
+		isWrapper: true,
+		join: "|",
+		status: "",
+		jobName: "",
+		condition: [{
+			isWrapper: false,
+			join: "&",
+			status: "su",
+			jobName: "job3",
+			condition: []
+		},
+		{
+			isWrapper: false,
+			join: "",
+			status: "su",
+			jobName: "job4",
+			condition: []
+		}]
+	},
+	{
+		isWrapper: true,
+		join: "",
+		status: "",
+		jobName: "",
+		condition: [{
+			isWrapper: false,
+			join: "&",
+			status: "fa",
+			jobName: "job5",
+			condition: []
+		},
+		{
+			isWrapper: false,
+			join: "",
+			status: "nr",
+			jobName: "job6",
+			condition: []
+		}]
+	},
+}
+
+Detect cycle:
+{ job1, [] }	// job1 -> nil
+{ job2, [job1] }	// job2 -> job1
+{ job3, [job2, job5] }	// job3 -> (job2 -> job1, job5 -> job4 -> job3 cycle)
+{ job4, [job3] }	// job4 -> job3 -> (job2 -> job1), (job5 -> job4 cycle)
+{ job5, [job4] }	// job5 -> job4 -> job3 -> (job2 -> job1), (job5 cycle)
+

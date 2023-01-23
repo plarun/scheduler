@@ -1,0 +1,36 @@
+# callable manual job
+insert_task: test_6_job_1
+type: callable
+label: callable manual job
+command: /opt/work/scripts/test.sh 5
+out_log_file: /opt/work/logs/test_6_job_1.out
+err_log_file: /opt/work/logs/test_6_job_1.err
+
+# callable manual job
+insert_task: test_6_job_2
+type: callable
+label: callable manual job
+command: /opt/work/scripts/test.sh 5
+out_log_file: /opt/work/logs/test_6_job_2.out
+err_log_file: /opt/work/logs/test_6_job_2.err
+
+# callable batch job
+insert_task: test_6_job_3
+type: callable
+run_days: mo,we,th,fr
+start_times: 04:00, 16:00
+label: callable batch job
+command: /opt/work/scripts/test.sh 5
+out_log_file: /opt/work/logs/test_6_job_3.out
+err_log_file: /opt/work/logs/test_6_job_3.err
+
+# callable window job
+insert_task: test_6_job_4
+type: callable
+run_days: mo,we,th,fr
+run_window: 00:10-02:50
+start_mins: 20, 40
+label: callable window job
+command: /opt/work/scripts/test.sh 5
+out_log_file: /opt/work/logs/test_6_job_4.out
+err_log_file: /opt/work/logs/test_6_job_4.err

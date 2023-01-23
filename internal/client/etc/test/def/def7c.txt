@@ -1,0 +1,5 @@
+# change window run to batch run
+update: test_6_job_4
+start_times: 4:00, 16:00
+run_window:
+start_mins:

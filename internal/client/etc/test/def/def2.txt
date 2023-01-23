@@ -1,0 +1,10 @@
+# callable window job
+insert_task: test_2_job_1
+type: callable
+run_days: mo,we,th,fr
+run_window: 00:10-02:50
+start_mins: 20, 40
+label: callable window job
+command: /opt/work/scripts/test.sh 5
+out_log_file: /opt/work/logs/test_2_job_1.out
+err_log_file: /opt/work/logs/test_2_job_1.err

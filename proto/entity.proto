@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/plarun/scheduler/proto";
+
+// Service to communicate between Client and EventServer services
+// Requests the EventServer to route the ParsedEntities request to Validator
+service ParsedActionService {
+    // Submit sends the parsed entities to eventserver
+	rpc Submit(ParsedEntitiesRequest) returns (EntityActionResponse) {}
+}
+
+// Service to communicate between EventServer and Validator services
+// Actual requests from the client will be routed by EventServer to
+// Validator for validation
+service ValidatedActionService {
+    // Route sends the parsed entities from client to validator
+	rpc Route(ParsedEntitiesRequest) returns (ValidatedEntitiesResponse) {}
+}
+
+// Request message of parsed actions
+message ParsedEntitiesRequest {
+	repeated ParsedTaskEntity Tasks = 1;
+	bool OnlyValidate = 2;
+}
+
+// Response for validated list of jobs
+message ValidatedEntitiesResponse {
+    repeated ValidatedTaskEntity Tasks = 1;
+	ActionStatus Status = 2;
+}
+
+// Response message of entity action
+message EntityActionResponse {
+	ActionStatus Status = 1;
+}
+
+// ActionStatus represents status of actions
+// Iff all actions are implemented successfully then Success will be true
+message ActionStatus {
+	bool Success = 1;
+	repeated string Errors = 2;
+	repeated string Warnings = 3;
+}
+
+// ParsedTaskEntity represents the task entity with its fields for validation
+message ParsedTaskEntity {
+	string Action = 1;
+	string Target = 2;
+	map<string, string> Fields = 3;
+}
+
+// ValidatedTaskEntity represents validated job data
+message ValidatedTaskEntity {
+    string Action = 1;
+	string Name = 2;
+	NullableString Type = 3;
+	NullableString Parent = 4;
+	NullableString Machine = 5;
+	NullableString Command = 6;
+	NullableString Condition = 7;
+	NullableString OutLogFile = 8;
+	NullableString ErrLogFile = 9;
+	NullableString Label = 10;
+	NullableString Profile = 11;
+	NullableInt32 RunDays = 12;
+	NullableStrings StartTimes = 13;
+	NullableTimeRange RunWindow = 14;
+	NullableInt32s StartMins = 15;
+	NullableInt32 Priority = 16;
+}
+
+enum NullableFlag {
+	NotAvailable = 0;
+	Empty = 1;
+	Available = 2;
+}
+
+message NullableString {
+	string Value = 1;
+	NullableFlag flag = 2;
+}
+
+message NullableStrings {
+    repeated string Value = 1;
+	NullableFlag flag = 2;
+}
+
+message NullableInt32 {
+    int32 Value = 1;
+	NullableFlag flag = 2;
+}
+
+message NullableInt32s {
+    repeated int32 Value = 1;
+	NullableFlag flag = 2;
+}
+
+message TimeRange {
+    string Start = 1;
+    string End = 2;
+}
+
+message NullableTimeRange {
+    TimeRange Value = 1;
+	NullableFlag flag = 2;
+}

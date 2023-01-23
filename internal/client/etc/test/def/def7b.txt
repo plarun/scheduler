@@ -1,0 +1,3 @@
+# update start mins
+update: test_4_box_1
+start_mins: 00, 20, 40

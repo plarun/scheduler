@@ -1,0 +1,42 @@
+workflow of scheduler
+
+Allocator service handles the scheduling and allocating tasks
+
+Tables:
+sched_stage
+sched_queue
+sched_wait
+sched_ready
+sched_exec
+
+1. Check database periodically and poll the runnable jobs into sched_stage
+2. For each job in sched_stage
+2a. If job is callable, push the job into sched_queue
+2b. If job is bundle, push all of its callable jobs into sched_queue
+3. For each job in sched_queue, check start condition
+3a. If satisfied, push the job into sched_ready then remove from sched_queue
+3b. Otherwise, push the job into sched_wait then remove from sched_queue
+4. Controller.Executor pulls the job from sched_ready and execute its command on mentioned machine
+5. Controller.Executor removes the job from sched_ready and push into sched_exec
+6. Controller.Heartbeat checks if each running jobs are alive
+7. If job execution is completed, Controller will request Allocator.Workflow to check if any child job waiting in sched_wait
+7a. Child job in sched_wait will be removed from sched_wait then pushed into sched_ready
+8. If executed job has parent, check status of all child jobs of that parent
+8a. If any child jobs are running/waiting then parent waits for them to complete
+8b. Otherwise update the status of parent job then remove it from sched_stage
+
+sched_job ----->  sched_stage <----- [workflow] <---.
+                      |                 |           |
+                      |                 |           |
+                      v                 v           |
+                  sched_queue -----> sched_wait     |
+                      |                 |           |
+                      |                 |           |
+                      v                 |           |
+[executor] -----> sched_ready <---------'           |
+                      |                             |
+                      |                             |
+                      v                             |
+                  sched_exec  <----- [heartbeat]    |
+                      ^                             |
+                      '-----------------------------'
