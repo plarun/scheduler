@@ -15,7 +15,7 @@ Create Table `sched_job` (
     `job_type`        varchar(16) Not Null,
     `owner_id`        int Default Null,
     `machine`         int Default Null,
-    `run_flag`        int Default Null,
+    `run_flag`        varchar(16) Default Null,
     `start_condition` varchar(2048) Default Null,
     `command`         varchar(256) Default Null,
     `std_out_log`     varchar(256) Default Null,
