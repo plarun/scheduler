@@ -146,7 +146,7 @@ func insertJob(tx *sql.Tx, tsk *task.TaskEntity) (int64, error) {
 
 	result, err = tx.Exec(qry,
 		parent,
-		tsk.Name,
+		tsk.Name(),
 		tasktype,
 		runFlag,
 		condition,
