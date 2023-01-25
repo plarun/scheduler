@@ -88,9 +88,9 @@ func GetJobData(tx *sql.Tx, jobName string) (*pb.GetJilRes, error) {
 }
 */
 
-func getRunFlag(tx *sql.Tx, jobName string) (int64, int32, error) {
+func getRunFlag(tx *sql.Tx, jobName string) (int64, string, error) {
 	var jobId int64
-	var runFlag int32
+	var runFlag string
 
 	qry := "Select job_id, run_flag From sched_job Where job_name=?"
 
