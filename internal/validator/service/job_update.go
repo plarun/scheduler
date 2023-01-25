@@ -214,7 +214,7 @@ func (upd *updateValidation) Validate() error {
 
 	// validate field 'start_times'
 	if f, ok := tsk.GetFieldStartTimes(); !ok {
-		otask.RunDays.Flag = proto.NullableFlag_NotAvailable
+		otask.StartTimes.Flag = proto.NullableFlag_NotAvailable
 	} else if f.Empty() {
 		rmST = true
 		otask.StartTimes.Flag = proto.NullableFlag_Empty

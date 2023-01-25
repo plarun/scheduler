@@ -5,9 +5,9 @@ import (
 	"github.com/plarun/scheduler/internal/validator/errors"
 )
 
-func GetRunDetails(jobName string) (int32, error) {
+func GetRunDetails(jobName string) (string, error) {
 	database := mysql.GetDatabase()
-	var runFlag int32
+	var runFlag string
 
 	qry := "Select run_flag From sched_job Where job_name=?"
 
@@ -16,7 +16,7 @@ func GetRunDetails(jobName string) (int32, error) {
 	database.RUnlock()
 
 	if err := row.Scan(&runFlag); err != nil {
-		return 0, &errors.InternalSqlError{
+		return "", &errors.InternalSqlError{
 			Query: qry,
 			Err:   err,
 		}

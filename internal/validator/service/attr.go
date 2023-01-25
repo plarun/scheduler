@@ -28,10 +28,10 @@ var (
 	TypeCallableTask = string(task.TypeCallable)
 )
 
-func convertRunFlag(flag int32) task.RunType {
-	if flag == 1 {
+func convertRunFlag(flag string) task.RunType {
+	if flag == "batch" {
 		return task.RunTypeBatch
-	} else if flag == 2 {
+	} else if flag == "window" {
 		return task.RunTypeWindow
 	} else {
 		return task.RunTypeManual
