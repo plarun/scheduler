@@ -67,8 +67,8 @@ func (s State) IsFrozen() bool {
 	return s == StateFrozen
 }
 
-// IsSchedulable checks if state is schedulable
-func IsSchedulable(s State) bool {
+// IsStable checks if state is schedulable
+func IsStable(s State) bool {
 	return s.IsAborted() || s.IsFailure() || s.IsIdle() || s.IsSuccess()
 }
 
