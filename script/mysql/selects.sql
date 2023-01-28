@@ -1,12 +1,13 @@
--- To view task's run details
+-- Query tasks and its schedule details
 Select 
-	j.job_id, 
-    j.job_name, 
-    j.job_type,
+	t.id, 
+    t.name, 
+    t.type,
     run_flag,
-    j.run_days_bit, 
-    j.start_window, 
-    j.end_window,
-    (select group_concat(start_time order by start_time asc separator ',') from sched_batch_run b where b.job_id=j.job_id) start_times,
-    (select group_concat(start_min order by start_min asc separator ',') from sched_window_run w where w.job_id=j.job_id) start_mins
-From sched_job j;
+    t.run_days_bit, 
+    t.start_window, 
+    t.end_window,
+    (select group_concat(start_time order by start_time asc separator ',') from sched_batch_run b where b.task_id=t.id) start_times,
+    (select group_concat(start_min order by start_min asc separator ',') from sched_window_run w where w.task_id=t.id) start_mins
+From sched_task t;
+
