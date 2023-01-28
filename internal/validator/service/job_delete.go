@@ -28,7 +28,7 @@ func (del *deleteValidation) Get() *proto.ValidatedTaskEntity {
 
 func (del *deleteValidation) Validate() error {
 	badErr := func(err error) error {
-		return &er.BadJobDefError{
+		return &er.BadTaskDefError{
 			Action: string(task.ActionUpdate),
 			Target: del.input.Target,
 			Err:    err,
@@ -41,16 +41,16 @@ func (del *deleteValidation) Validate() error {
 	otask.Action = string(task.ActionDelete)
 
 	// validate task name
-	if err := checkFieldJobName(tsk.Name()); err != nil {
+	if err := checkFieldTaskName(tsk.Name()); err != nil {
 		return fmt.Errorf("insertValidation.validate: %w", err)
 	}
 	otask.Name = tsk.Name()
 
 	// task should already exist
-	if exist, err := db.JobExists(otask.Name); err != nil {
+	if exist, err := db.TaskExists(otask.Name); err != nil {
 		return err
 	} else if !exist {
-		return badErr(er.ErrJobNotExist)
+		return badErr(er.ErrTaskNotExist)
 	}
 
 	// other fields should not be available for delete action
@@ -68,7 +68,7 @@ func (del *deleteValidation) Validate() error {
 		tsk.HasField(task.FIELD_ERR_LOG_FILE) ||
 		tsk.HasField(task.FIELD_OUT_LOG_FILE) ||
 		tsk.HasField(task.FIELD_TYPE) {
-		return badErr(er.ErrBadDeleteJob)
+		return badErr(er.ErrBadDeleteTask)
 	}
 
 	return nil

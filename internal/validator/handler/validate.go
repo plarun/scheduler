@@ -9,18 +9,18 @@ import (
 	"golang.org/x/net/context"
 )
 
-// jobActionService serves the requests from client
+// taskActionService serves the requests from client
 // then it will route the request to validator for
 // validating the
-type jobValidationService struct {
+type taskActionService struct {
 	proto.UnimplementedValidatedActionServiceServer
 }
 
-func NewJobValidationService() jobValidationService {
-	return jobValidationService{}
+func NewTaskValidationService() taskActionService {
+	return taskActionService{}
 }
 
-func (svc jobValidationService) Route(ctx context.Context, req *proto.ParsedEntitiesRequest) (*proto.ValidatedEntitiesResponse, error) {
+func (svc taskActionService) Route(ctx context.Context, req *proto.ParsedEntitiesRequest) (*proto.ValidatedEntitiesResponse, error) {
 
 	tsks := req.Tasks
 	n := len(tsks)

@@ -6,39 +6,33 @@ import (
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
-func InsertReadyjob(jobId int) error {
+func InsertReadyTask(id int) error {
 	db := mysql.GetDatabase()
 
-	db.Lock()
-	defer db.Unlock()
-
 	qry := `Insert Into sched_ready (
-		job_id,
+		task_id,
 		sys_entry_date,
 		priority
 	)
-	Select job_id, now(), priority
+	Select task_id, now(), priority
 	From sched_queue
-	Where job_id=? And flag=1`
+	Where task_id=? And flag=1`
 
-	_, err := db.DB.Exec(qry, jobId)
+	_, err := db.DB.Exec(qry, id)
 	if err != nil {
-		return fmt.Errorf("InsertReadyjob: failed to move job from queue to ready queue: %v", err)
+		return fmt.Errorf("InsertReadyTask: failed to move task from queue to ready queue: %v", err)
 	}
 	return nil
 }
 
-func DeleteReadyJob(jobId int) error {
+func DeleteReadyTask(id int) error {
 	db := mysql.GetDatabase()
 
-	db.Lock()
-	defer db.Unlock()
+	qry := `Delete From sched_ready Where task_id=?`
 
-	qry := `Delete From sched_ready Where job_id=?`
-
-	_, err := db.DB.Exec(qry, jobId)
+	_, err := db.DB.Exec(qry, id)
 	if err != nil {
-		return fmt.Errorf("DeleteReadyJob: failed to delete job from ready: %v", err)
+		return fmt.Errorf("DeleteReadyTask: failed to delete task from ready: %v", err)
 	}
 	return nil
 }

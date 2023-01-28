@@ -5,14 +5,14 @@ import (
 	"fmt"
 )
 
-// ClearJobRunHistory removes all the run history of a given job_seq_id
-func ClearJobRunHistory(tx *sql.Tx, jobId int64) error {
-	qry := "Delete From job_run_history Where job_id=?"
+// ClearTaskRunHistory removes all the run history of a given task id
+func ClearTaskRunHistory(tx *sql.Tx, id int64) error {
+	qry := "Delete From task_run_history Where task_id=?"
 
-	_, err := tx.Exec(qry, jobId)
+	_, err := tx.Exec(qry, id)
 
 	if err != nil {
-		return fmt.Errorf("clearJobRunHistory: %v", err)
+		return fmt.Errorf("ClearTaskRunHistory: %v", err)
 	}
 
 	return nil

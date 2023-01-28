@@ -10,17 +10,6 @@ import (
 	"github.com/plarun/scheduler/proto"
 )
 
-/*
-insert_task: test_1_job_1
-type: callable
-run_days: mo,we,th,fr
-start_times: 11:00, 12:00, 13:00
-label: callable batch job
-command: /opt/work/scripts/test.sh 5
-out_log_file: /opt/work/logs/test_1_job_1.out
-err_log_file: /opt/work/logs/test_1_job_1.err
-*/
-
 func initValidator() {
 	// export configs
 	if err := config.LoadConfig(); err != nil {

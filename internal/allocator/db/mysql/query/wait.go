@@ -6,39 +6,33 @@ import (
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
-func InsertWaitJob(jobId int) error {
+func InsertWaitTask(id int) error {
 	db := mysql.GetDatabase()
 
-	db.Lock()
-	defer db.Unlock()
-
 	qry := `Insert Into sched_wait (
-			job_id,
+			task_id,
 			sys_entry_date,
 			priority
 		)
-		Select job_id, now(), priority
+		Select task_id, now(), priority
 		From sched_queue
-		Where job_id=? And flag=1`
+		Where task_id=? And flag=1`
 
-	_, err := db.DB.Exec(qry, jobId)
+	_, err := db.DB.Exec(qry, id)
 	if err != nil {
-		return fmt.Errorf("DequeueJob: failed to move job from queue to wait: %v", err)
+		return fmt.Errorf("InsertWaitTask: failed to move task from queue to wait: %v", err)
 	}
 	return nil
 }
 
-func DeleteWaitJob(jobId int) error {
+func DeleteWaitTask(id int) error {
 	db := mysql.GetDatabase()
 
-	db.Lock()
-	defer db.Unlock()
+	qry := `Delete From sched_wait Where task_id=?`
 
-	qry := `Delete From sched_wait Where job_id=?`
-
-	_, err := db.DB.Exec(qry, jobId)
+	_, err := db.DB.Exec(qry, id)
 	if err != nil {
-		return fmt.Errorf("DeleteWaitJob: failed to delete job from wait: %v", err)
+		return fmt.Errorf("DeleteWaitTask: failed to delete task from wait: %v", err)
 	}
 	return nil
 }

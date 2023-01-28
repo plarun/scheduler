@@ -5,21 +5,21 @@ import (
 	"fmt"
 )
 
-// updateJobRelation updates the relation of given job id
-// with given new distnct condition jobs list. It will remove
-// the existing relations of the given job id then will insert
-// new relations with given new jobs list.
-func updateJobRelation(dbTxn *sql.Tx, jobId int64, condJobs []string) error {
-	condJobsId, err := getJobIdList(dbTxn, condJobs)
+// updateTaskRelation updates the relation of given task id
+// with given new distnct condition tasks list. It will remove
+// the existing relations of the given task id then will insert
+// new relations with given new tasks list.
+func updateTaskRelation(dbTxn *sql.Tx, id int64, condTasks []string) error {
+	condIds, err := getTaskIdList(dbTxn, condTasks)
 	if err != nil {
-		return fmt.Errorf("updateJobRelation: %v", err)
+		return fmt.Errorf("updateTaskRelation: %v", err)
 	}
 
-	if err := deleteJobRelation(dbTxn, jobId); err != nil {
-		return fmt.Errorf("updateJobRelation: %v", err)
+	if err := deleteTaskRelation(dbTxn, id); err != nil {
+		return fmt.Errorf("updateTaskRelation: %v", err)
 	}
-	if err := insertJobRelation(dbTxn, jobId, condJobsId); err != nil {
-		return fmt.Errorf("updateJobRelation: %v", err)
+	if err := insertTaskRelation(dbTxn, id, condIds); err != nil {
+		return fmt.Errorf("updateTaskRelation: %v", err)
 	}
 	return nil
 }

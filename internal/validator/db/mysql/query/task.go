@@ -5,14 +5,14 @@ import (
 	"github.com/plarun/scheduler/internal/validator/errors"
 )
 
-// JobExists checks whether a job is available in job table
-func JobExists(jobName string) (bool, error) {
+// TaskExists checks whether a task is already exist
+func TaskExists(name string) (bool, error) {
 	db := mysql.GetDatabase()
 	var isExists int
 
-	qry := "Select Exists(Select job_name From sched_job Where job_name=?)"
+	qry := "Select Exists(Select 1 From sched_task Where name=?)"
 
-	row := db.DB.QueryRow(qry, jobName)
+	row := db.DB.QueryRow(qry, name)
 
 	if err := row.Scan(&isExists); err != nil {
 		return false, &errors.InternalSqlError{
@@ -23,12 +23,12 @@ func JobExists(jobName string) (bool, error) {
 	return isExists == 1, nil
 }
 
-// GetTaskType gets the job type value of exising job
+// GetTaskType gets the task type value of exising task
 func GetTaskType(name string) (string, error) {
 	database := mysql.GetDatabase()
 	var typ string
 
-	qry := "Select job_type From sched_job Where job_name=?"
+	qry := "Select type From sched_task Where name=?"
 
 	row := database.DB.QueryRow(qry, name)
 

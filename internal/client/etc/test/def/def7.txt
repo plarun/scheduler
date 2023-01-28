@@ -1,10 +1,10 @@
 # update a non-runnable to batch run
-update_task: test_6_job_1
+update_task: test_6_task_1
 run_days: mo,tu, we
 start_times: 5:00
 
 # update a non-runnable to window run
-update_task: test_6_job_2
+update_task: test_6_task_2
 run_days: sa,su
 run_window: 4:00-8:00
 start_mins: 5, 25, 45
@@ -22,13 +22,13 @@ update_task: test_4_box_1
 start_mins: 00, 20, 40
 
 # change batch run to window run
-update_task: test_6_job_3
+update_task: test_6_task_3
 start_times:
 run_window: 6:00-10:00
 start_mins: 00, 30
 
 # change window run to batch run
-update_task: test_6_job_4
+update_task: test_6_task_4
 start_times: 4:00, 16:00
 run_window:
 start_mins:

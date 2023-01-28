@@ -6,7 +6,7 @@ import (
 )
 
 type statusCommand struct {
-	job    string
+	task   string
 	parsed bool
 }
 
@@ -21,12 +21,12 @@ func (sc *statusCommand) IsParsed() bool {
 func (sc *statusCommand) Parse(args []string) error {
 	fs := flag.NewFlagSet(CMD_STATUS, flag.ContinueOnError)
 
-	fs.StringVar(&sc.job, "j", "", "job name")
+	fs.StringVar(&sc.task, "j", "", "task name")
 
 	fs.Parse(args)
 
-	if sc.job == "" {
-		return fmt.Errorf("missing job name")
+	if sc.task == "" {
+		return fmt.Errorf("missing task name")
 	}
 
 	sc.parsed = true

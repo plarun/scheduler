@@ -7,51 +7,51 @@ import (
 	"github.com/plarun/scheduler/api/types/entity/task"
 )
 
-// InsertJob inserts a new job definition into job table
-// job can be one of below category
+// InsertTask inserts a new task
+// task can be one of below category
 // 1. runnable/non-runnable
 // 2. bundle/callable
 // 3. batch-run/window-run
-func InsertJob(tx *sql.Tx, tsk *task.TaskEntity) error {
-	// insert the job
-	insertedJobId, err := insertJob(tx, tsk)
+func InsertTask(tx *sql.Tx, tsk *task.TaskEntity) error {
+	// insert the task
+	insertedTaskId, err := insertTask(tx, tsk)
 	if err != nil {
-		return fmt.Errorf("InsertJob: %v", err)
+		return fmt.Errorf("insertTask: %v", err)
 	}
 
 	// insert run times
 	if f, ok := tsk.GetFieldStartTimes(); ok {
 		// Start times of task
-		if err := insertStartTimes(tx, insertedJobId, f.Value()); err != nil {
-			return fmt.Errorf("InsertJob: %w", err)
+		if err := insertStartTimes(tx, insertedTaskId, f.Value()); err != nil {
+			return fmt.Errorf("insertTask: %w", err)
 		}
 	} else if f, ok := tsk.GetFieldStartMins(); ok {
 		// Start mins of task
-		if err := insertStartMins(tx, insertedJobId, f.Value()); err != nil {
-			return fmt.Errorf("InsertJob: %w", err)
+		if err := insertStartMins(tx, insertedTaskId, f.Value()); err != nil {
+			return fmt.Errorf("insertTask: %w", err)
 		}
 	}
 
-	// insert job relation
+	// insert task relation
 	if _, ok := tsk.GetFieldCondition(); ok {
 		f, _ := tsk.GetField(task.FIELD_CONDITION)
 		distTasks := f.(*task.Condition).DistinctTasks()
-		dependentJobIds, err := getJobIdList(tx, distTasks)
+		dependentTasksId, err := getTaskIdList(tx, distTasks)
 		if err != nil {
-			return fmt.Errorf("InsertJob.%v", err)
+			return fmt.Errorf("insertTask.%v", err)
 		}
 
-		if err := insertJobRelation(tx, insertedJobId, dependentJobIds); err != nil {
-			return fmt.Errorf("InsertJob.%v", err)
+		if err := insertTaskRelation(tx, insertedTaskId, dependentTasksId); err != nil {
+			return fmt.Errorf("insertTask.%v", err)
 		}
 	}
 
 	return nil
 }
 
-// insertJob inserts a new job
-func insertJob(tx *sql.Tx, tsk *task.TaskEntity) (int64, error) {
-	var insertedJobId int64
+// insertTask inserts a new task
+func insertTask(tx *sql.Tx, tsk *task.TaskEntity) (int64, error) {
+	var insertedTaskId int64
 	var err error
 	var result sql.Result
 
@@ -104,9 +104,9 @@ func insertJob(tx *sql.Tx, tsk *task.TaskEntity) (int64, error) {
 	}
 
 	if f, ok := tsk.GetFieldParent(); ok {
-		id, err := getJobId(tx, f.Value())
+		id, err := getTaskId(tx, f.Value())
 		if err != nil {
-			return insertedJobId, fmt.Errorf("insertJob: %v", err)
+			return insertedTaskId, fmt.Errorf("insertTask: %v", err)
 		}
 		parent.Int64, parent.Valid = id, ok
 	}
@@ -124,17 +124,17 @@ func insertJob(tx *sql.Tx, tsk *task.TaskEntity) (int64, error) {
 		}
 	}
 
-	qry := `Insert Into sched_job (
+	qry := `Insert Into sched_task (
 		parent_id,
-		job_name,
-		job_type,
+		name,
+		type,
 		run_flag,
 		start_condition,
 		command,
 		std_out_log,
 		std_err_log,
 		label,
-		job_profile,
+		profile,
 		run_days_bit,
 		start_window,
 		end_window,
@@ -163,32 +163,32 @@ func insertJob(tx *sql.Tx, tsk *task.TaskEntity) (int64, error) {
 		"IDLE")
 
 	if err != nil {
-		return insertedJobId, fmt.Errorf("insertJob: %v", err)
+		return insertedTaskId, fmt.Errorf("insertTask: %v", err)
 	}
 
-	insertedJobId, err = result.LastInsertId()
+	insertedTaskId, err = result.LastInsertId()
 	if err != nil {
-		return insertedJobId, fmt.Errorf("insertJob: %v", err)
+		return insertedTaskId, fmt.Errorf("insertTask: %v", err)
 	}
-	return insertedJobId, nil
+	return insertedTaskId, nil
 }
 
-func insertStartTimes(tx *sql.Tx, jobId int64, startTimes []string) error {
-	qry := "Insert Into sched_batch_run (job_id, start_time) Values (?,?)"
+func insertStartTimes(tx *sql.Tx, id int64, startTimes []string) error {
+	qry := "Insert Into sched_batch_run (task_id, start_time) Values (?,?)"
 
 	for _, stime := range startTimes {
-		if _, err := tx.Exec(qry, jobId, stime); err != nil {
+		if _, err := tx.Exec(qry, id, stime); err != nil {
 			return fmt.Errorf("insertStartTimes: %v", err)
 		}
 	}
 	return nil
 }
 
-func insertStartMins(tx *sql.Tx, jobId int64, startMins []uint8) error {
-	qry := "Insert Into sched_window_run (job_id, start_min) Values (?,?)"
+func insertStartMins(tx *sql.Tx, id int64, startMins []uint8) error {
+	qry := "Insert Into sched_window_run (task_id, start_min) Values (?,?)"
 
 	for _, smin := range startMins {
-		if _, err := tx.Exec(qry, jobId, smin); err != nil {
+		if _, err := tx.Exec(qry, id, smin); err != nil {
 			return fmt.Errorf("insertStartMins: %v", err)
 		}
 	}

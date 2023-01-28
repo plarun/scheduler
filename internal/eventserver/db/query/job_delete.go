@@ -7,45 +7,45 @@ import (
 	"github.com/plarun/scheduler/api/types/entity/task"
 )
 
-// DeleteJob deletes an existing job definition from job table
-func DeleteJob(tx *sql.Tx, tsk *task.TaskEntity) error {
-	jobId, err := getJobId(tx, tsk.Name())
+// DeleteTask deletes an existing task
+func DeleteTask(tx *sql.Tx, tsk *task.TaskEntity) error {
+	taskId, err := getTaskId(tx, tsk.Name())
 	if err != nil {
 		return err
 	}
 
-	// remove job run times
-	if err := deleteStartTimes(tx, jobId); err != nil {
-		return fmt.Errorf("DeleteJob: %w", err)
+	// remove task run times
+	if err := deleteStartTimes(tx, taskId); err != nil {
+		return fmt.Errorf("DeleteTask: %w", err)
 	}
-	if err := deleteStartMins(tx, jobId); err != nil {
-		return fmt.Errorf("DeleteJob: %w", err)
-	}
-
-	// remove all the relations of job
-	if err := deleteJobRelation(tx, jobId); err != nil {
-		return fmt.Errorf("DeleteJob: %w", err)
+	if err := deleteStartMins(tx, taskId); err != nil {
+		return fmt.Errorf("DeleteTask: %w", err)
 	}
 
-	// remove all the run history of job
-	if err := ClearJobRunHistory(tx, jobId); err != nil {
-		return fmt.Errorf("DeleteJob: %w", err)
+	// remove all the relations of task
+	if err := deleteTaskRelation(tx, taskId); err != nil {
+		return fmt.Errorf("DeleteTask: %w", err)
 	}
 
-	// remove the definition of job
-	qry := "Delete From sched_job Where job_name=?"
+	// remove all the run history of task
+	if err := ClearTaskRunHistory(tx, taskId); err != nil {
+		return fmt.Errorf("DeleteTask: %w", err)
+	}
+
+	// remove the definition of task
+	qry := "Delete From sched_task Where name=?"
 	_, err = tx.Exec(qry, tsk.Name)
 
 	if err != nil {
-		return fmt.Errorf("DeleteJob: %v", err)
+		return fmt.Errorf("DeleteTask: %v", err)
 	}
 
 	return nil
 }
 
-func deleteStartTimes(tx *sql.Tx, jobId int64) error {
-	qry := "Delete From sched_batch_run Where job_id=?"
-	_, err := tx.Exec(qry, jobId)
+func deleteStartTimes(tx *sql.Tx, taskId int64) error {
+	qry := "Delete From sched_batch_run Where task_id=?"
+	_, err := tx.Exec(qry, taskId)
 
 	if err != nil {
 		return fmt.Errorf("deleteStartTimes: %v", err)
@@ -53,9 +53,9 @@ func deleteStartTimes(tx *sql.Tx, jobId int64) error {
 	return nil
 }
 
-func deleteStartMins(tx *sql.Tx, jobId int64) error {
-	qry := "Delete From sched_window_run Where job_id=?"
-	_, err := tx.Exec(qry, jobId)
+func deleteStartMins(tx *sql.Tx, taskId int64) error {
+	qry := "Delete From sched_window_run Where task_id=?"
+	_, err := tx.Exec(qry, taskId)
 
 	if err != nil {
 		return fmt.Errorf("deleteStartTimes: %v", err)
@@ -63,8 +63,8 @@ func deleteStartMins(tx *sql.Tx, jobId int64) error {
 	return nil
 }
 
-func deleteRunWindow(tx *sql.Tx, jobId int64) error {
-	if err := updateRunWindow(tx, jobId, "", ""); err != nil {
+func deleteRunWindow(tx *sql.Tx, taskId int64) error {
+	if err := updateRunWindow(tx, taskId, "", ""); err != nil {
 		return fmt.Errorf("deleteRunWindow: %w", err)
 	}
 	return nil

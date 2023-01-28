@@ -7,9 +7,9 @@ type State string
 const (
 	// state of newly created task or unfreezed task
 	StateIdle State = "idle"
-	// task is staged for execution
+	// task is staged to track
 	StateStaged State = "staged"
-	// task is polled for execution
+	// task is queued for checks
 	StateQueued State = "queued"
 	// task is ready for execution
 	StateReady State = "ready"
@@ -75,4 +75,9 @@ func IsStable(s State) bool {
 // IsRunnable checks if it can be triggered to run
 func IsRunnable(s State) bool {
 	return !s.IsQueued() || !s.IsReady() || !s.IsStaged() || !s.IsRunning()
+}
+
+// IsTriggered checks if task is staged or set for execution
+func IsTriggered(s State) bool {
+	return s.IsStaged() || s.IsQueued() || s.IsReady() || s.IsWaiting() || s.IsRunning()
 }

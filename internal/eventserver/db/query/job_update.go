@@ -8,70 +8,70 @@ import (
 	"github.com/plarun/scheduler/api/types/entity/task"
 )
 
-// UpdateJob updates the job attributes by job name for an existing job
-func UpdateJob(tx *sql.Tx, tsk *task.TaskEntity) error {
-	// get job id and exisiting run flags of the job
-	jobId, runFlag, err := getRunFlag(tx, tsk.Name())
+// UpdateTask updates the task attributes by task name for an existing task
+func UpdateTask(tx *sql.Tx, tsk *task.TaskEntity) error {
+	// get task id and exisiting run flags of the task
+	id, runFlag, err := getRunFlag(tx, tsk.Name())
 	if err != nil {
-		return fmt.Errorf("UpdateJob: %w", err)
+		return fmt.Errorf("UpdateTask: %w", err)
 	}
 
-	// update the job attributes on sched_job table
-	if err := updateJobAttr(tx, tsk); err != nil {
-		return fmt.Errorf("UpdateJob: %w", err)
+	// update the task attributes
+	if err := updateTaskAttr(tx, tsk); err != nil {
+		return fmt.Errorf("UpdateTask: %w", err)
 	}
 
-	// job relation
+	// task relation
 	if _, ok := tsk.GetFieldCondition(); ok {
 		f, _ := tsk.GetField(task.FIELD_CONDITION)
 		distTasks := f.(*task.Condition).DistinctTasks()
-		if err := updateJobRelation(tx, jobId, distTasks); err != nil {
-			return fmt.Errorf("UpdateJob: %w", err)
+		if err := updateTaskRelation(tx, id, distTasks); err != nil {
+			return fmt.Errorf("UpdateTask: %w", err)
 		}
 	}
 
 	var newRunFlag task.RunType = task.RunTypeManual
 
-	// update the job to batch run
+	// update the task to batch run
 	if f, ok := tsk.GetFieldStartTimes(); ok {
-		if err := deleteStartTimes(tx, jobId); err != nil {
-			return fmt.Errorf("UpdateJob: %w", err)
+		if err := deleteStartTimes(tx, id); err != nil {
+			return fmt.Errorf("UpdateTask: %w", err)
 		}
 
 		if hasStartTimes := len(f.Value()) != 0; hasStartTimes {
-			if err := insertStartTimes(tx, jobId, f.Value()); err != nil {
-				return fmt.Errorf("UpdateJob: %w", err)
+			if err := insertStartTimes(tx, id, f.Value()); err != nil {
+				return fmt.Errorf("UpdateTask: %w", err)
 			}
 			newRunFlag = task.RunTypeBatch
 		}
 	}
 
-	// update the start mins of job
+	// update the start mins of task
 	if f, ok := tsk.GetFieldStartMins(); ok {
-		if err := deleteStartMins(tx, jobId); err != nil {
-			return fmt.Errorf("UpdateJob: %w", err)
+		if err := deleteStartMins(tx, id); err != nil {
+			return fmt.Errorf("UpdateTask: %w", err)
 		}
 
 		if hasStartMins := len(f.Value()) != 0; hasStartMins {
-			if err := insertStartMins(tx, jobId, f.Value()); err != nil {
-				return fmt.Errorf("UpdateJob: %w", err)
+			if err := insertStartMins(tx, id, f.Value()); err != nil {
+				return fmt.Errorf("UpdateTask: %w", err)
 			}
 			newRunFlag = task.RunTypeWindow
 		}
 	}
 
-	// update the run window of job
+	// update the run window of task
 	if f, ok := tsk.GetField(task.FIELD_RUN_WINDOW); ok {
 		if f.Empty() {
-			if err := deleteRunWindow(tx, jobId); err != nil {
-				return fmt.Errorf("UpdateJob: %w", err)
+			if err := deleteRunWindow(tx, id); err != nil {
+				return fmt.Errorf("UpdateTask: %w", err)
 			}
 		} else {
 			f, _ := tsk.GetFieldRunWindow()
 			window := f.Value()
 			startWindow, endWindow := window[0], window[1]
-			if err := updateRunWindow(tx, jobId, startWindow, endWindow); err != nil {
-				return fmt.Errorf("UpdateJob: %w", err)
+			if err := updateRunWindow(tx, id, startWindow, endWindow); err != nil {
+				return fmt.Errorf("UpdateTask: %w", err)
 			}
 			newRunFlag = task.RunTypeWindow
 		}
@@ -79,16 +79,16 @@ func UpdateJob(tx *sql.Tx, tsk *task.TaskEntity) error {
 
 	// update is_batch_run flag
 	if newRunFlag != task.RunType(runFlag) {
-		if err := updateRunFlag(tx, jobId, newRunFlag); err != nil {
-			return fmt.Errorf("UpdateJob: %w", err)
+		if err := updateRunFlag(tx, id, newRunFlag); err != nil {
+			return fmt.Errorf("UpdateTask: %w", err)
 		}
 	}
 
 	return nil
 }
 
-// updateJobAttr updates the job attributes which are simple and straight forward
-func updateJobAttr(tx *sql.Tx, tsk *task.TaskEntity) error {
+// updateTaskAttr updates the task attributes which are simple and straight forward
+func updateTaskAttr(tx *sql.Tx, tsk *task.TaskEntity) error {
 	var columns []string
 
 	if f, ok := tsk.GetFieldMachine(); ok {
@@ -107,7 +107,7 @@ func updateJobAttr(tx *sql.Tx, tsk *task.TaskEntity) error {
 		columns = append(columns, fmt.Sprintf("label = '%s'", f.Value()))
 	}
 	if f, ok := tsk.GetFieldProfile(); ok {
-		columns = append(columns, fmt.Sprintf("job_profile = '%s'", f.Value()))
+		columns = append(columns, fmt.Sprintf("profile = '%s'", f.Value()))
 	}
 	if f, ok := tsk.GetFieldRunDays(); ok {
 		columns = append(columns, fmt.Sprintf("run_days_bit = %d", int32(f.Value())))
@@ -118,16 +118,16 @@ func updateJobAttr(tx *sql.Tx, tsk *task.TaskEntity) error {
 
 	columnStr := strings.Join(columns, ",")
 	if len(columns) != 0 {
-		_, err := tx.Exec("update sched_job set "+columnStr+" where job_name=?;", tsk.Name)
+		_, err := tx.Exec("update sched_task set "+columnStr+" where name=?;", tsk.Name())
 
 		if err != nil {
-			return fmt.Errorf("updateJobAttr: %v", err)
+			return fmt.Errorf("updateTaskAttr: %v", err)
 		}
 	}
 	return nil
 }
 
-func updateRunWindow(tx *sql.Tx, jobId int64, windowStartTime, windowEndTime string) error {
+func updateRunWindow(tx *sql.Tx, id int64, windowStartTime, windowEndTime string) error {
 
 	isValid := len(windowStartTime) != 0
 	var nStartWindow, nEndWindow sql.NullString
@@ -135,9 +135,9 @@ func updateRunWindow(tx *sql.Tx, jobId int64, windowStartTime, windowEndTime str
 	nStartWindow = sql.NullString{String: windowStartTime, Valid: isValid}
 	nEndWindow = sql.NullString{String: windowEndTime, Valid: isValid}
 
-	qry := "Update sched_job Set start_window=?, end_window=? Where job_id=?"
+	qry := "Update sched_task Set start_window=?, end_window=? Where id=?"
 
-	_, err := tx.Exec(qry, nStartWindow, nEndWindow, jobId)
+	_, err := tx.Exec(qry, nStartWindow, nEndWindow, id)
 
 	if err != nil {
 		return fmt.Errorf("updateRunWindow: %v", err)
@@ -145,13 +145,13 @@ func updateRunWindow(tx *sql.Tx, jobId int64, windowStartTime, windowEndTime str
 	return nil
 }
 
-func updateRunFlag(tx *sql.Tx, jobId int64, flag task.RunType) error {
-	qry := "Update sched_job Set run_flag=? Where job_id=?"
+func updateRunFlag(tx *sql.Tx, id int64, flag task.RunType) error {
+	qry := "Update sched_task Set run_flag=? Where id=?"
 
-	_, err := tx.Exec(qry, string(flag), jobId)
+	_, err := tx.Exec(qry, string(flag), id)
 
 	if err != nil {
-		return fmt.Errorf("updateJobRunType: %v", err)
+		return fmt.Errorf("updateRunFlag: %v", err)
 	}
 	return nil
 }

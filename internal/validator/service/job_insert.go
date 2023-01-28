@@ -27,9 +27,9 @@ func (ins *insertValidation) Get() *proto.ValidatedTaskEntity {
 }
 
 func (ins *insertValidation) Validate() error {
-	// error to point out the error field with its input and job name
+	// error to point out the error field with its input and task name
 	invalidErr := func(err error, field, value string) error {
-		return &er.InvalidJobFieldError{
+		return &er.InvalidTaskFieldError{
 			Action: string(task.ActionInsert),
 			Target: ins.input.Target,
 			Err:    err,
@@ -49,17 +49,17 @@ func (ins *insertValidation) Validate() error {
 	// set task action type
 	otask.Action = string(task.ActionInsert)
 
-	// validate job name
-	if err := checkFieldJobName(tsk.Name()); err != nil {
+	// validate task name
+	if err := checkFieldTaskName(tsk.Name()); err != nil {
 		return fmt.Errorf("insertValidation.validate: %w", err)
 	}
 	otask.Name = tsk.Name()
 
 	// task should not already exist
-	if exist, err := db.JobExists(otask.Name); err != nil {
+	if exist, err := db.TaskExists(otask.Name); err != nil {
 		return err
 	} else if exist {
-		return invalidErr(er.ErrJobAlreadyExist, "", otask.Name)
+		return invalidErr(er.ErrTaskAlreadyExist, "", otask.Name)
 	}
 
 	// validate field 'type'

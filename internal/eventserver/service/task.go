@@ -132,7 +132,7 @@ func ProcessTaskActions(ctx context.Context, tasks []*proto.ValidatedTaskEntity)
 		log.Printf("Error: ProcessTaskActions: unable to create db transaction: %v", err)
 	}
 
-	log.Println("Starting to process job actions. New sql transaction begins")
+	log.Println("Starting to process task actions. New sql transaction begins")
 
 	for _, t := range tasks {
 		tsk := newTaskEntity(t)
@@ -140,15 +140,15 @@ func ProcessTaskActions(ctx context.Context, tasks []*proto.ValidatedTaskEntity)
 		err := func(action task.Action) error {
 			switch task.Action(t.Action) {
 			case task.ActionInsert:
-				if err = query.InsertJob(tx, tsk); err != nil {
+				if err = query.InsertTask(tx, tsk); err != nil {
 					return err
 				}
 			case task.ActionUpdate:
-				if err = query.UpdateJob(tx, tsk); err != nil {
+				if err = query.UpdateTask(tx, tsk); err != nil {
 					return err
 				}
 			case task.ActionDelete:
-				if err = query.DeleteJob(tx, tsk); err != nil {
+				if err = query.DeleteTask(tx, tsk); err != nil {
 					return err
 				}
 			}
@@ -156,15 +156,15 @@ func ProcessTaskActions(ctx context.Context, tasks []*proto.ValidatedTaskEntity)
 		}(task.Action(t.Action))
 
 		if err != nil {
-			log.Printf("Error: ProcessJobAction: %v", err)
+			log.Printf("Error: ProcessTaskActions: %v", err)
 
 			// rollback the transaction
 			if err := tx.Rollback(); err != nil {
-				log.Printf("Error: ProcessJobAction: failed to rollback sql transaction: %v", err)
+				log.Printf("Error: ProcessTaskActions: failed to rollback sql transaction: %v", err)
 				return status.Error(codes.Internal, "internal error")
 			}
 
-			log.Printf("Error: ProcessJobAction: successfully rollbacked sql transaction: %v", err)
+			log.Printf("Error: ProcessTaskActions: successfully rollbacked sql transaction: %v", err)
 
 			// failed to process JIL
 			for errors.Unwrap(err) != nil {
@@ -178,7 +178,7 @@ func ProcessTaskActions(ctx context.Context, tasks []*proto.ValidatedTaskEntity)
 	// commit the transaction
 	if err := tx.Commit(); err != nil {
 		// logger.Log.WithFields(logrus.Fields{"prefix": "JilService"}).Errorf("Submit: failed to commit: %v", err)
-		log.Printf("Error: ProcessJobAction: failed to commit sql transaction: %v", err)
+		log.Printf("Error: ProcessTaskActions: failed to commit sql transaction: %v", err)
 		return status.Error(codes.Internal, "internal error")
 	}
 

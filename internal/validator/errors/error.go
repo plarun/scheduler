@@ -10,12 +10,12 @@ var (
 	ErrFieldRequired         error = errors.New("field is required")
 	ErrFieldNotRequired      error = errors.New("field is not required")
 
-	ErrJobNotExist     error = errors.New("job not exist")
-	ErrJobAlreadyExist error = errors.New("job already exist")
-	ErrJobMaxLength    error = errors.New("job name can only have 64 characters")
-	ErrJobInvalidChar  error = errors.New("job name can only contain alpha numeric and underscore chars")
+	ErrTaskNotExist     error = errors.New("task not exist")
+	ErrTaskAlreadyExist error = errors.New("task already exist")
+	ErrTaskMaxLength    error = errors.New("task name can only have 64 characters")
+	ErrTaskInvalidChar  error = errors.New("task name can only contain alpha numeric and underscore chars")
 
-	ErrBadDeleteJob error = errors.New("delete job should not have other attributes")
+	ErrBadDeleteTask error = errors.New("delete task should not have other attributes")
 
 	ErrInvalidActionAttr     error = errors.New("action attribute should be either insert/delete/update")
 	ErrInvalidTypeAttr       error = errors.New("type attribute should be either bundle/callable")
@@ -27,7 +27,7 @@ var (
 
 	ErrRepeatedRundaysAttr error = errors.New("run_days attribute contains repeated days")
 
-	ErrBatchWindowRun      error = errors.New("job should not have both batch run and window run")
+	ErrBatchWindowRun      error = errors.New("task should not have both batch run and window run")
 	ErrIncompleteWindowRun error = errors.New("window run should have both 'run_window' and 'start_mins' attributes")
 	ErrRemoveBatchRun      error = errors.New("start_times should be set to null to have window run")
 	ErrRemoveWindowRun     error = errors.New("run_window and start_mins should be set to null to have batch run")
@@ -35,7 +35,7 @@ var (
 	ErrNonEditableTypeAttr error = errors.New("type attribute cannot be changed")
 )
 
-type InvalidJobFieldError struct {
+type InvalidTaskFieldError struct {
 	Action string
 	Target string
 	Field  string
@@ -43,18 +43,18 @@ type InvalidJobFieldError struct {
 	Err    error
 }
 
-func (e *InvalidJobFieldError) Error() string {
+func (e *InvalidTaskFieldError) Error() string {
 	return fmt.Sprintf("action=\"%s\" target=\"%s\" field=\"%s\" value=\"%s\" error=\"%s\"",
 		e.Action, e.Target, e.Field, e.Value, e.Err.Error())
 }
 
-type BadJobDefError struct {
+type BadTaskDefError struct {
 	Action string
 	Target string
 	Err    error
 }
 
-func (e *BadJobDefError) Error() string {
+func (e *BadTaskDefError) Error() string {
 	return fmt.Sprintf("action=\"%s\" target=\"%s\" error=\"%s\"",
 		e.Action, e.Target, e.Err.Error())
 }

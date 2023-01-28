@@ -5,38 +5,38 @@ import (
 	"fmt"
 )
 
-type jobCommand struct {
-	job    string
+type taskCommand struct {
+	task   string
 	parsed bool
 }
 
-func newJobCmd() Executer {
-	return &jobCommand{}
+func newTaskCmd() Executer {
+	return &taskCommand{}
 }
 
-func (jc *jobCommand) IsParsed() bool {
-	return jc.parsed
+func (tc *taskCommand) IsParsed() bool {
+	return tc.parsed
 }
 
-func (jc *jobCommand) Parse(args []string) error {
-	fs := flag.NewFlagSet(CMD_JOB, flag.ContinueOnError)
+func (tc *taskCommand) Parse(args []string) error {
+	fs := flag.NewFlagSet(CMD_TASK, flag.ContinueOnError)
 
-	fs.StringVar(&jc.job, "j", "", "job name")
+	fs.StringVar(&tc.task, "j", "", "task name")
 
 	fs.Parse(args)
 
-	if jc.job == "" {
-		return fmt.Errorf("missing job name")
+	if tc.task == "" {
+		return fmt.Errorf("missing task name")
 	}
 
-	jc.parsed = true
+	tc.parsed = true
 	return nil
 }
 
-func (jc *jobCommand) Exec() error {
+func (tc *taskCommand) Exec() error {
 	return nil
 }
 
-func (jc *jobCommand) Usage() string {
-	return USAGE_CMD_JOB
+func (tc *taskCommand) Usage() string {
+	return USAGE_CMD_TASK
 }

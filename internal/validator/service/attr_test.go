@@ -16,14 +16,14 @@ func TestTaskName(t *testing.T) {
 		wantErr error
 	}{
 		"good job name":    {input: "test_job_1"},
-		"bad space":        {input: "test_ job", wantErr: errors.ErrJobInvalidChar},
-		"bad special char": {input: "test_#", wantErr: errors.ErrJobInvalidChar},
-		"bad long name":    {input: "test_job_12345678901234567890123456789012345678901234567890123456", wantErr: errors.ErrJobMaxLength},
+		"bad space":        {input: "test_ job", wantErr: errors.ErrTaskInvalidChar},
+		"bad special char": {input: "test_#", wantErr: errors.ErrTaskInvalidChar},
+		"bad long name":    {input: "test_job_12345678901234567890123456789012345678901234567890123456", wantErr: errors.ErrTaskMaxLength},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := checkFieldJobName(tc.input)
+			err := checkFieldTaskName(tc.input)
 			if tc.wantErr != nil {
 				if tc.wantErr != err {
 					t.Fatalf("want: %#v, got: %#v", tc.wantErr, err)

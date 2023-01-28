@@ -16,7 +16,7 @@ type TaskValidater interface {
 func ValidateTaskAction(tsk *proto.ParsedTaskEntity) (*proto.ValidatedTaskEntity, error) {
 	action, err := castFieldAction(tsk.Action)
 	if err != nil {
-		return nil, fmt.Errorf("ValidateJob: %w", err)
+		return nil, fmt.Errorf("ValidateTaskAction: %w", err)
 	}
 
 	var vld TaskValidater
@@ -33,7 +33,7 @@ func ValidateTaskAction(tsk *proto.ParsedTaskEntity) (*proto.ValidatedTaskEntity
 	}
 
 	if err := vld.Validate(); err != nil {
-		return nil, fmt.Errorf("ValidateJob: %w", err)
+		return nil, fmt.Errorf("ValidateTaskAction: %w", err)
 	}
 
 	return vld.Get(), nil

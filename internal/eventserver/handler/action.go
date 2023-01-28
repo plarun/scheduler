@@ -58,7 +58,7 @@ func (s ParsedActionService) Submit(ctx context.Context, req *proto.ParsedEntiti
 		return res, nil
 	}
 
-	log.Println("Job processing request handled")
+	log.Println("Task processing request handled")
 	return res, nil
 }
 
@@ -86,15 +86,15 @@ func routeValidationReq(req *proto.ParsedEntitiesRequest) (*proto.ValidatedEntit
 		return res, err
 	}
 
-	vJobs, ok := valRes.(*proto.ValidatedEntitiesResponse)
+	ent, ok := valRes.(*proto.ValidatedEntitiesResponse)
 	if !ok {
-		return vJobs, fmt.Errorf("internal err")
+		return ent, fmt.Errorf("internal err")
 	}
 
 	if err := valConn.Close(); err != nil {
-		return vJobs, err
+		return ent, err
 	}
 
-	log.Println("Job definitions validated by validator service")
-	return vJobs, nil
+	log.Println("Task definitions validated by validator service")
+	return ent, nil
 }

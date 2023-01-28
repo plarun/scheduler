@@ -7,7 +7,7 @@ import (
 
 type eventCommand struct {
 	event  string
-	job    string
+	task   string
 	parsed bool
 }
 
@@ -23,15 +23,15 @@ func (ec *eventCommand) Parse(args []string) error {
 	fs := flag.NewFlagSet(CMD_EVENT, flag.ContinueOnError)
 
 	fs.StringVar(&ec.event, "e", "", "event name")
-	fs.StringVar(&ec.job, "j", "", "job name")
+	fs.StringVar(&ec.task, "j", "", "task name")
 
 	fs.Parse(args)
 
 	if ec.event == "" {
 		return fmt.Errorf("missing event name")
 	}
-	if ec.job == "" {
-		return fmt.Errorf("missing job name")
+	if ec.task == "" {
+		return fmt.Errorf("missing task name")
 	}
 
 	ec.parsed = true

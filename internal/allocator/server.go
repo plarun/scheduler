@@ -3,8 +3,7 @@ package allocator
 import (
 	"log"
 
-	qry "github.com/plarun/scheduler/internal/allocator/config"
-	"github.com/plarun/scheduler/internal/allocator/db/mysql"
+	db "github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
 func Serve(port int) {
@@ -18,15 +17,14 @@ func Serve(port int) {
 	// log.Printf("tcp listening on %s", addr)
 
 	// connect to mysql db
-	if err := mysql.ConnectDB(); err != nil {
+	if err := db.ConnectDB(); err != nil {
 		log.Fatal(err)
 	}
 
-	if err := qry.LoadConfig(); err != nil {
-		log.Fatal(err)
-	}
+	// ser := grpc.NewServer()
 
-	// ser := api.RegisterGrpcServers()
+	// register all grpc services here
+	// proto.RegisterParsedActionServiceServer(ser, handler.NewParsedActionService())
 
 	// if err := ser.Serve(listen); err != nil {
 	// 	log.Fatal("failed to listen")

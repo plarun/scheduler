@@ -3,7 +3,7 @@ package client
 const (
 	CMD_DEF    string = "schd_def"
 	CMD_EVENT  string = "schd_event"
-	CMD_JOB    string = "schd_job"
+	CMD_TASK   string = "schd_task"
 	CMD_RUNS   string = "schd_runs"
 	CMD_STATUS string = "schd_status"
 )
@@ -13,56 +13,56 @@ const (
 	USAGE_CMD_DEF string = `
 Usage:
     schd_def [OPTION] FILE
-Check and process the job actions in the file.
+Check and process the task actions in the file.
 
 OPTION:
     -c, --only-check    dont process the file
 FILE:
-    -f, --file          input file containing job definition
-                        and action for one or more jobs`
+    -f, --file          input file containing task definition
+                        and action for one or more tasks`
 	// usage message for sub command schd_event
 	USAGE_CMD_EVENT string = `
 Usage:
-    schd_event EVENT JOB
-Send an event to job.
+    schd_event EVENT TASK
+Send an event to task.
 
-JOB:
-    -j, --job=string    job name
+TASK:
+    -j, --task=string   task name
 EVENT:
     -e, --event=EVENT   event name should be one of following
-                        start - starts the job
-                        abort - stops the job
-                        froze - change the status of job to FROZEN
-                        reset - change the status of job to IDLE
-                        chg_succ - change the status of job to SUCCESS
-                        chg_fail - change the status of job to FAILURE`
-	// usage message for sub command schd_job
-	USAGE_CMD_JOB string = `
+                        start - starts the task
+                        abort - stops the task
+                        froze - change the status of task to FROZEN
+                        reset - change the status of task to IDLE
+                        chg_succ - change the status of task to SUCCESS
+                        chg_fail - change the status of task to FAILURE`
+	// usage message for sub command schd_task
+	USAGE_CMD_TASK string = `
 Usage:
-    schd_job JOB
-Print job definition.
+    schd_task TASK
+Print task definition.
 
-JOB:
-    -j, --job=string   job name`
+TASK:
+    -j, --task=string   task name`
 	// usage message for sub command schd_runs
 	USAGE_CMD_RUNS string = `
 Usage:
-    schd_runs [OPTION]... JOB
-Display previous runs and status of the job.
+    schd_runs [OPTION]... TASK
+Display previous runs and status of the task.
 
 OPTION:
     -c, --count=NUM     number of runs
     -d, --date=strings  only runs of given date
-JOB:
-    -j, --job=string    job name`
+TASK:
+    -j, --task=string    task name`
 	// usage message for sub command schd_status
 	USAGE_CMD_STATUS string = `
 Usage:
-    schd_status JOB_NAME
-Display current run and status of the job.
+    schd_status TASK_NAME
+Display current run and status of the task.
 
-JOB:
-    -j, --job=string   job name`
+TASK:
+    -j, --task=string   task name`
 )
 
 // Based on the sub command, choose the corresponding
@@ -87,8 +87,8 @@ func New(subCommand string) Executer {
 		return newDefinitionCmd()
 	case CMD_EVENT:
 		return newEventCmd()
-	case CMD_JOB:
-		return newJobCmd()
+	case CMD_TASK:
+		return newTaskCmd()
 	case CMD_RUNS:
 		return newRunsCmd()
 	case CMD_STATUS:

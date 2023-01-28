@@ -6,7 +6,7 @@ import (
 )
 
 type runsCommand struct {
-	job    string
+	task   string
 	count  int
 	date   string
 	parsed bool
@@ -25,12 +25,12 @@ func (rc *runsCommand) Parse(args []string) error {
 
 	fs.IntVar(&rc.count, "c", -1, "number of runs")
 	fs.StringVar(&rc.date, "d", "01/01/1700", "runs only on")
-	fs.StringVar(&rc.job, "j", "", "job name")
+	fs.StringVar(&rc.task, "j", "", "task name")
 
 	fs.Parse(args)
 
-	if rc.job == "" {
-		return fmt.Errorf("missing job name")
+	if rc.task == "" {
+		return fmt.Errorf("missing task name")
 	}
 
 	return nil

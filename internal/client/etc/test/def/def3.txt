@@ -1,24 +1,24 @@
-# bundle batch job
+# bundle batch task
 insert_task: test_3_box_1
 type: bundle
 run_days: mo,tu,we,th,fr,sa
 start_times: 01:00, 13:00
-label: bundle batch job
+label: bundle batch task
 
-# callable job within bundle test_3_box_1
-insert_task: test_3_job_1
+# callable task within bundle test_3_box_1
+insert_task: test_3_task_1
 type: callable
 parent: test_3_box_1
-label: callable job within bundle test_3_box_1
+label: callable task within bundle test_3_box_1
 command: /opt/work/scripts/test.sh 3
-out_log_file: /opt/work/logs/test_3_job_1.out
-err_log_file: /opt/work/logs/test_3_job_1.err
+out_log_file: /opt/work/logs/test_3_task_1.out
+err_log_file: /opt/work/logs/test_3_task_1.err
 
-# callable job within bundle test_3_box_1
-insert_task: test_3_job_2
+# callable task within bundle test_3_box_1
+insert_task: test_3_task_2
 type: callable
 parent: test_3_box_1
-label: callable job within bundle test_3_box_1
+label: callable task within bundle test_3_box_1
 command: /opt/work/scripts/test.sh 3
-out_log_file: /opt/work/logs/test_3_job_2.out
-err_log_file: /opt/work/logs/test_3_job_2.err
+out_log_file: /opt/work/logs/test_3_task_2.out
+err_log_file: /opt/work/logs/test_3_task_2.err

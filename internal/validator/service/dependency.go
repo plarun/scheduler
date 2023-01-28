@@ -12,9 +12,9 @@ import (
 )
 
 type Checker struct {
-	insertJobs map[string]*localTask
-	updateJobs map[string]*localTask
-	deleteJobs map[string]*localTask
+	insertTasks map[string]*localTask
+	updateTasks map[string]*localTask
+	deleteTasks map[string]*localTask
 }
 
 type localTask struct {
@@ -31,44 +31,44 @@ func newLocalTask(name string, tp task.Type, pos int) *localTask {
 	}
 }
 
-func (lJob *localTask) String() string {
-	return fmt.Sprintf("{job_name: %s, job_type: %s, job_pos: %d}", lJob.name, lJob.tasktype, lJob.pos)
+func (lt *localTask) String() string {
+	return fmt.Sprintf("{task_name: %s, task_type: %s, task_pos: %d}", lt.name, lt.tasktype, lt.pos)
 }
 
 func NewChecker() *Checker {
 	return &Checker{
-		insertJobs: make(map[string]*localTask),
-		updateJobs: make(map[string]*localTask),
-		deleteJobs: make(map[string]*localTask),
+		insertTasks: make(map[string]*localTask),
+		updateTasks: make(map[string]*localTask),
+		deleteTasks: make(map[string]*localTask),
 	}
 }
 
 func (chk *Checker) String() string {
-	var insJobs, updJobs, delJobs, condJobs []string
+	var insTasks, updTasks, delTasks []string
 
-	for _, insJob := range chk.insertJobs {
-		insJobs = append(insJobs, insJob.String())
+	for _, t := range chk.insertTasks {
+		insTasks = append(insTasks, t.String())
 	}
-	for _, updJob := range chk.updateJobs {
-		updJobs = append(updJobs, updJob.String())
+	for _, t := range chk.updateTasks {
+		updTasks = append(updTasks, t.String())
 	}
-	for _, delJob := range chk.deleteJobs {
-		delJobs = append(delJobs, delJob.String())
+	for _, t := range chk.deleteTasks {
+		delTasks = append(delTasks, t.String())
 	}
 
 	return fmt.Sprintf(
-		"{insert_jobs: %v, update_jobs: %v, delete_jobs: %v, condition_jobs: %v}",
-		insJobs, updJobs, delJobs, condJobs,
+		"{insert_tasks: %v, update_tasks: %v, delete_tasks: %v}",
+		insTasks, updTasks, delTasks,
 	)
 }
 
-func (chk *Checker) CheckExistance(validatedJobs []*proto.ValidatedTaskEntity) error {
-	for i, tsk := range validatedJobs {
+func (chk *Checker) CheckExistance(tsks []*proto.ValidatedTaskEntity) error {
+	for i, tsk := range tsks {
 		if tsk == nil {
 			log.Fatal("nil task")
 		}
 		// check task existance based on action
-		if err := chk.checkJob(tsk, i); err != nil {
+		if err := chk.checkTask(tsk, i); err != nil {
 			return fmt.Errorf("CheckExistance: %w", err)
 		}
 
@@ -77,7 +77,7 @@ func (chk *Checker) CheckExistance(validatedJobs []*proto.ValidatedTaskEntity) e
 			return fmt.Errorf("CheckExistance: %w", err)
 		}
 
-		// condition jobs should exists in db or should be available
+		// condition tasks should exists in db or should be available
 		// before this task in the JIL
 		if err := chk.checkPredecessors(tsk); err != nil {
 			return fmt.Errorf("CheckExistance: %w", err)
@@ -87,56 +87,56 @@ func (chk *Checker) CheckExistance(validatedJobs []*proto.ValidatedTaskEntity) e
 	return nil
 }
 
-func (chk *Checker) checkJob(tsk *proto.ValidatedTaskEntity, pos int) error {
+func (chk *Checker) checkTask(tsk *proto.ValidatedTaskEntity, pos int) error {
 	switch tsk.Action {
 	case string(task.ActionInsert):
-		return chk.checkInsertJob(tsk, pos)
+		return chk.checkInsertTask(tsk, pos)
 	case string(task.ActionUpdate):
-		return chk.checkUpdateJob(tsk, pos)
+		return chk.checkUpdateTask(tsk, pos)
 	case string(task.ActionDelete):
-		return chk.checkDeleteJob(tsk, pos)
+		return chk.checkDeleteTask(tsk, pos)
 	}
 
 	return nil
 }
 
-func (chk *Checker) checkInsertJob(tsk *proto.ValidatedTaskEntity, pos int) error {
-	if exists, err := db.JobExists(tsk.Name); err != nil {
-		return fmt.Errorf("checkInsertJob: %w", err)
+func (chk *Checker) checkInsertTask(tsk *proto.ValidatedTaskEntity, pos int) error {
+	if exists, err := db.TaskExists(tsk.Name); err != nil {
+		return fmt.Errorf("checkInsertTask: %w", err)
 	} else if exists {
-		return errors.ErrJobAlreadyExist
+		return errors.ErrTaskAlreadyExist
 	}
 
-	chk.insertJobs[tsk.Name] = newLocalTask(tsk.Name, task.Type(tsk.Type.Value), pos+1)
+	chk.insertTasks[tsk.Name] = newLocalTask(tsk.Name, task.Type(tsk.Type.Value), pos+1)
 	return nil
 }
 
-func (chk *Checker) checkUpdateJob(tsk *proto.ValidatedTaskEntity, pos int) error {
-	if exists, err := db.JobExists(tsk.Name); err != nil {
+func (chk *Checker) checkUpdateTask(tsk *proto.ValidatedTaskEntity, pos int) error {
+	if exists, err := db.TaskExists(tsk.Name); err != nil {
 		return fmt.Errorf("CheckExistance: %w", err)
 	} else if !exists {
-		return errors.ErrJobNotExist
+		return errors.ErrTaskNotExist
 	}
 
-	chk.updateJobs[tsk.Name] = newLocalTask(tsk.Name, task.Type(tsk.Type.Value), pos+1)
+	chk.updateTasks[tsk.Name] = newLocalTask(tsk.Name, task.Type(tsk.Type.Value), pos+1)
 	return nil
 }
 
-func (chk *Checker) checkDeleteJob(tsk *proto.ValidatedTaskEntity, pos int) error {
-	if exists, err := db.JobExists(tsk.Name); err != nil {
+func (chk *Checker) checkDeleteTask(tsk *proto.ValidatedTaskEntity, pos int) error {
+	if exists, err := db.TaskExists(tsk.Name); err != nil {
 		return fmt.Errorf("CheckExistance: %w", err)
 	} else if !exists {
-		return errors.ErrJobNotExist
+		return errors.ErrTaskNotExist
 	}
 
-	chk.deleteJobs[tsk.Name] = newLocalTask(tsk.Name, task.Type(tsk.Type.Value), pos+1)
+	chk.deleteTasks[tsk.Name] = newLocalTask(tsk.Name, task.Type(tsk.Type.Value), pos+1)
 	return nil
 }
 
 func (chk *Checker) checkParent(tsk *proto.ValidatedTaskEntity, pos int) error {
 	if tsk.Parent.Flag == proto.NullableFlag_Available {
 		// check bundle task in local
-		if lTsk, exists := chk.insertJobs[tsk.Parent.Value]; exists && lTsk.pos < pos+1 {
+		if lTsk, exists := chk.insertTasks[tsk.Parent.Value]; exists && lTsk.pos < pos+1 {
 			if !lTsk.tasktype.IsBundle() {
 				return fmt.Errorf("checkParent: task %s is not bundle type, it cannot be parent", lTsk.name)
 			}
@@ -160,16 +160,16 @@ func (chk *Checker) checkPredecessors(tsk *proto.ValidatedTaskEntity) error {
 		pred = condition.GetDistinctTasks(tsk.Condition.Value)
 	}
 
-	for _, condJob := range pred {
-		lTsk := chk.insertJobs[condJob]
+	for _, condTask := range pred {
+		lTsk := chk.insertTasks[condTask]
 
 		if lTsk == nil { // task doesn't exist in current JIL
-			if exists, err := db.JobExists(condJob); err != nil {
+			if exists, err := db.TaskExists(condTask); err != nil {
 				return fmt.Errorf("CheckExistance: %v", err)
 			} else if !exists {
-				return errors.ErrJobNotExist
+				return errors.ErrTaskNotExist
 			}
-		} else if tsk.Name == condJob { // self reference
+		} else if tsk.Name == condTask { // self reference
 			return fmt.Errorf("self reference is not allowed")
 		}
 	}

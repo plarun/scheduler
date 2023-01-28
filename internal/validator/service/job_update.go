@@ -27,9 +27,9 @@ func (upd *updateValidation) Get() *proto.ValidatedTaskEntity {
 }
 
 func (upd *updateValidation) Validate() error {
-	// error to point out the error field with its input and job name
+	// error to point out the error field with its input and task name
 	invalidErr := func(err error, field, value string) error {
-		return &er.InvalidJobFieldError{
+		return &er.InvalidTaskFieldError{
 			Action: string(task.ActionUpdate),
 			Target: upd.input.Target,
 			Err:    err,
@@ -39,7 +39,7 @@ func (upd *updateValidation) Validate() error {
 	}
 
 	badErr := func(err error) error {
-		return &er.BadJobDefError{
+		return &er.BadTaskDefError{
 			Action: string(task.ActionUpdate),
 			Target: upd.input.Target,
 			Err:    err,
@@ -58,19 +58,19 @@ func (upd *updateValidation) Validate() error {
 	otask.Action = string(task.ActionUpdate)
 
 	// validate task name
-	if err := checkFieldJobName(tsk.Name()); err != nil {
+	if err := checkFieldTaskName(tsk.Name()); err != nil {
 		return fmt.Errorf("insertValidation.validate: %w", err)
 	}
 	otask.Name = tsk.Name()
 
 	// task should already exist
-	if exist, err := db.JobExists(otask.Name); err != nil {
+	if exist, err := db.TaskExists(otask.Name); err != nil {
 		return err
 	} else if !exist {
-		return badErr(er.ErrJobNotExist)
+		return badErr(er.ErrTaskNotExist)
 	}
 
-	// task should already exist for an update and get the run flag of job
+	// task should already exist for an update and get the run flag of task
 	var runFlag task.RunType
 	if rf, err := db.GetRunDetails(otask.Name); err != nil {
 		return fmt.Errorf("updateValidation.validate: %w", err)
@@ -96,7 +96,7 @@ func (upd *updateValidation) Validate() error {
 	} else if f.Empty() {
 		otask.Parent.Flag = proto.NullableFlag_Empty
 	} else {
-		if err := checkFieldJobName(f.Value()); err != nil {
+		if err := checkFieldTaskName(f.Value()); err != nil {
 			return invalidErr(err, f.Name(), f.Value())
 		}
 		otask.Parent.Flag = proto.NullableFlag_Available
@@ -262,7 +262,7 @@ func (upd *updateValidation) Validate() error {
 		hasRW = true
 	}
 
-	// check if job is scheduling to window run and if so,
+	// check if task is scheduling to window run and if so,
 	// it should have both "run_window" and "start_mins" attributes
 	if (hasRW != hasSM) && (rmRW != rmSM) {
 		return badErr(er.ErrIncompleteWindowRun)
@@ -271,12 +271,12 @@ func (upd *updateValidation) Validate() error {
 	schedToBatchRun := hasST && !rmST
 	schedToWindowRun := hasRW && hasSM && !rmRW && !rmSM
 
-	// check if job is scheduling to both window run and batch run
+	// check if task is scheduling to both window run and batch run
 	if schedToBatchRun && schedToWindowRun {
 		return badErr(er.ErrBatchWindowRun)
 	}
 
-	// cannot remove start_times for existing job which doesn't have start_times
+	// cannot remove start_times for existing task which doesn't have start_times
 	if runFlag.IsWindow() && rmST {
 		return badErr(er.ErrNonEmptyValueRequired)
 	}

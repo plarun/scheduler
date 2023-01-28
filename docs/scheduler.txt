@@ -38,5 +38,34 @@ sched_job ----->  sched_stage <----- [workflow] <---.
                       |                             |
                       v                             |
                   sched_exec  <----- [heartbeat]    |
-                      ^                             |
+                      |                             |
                       '-----------------------------'
+
+Workflow of scheduled task
+1. 'Allocator' checks [sched_job] periodically and poll the tasks into [sched_stage] then mark the status as 'STAGED'
+2. For each task in [sched_stage], 'Allocator' performs below
+    a. If task is callable, push the task into [sched_queue] and mark the status as 'QUEUED'
+    b. If task is bundle, push all of its callable tasks into [sched_queue] and mark the status as 'QUEUED' for callable tasks
+3. 'Allocator' checks start condition of each task in [sched_queue] and performs below
+    a. If satisfied, move the task into [sched_ready] then mark the status as 'READY'
+    b. If not satisfied, move the task into [sched_wait] then mark the status as 'WAITING'
+4. 'Controller' pulls task from [sched_ready] if any, marks the status as 'RUNNING' then puts an entry on [sched_exec]
+5. 'Controller' then executes the command of the task.
+6. 'Controller' also checks the heartbeat of task.
+7. 'Controller' will know once the task is completed then removes the task from [sched_exec],
+    a. If task is completed successfully, marks the status as 'SUCCESS'
+    b. If task is failed, marks the status as 'FAILED'
+    c. If task is aborted, marks the status as 'ABORTED'
+8. 'Controller' will push the task into [sched_unstage]
+9. 'Allocator' checks [sched_unstage] periodically and perform below action for each task
+    a. If any of the dependent task is available in [sched_wait] then rechecks its start condition. 
+        - If satisfied, then move the task to [sched_ready] then mark the status as 'READY'
+        - If not satisfied, then do nothing
+    b. If task has no parent (standalone task) then remove it from [sched_stage] and [sched_unstage]
+    c. If task has parent bundle task then perform below and remote it from [sched_stage] and [sched_unstage]
+        - If task is 'SUCCESS'
+            i. If its last task of bundle then mark bundle as 'SUCCESS'
+            ii. Otherwise keep its status as 'RUNNING'
+        - If task is 'FAILED' or 'ABORTED'
+            i. If any other task is either running or waiting then keep bundle status as 'RUNNING'
+            ii. Otherwise mark bundle as 'FAILED'

@@ -29,7 +29,7 @@ func Serve(port int) {
 	ser := grpc.NewServer()
 
 	// register all grpc services here
-	proto.RegisterValidatedActionServiceServer(ser, handler.NewJobValidationService())
+	proto.RegisterValidatedActionServiceServer(ser, handler.NewTaskValidationService())
 
 	if err := ser.Serve(listen); err != nil {
 		log.Fatalf("failed to listen")

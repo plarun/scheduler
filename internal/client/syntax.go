@@ -114,22 +114,3 @@ func splitToKeyValue(str string) (string, string, error) {
 	key, value := fields[0], strings.TrimLeft(fields[1], " \t")
 	return key, value, nil
 }
-
-// func newRawJob() *proto.RawJob {
-// 	return &proto.RawJob{
-// 		Command:    &proto.NullString{Valid: false},
-// 		Condition:  &proto.NullString{Valid: false},
-// 		StdErr:     &proto.NullString{Valid: false},
-// 		Label:      &proto.NullString{Valid: false},
-// 		Machine:    &proto.NullString{Valid: false},
-// 		StdOut:     &proto.NullString{Valid: false},
-// 		Parent:     &proto.NullString{Valid: false},
-// 		Priority:   &proto.NullString{Valid: false},
-// 		Profile:    &proto.NullString{Valid: false},
-// 		RunDays:    &proto.NullString{Valid: false},
-// 		RunWindow:  &proto.NullString{Valid: false},
-// 		StartMins:  &proto.NullString{Valid: false},
-// 		StartTimes: &proto.NullString{Valid: false},
-// 		Type:       &proto.NullString{Valid: false},
-// 	}
-// }

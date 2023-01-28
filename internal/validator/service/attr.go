@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	REGEX_JOB_NAME    string = "^[0-9a-zA-Z_]+$"
+	REGEX_TASK_NAME   string = "^[0-9a-zA-Z_]+$"
 	REGEX_HHMM_HHMMSS string = "^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$"
 	REGEX_MINUTE      string = "^([0-5])([0-9])?$"
 )
@@ -38,17 +38,17 @@ func convertRunFlag(flag string) task.RunType {
 	}
 }
 
-func checkFieldJobName(name string) error {
+func checkFieldTaskName(name string) error {
 	if len(name) == 0 {
 		return errors.ErrNonEmptyValueRequired
 	}
 	if len(name) > 64 {
-		return errors.ErrJobMaxLength
+		return errors.ErrTaskMaxLength
 	}
 
-	exp, _ := regexp.Compile(REGEX_JOB_NAME)
+	exp, _ := regexp.Compile(REGEX_TASK_NAME)
 	if ok := exp.MatchString(name); !ok {
-		return errors.ErrJobInvalidChar
+		return errors.ErrTaskInvalidChar
 	}
 	return nil
 }
@@ -70,8 +70,8 @@ func castFieldAction(action string) (string, error) {
 }
 
 // Type field of task should not be empty
-func castFieldType(jobType string) (string, error) {
-	switch task.Type(jobType) {
+func castFieldType(tskType string) (string, error) {
+	switch task.Type(tskType) {
 	case task.TypeBundle:
 		return TypeBundleTask, nil
 	case task.TypeCallable:
@@ -153,7 +153,7 @@ func convertTimeToHHMM(t string) (string, error) {
 	return parsed.Format(layout), nil
 }
 
-// castFieldStartTimes validates an attribute 'start_times' of job
+// castFieldStartTimes validates an attribute 'start_times' of task
 func castFieldStartTimes(times string) ([]string, error) {
 	var startTimes []string
 
@@ -172,7 +172,7 @@ func castFieldStartTimes(times string) ([]string, error) {
 	return startTimes, nil
 }
 
-// validateRunWindow validates an attribute 'run_window' of job
+// validateRunWindow validates an attribute 'run_window' of task
 func castFieldRunWindow(window string) (string, string, error) {
 	window = strings.ReplaceAll(window, " ", "")
 	if len(window) == 0 {
