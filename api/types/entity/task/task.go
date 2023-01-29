@@ -224,7 +224,7 @@ func (t *TaskEntity) SetFieldRunDays(val int32, empty bool) {
 }
 
 func (t *TaskEntity) GetFieldRunDays() (*RunDays, bool) {
-	f, ok := t.GetField(FIELD_PROFILE)
+	f, ok := t.GetField(FIELD_RUN_DAYS)
 	if ok {
 		return f.(*RunDays), ok
 	}
