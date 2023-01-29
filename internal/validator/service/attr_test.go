@@ -15,10 +15,10 @@ func TestTaskName(t *testing.T) {
 		input   string
 		wantErr error
 	}{
-		"good job name":    {input: "test_job_1"},
-		"bad space":        {input: "test_ job", wantErr: errors.ErrTaskInvalidChar},
+		"good task name":    {input: "test_task_1"},
+		"bad space":        {input: "test_ task", wantErr: errors.ErrTaskInvalidChar},
 		"bad special char": {input: "test_#", wantErr: errors.ErrTaskInvalidChar},
-		"bad long name":    {input: "test_job_12345678901234567890123456789012345678901234567890123456", wantErr: errors.ErrTaskMaxLength},
+		"bad long name":    {input: "test_task_12345678901234567890123456789012345678901234567890123456", wantErr: errors.ErrTaskMaxLength},
 	}
 
 	for name, tc := range tests {
@@ -103,34 +103,34 @@ func TestCastFieldStartCondition(t *testing.T) {
 		fail  bool
 	}{
 		// negative cases
-		"bad 1": {input: "su(job1", fail: true},
-		"bad 2": {input: "su(job1 & su(job2)", fail: true},
-		"bad 3": {input: "su(job1) | su()", fail: true},
-		"bad 4": {input: "s(job1)", fail: true},
-		"bad 5": {input: "(su(job1) & su(job2)", fail: true},
-		"bad 6": {input: "su(job1) & su(job2))", fail: true},
-		"bad 7": {input: "suc(job1)", fail: true},
-		"bad 8": {input: "su(job1) & suc(job2)", fail: true},
-		"bad 9": {input: "su(job1) &", fail: true},
+		"bad 1": {input: "su(task1", fail: true},
+		"bad 2": {input: "su(task1 & su(task2)", fail: true},
+		"bad 3": {input: "su(task1) | su()", fail: true},
+		"bad 4": {input: "s(task1)", fail: true},
+		"bad 5": {input: "(su(task1) & su(task2)", fail: true},
+		"bad 6": {input: "su(task1) & su(task2))", fail: true},
+		"bad 7": {input: "suc(task1)", fail: true},
+		"bad 8": {input: "su(task1) & suc(task2)", fail: true},
+		"bad 9": {input: "su(task1) &", fail: true},
 
 		// positive cases
 		"good 1":  {input: "", want: ""},
-		"good 2":  {input: "su(job1)", want: "su(job1)"},
-		"good 3":  {input: "fa(job1)", want: "fa(job1)"},
-		"good 4":  {input: "nr(job1)", want: "nr(job1)"},
+		"good 2":  {input: "su(task1)", want: "su(task1)"},
+		"good 3":  {input: "fa(task1)", want: "fa(task1)"},
+		"good 4":  {input: "nr(task1)", want: "nr(task1)"},
 		"good 5":  {input: "", want: ""},
-		"good 6":  {input: "(su(job1))", want: "(su(job1))"},
-		"good 7":  {input: "su(job1) & su(job2)", want: "su(job1)&su(job2)"},
-		"good 8":  {input: "su(job1) & fa(job2)", want: "su(job1)&fa(job2)"},
-		"good 9":  {input: "(su(job1) & su(job2))", want: "(su(job1)&su(job2))"},
-		"good 10": {input: "su(job1) & fa(job2) | nr(job3)", want: "su(job1)&fa(job2)|nr(job3)"},
-		"good 11": {input: "(su(job1) & su(job2)) | su(job3)", want: "(su(job1)&su(job2))|su(job3)"},
-		"good 12": {input: "((su(job1) & su(job2)) | su(job3))", want: "((su(job1)&su(job2))|su(job3))"},
-		"good 13": {input: "su(job1) & (su(job2) | su(job3))", want: "su(job1)&(su(job2)|su(job3))"},
-		"good 14": {input: "(su(job1) & (su(job2) | su(job3)))", want: "(su(job1)&(su(job2)|su(job3)))"},
-		"good 15": {input: "su(job1) & (su(job2) | su(job3) & (fa(job4) | nr(job5)))", want: "su(job1)&(su(job2)|su(job3)&(fa(job4)|nr(job5)))"},
-		"good 16": {input: "su(job1)|(su(job2)&su(job3))|(fa(job4)|nr(job5))", want: "su(job1)|(su(job2)&su(job3))|(fa(job4)|nr(job5))"},
-		"good 17": {input: "su(job1) | (((su(job2) & su(job3) | fa(job4)) | nr(job5)) | nr(job6)) & su(job7)", want: "su(job1)|(((su(job2)&su(job3)|fa(job4))|nr(job5))|nr(job6))&su(job7)"},
+		"good 6":  {input: "(su(task1))", want: "(su(task1))"},
+		"good 7":  {input: "su(task1) & su(task2)", want: "su(task1)&su(task2)"},
+		"good 8":  {input: "su(task1) & fa(task2)", want: "su(task1)&fa(task2)"},
+		"good 9":  {input: "(su(task1) & su(task2))", want: "(su(task1)&su(task2))"},
+		"good 10": {input: "su(task1) & fa(task2) | nr(task3)", want: "su(task1)&fa(task2)|nr(task3)"},
+		"good 11": {input: "(su(task1) & su(task2)) | su(task3)", want: "(su(task1)&su(task2))|su(task3)"},
+		"good 12": {input: "((su(task1) & su(task2)) | su(task3))", want: "((su(task1)&su(task2))|su(task3))"},
+		"good 13": {input: "su(task1) & (su(task2) | su(task3))", want: "su(task1)&(su(task2)|su(task3))"},
+		"good 14": {input: "(su(task1) & (su(task2) | su(task3)))", want: "(su(task1)&(su(task2)|su(task3)))"},
+		"good 15": {input: "su(task1) & (su(task2) | su(task3) & (fa(task4) | nr(task5)))", want: "su(task1)&(su(task2)|su(task3)&(fa(task4)|nr(task5)))"},
+		"good 16": {input: "su(task1)|(su(task2)&su(task3))|(fa(task4)|nr(task5))", want: "su(task1)|(su(task2)&su(task3))|(fa(task4)|nr(task5))"},
+		"good 17": {input: "su(task1) | (((su(task2) & su(task3) | fa(task4)) | nr(task5)) | nr(task6)) & su(task7)", want: "su(task1)|(((su(task2)&su(task3)|fa(task4))|nr(task5))|nr(task6))&su(task7)"},
 	}
 
 	for name, tc := range tests {
