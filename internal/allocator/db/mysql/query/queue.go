@@ -4,15 +4,45 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
-// QueueTasks inserts the scheduled tasks into sched_stage for staging.
-// Task cannot be staged if its already staged.
-func QueueTasks() (int64, error) {
+// SetFlagPreQueue changes the flag of staged tasks to pre queue state
+func SetFlagPreQueue() error {
+	cnt, err := UpdateStageFlag(1, 2)
+	if err != nil {
+		return fmt.Errorf("MigrateStage: %v", err)
+	}
+
+	log.Printf("%d tasks ready for migration to queue", cnt)
+	return nil
+}
+
+func SetStatusQueue() error {
 	db := mysql.GetDatabase()
 
-	// change the status of task to '
+	qry := `Update sched_task t Join sched_stage s On t.id=s.task_id
+	Set t.current_status='?'
+	Where s.flag=2`
+
+	result, err := db.DB.Exec(qry, task.StateQueued)
+	if err != nil {
+		return fmt.Errorf("SetStatusQueue: %v", err)
+	}
+
+	cnt, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("SetStatusQueue: %v", err)
+	}
+
+	log.Printf("%d tasks changed to status queued", cnt)
+	return nil
+}
+
+// QueueTasks inserts the staged tasks into sched_stage.
+func QueueTasks() error {
+	db := mysql.GetDatabase()
 
 	qry := `Insert Into sched_queue (
 			task_id,
@@ -21,24 +51,34 @@ func QueueTasks() (int64, error) {
 		)
 		Select task_id
 		From sched_stage
-		Where is_bundle=0 And flag=1
-		Union
+		Where is_bundle=0 And flag=2
+		Union All
 		Select t.task_id 
 		From sched_task t
 			Inner Join sched_stage s On (t.parent_id=s.task_id)
-		Where s.flag=1 And s.is_bundle=1`
+		Where s.is_bundle=1 And s.flag=2`
 
 	result, err := db.DB.Exec(qry)
 	if err != nil {
-		return 0, fmt.Errorf("QueueTasks: failed to push tasks into queue: %v", err)
+		return fmt.Errorf("QueueTasks: failed to push tasks into queue: %v", err)
 	}
 	cnt, err := result.RowsAffected()
 	if err != nil {
-		return 0, fmt.Errorf("QueueTasks: %v", err)
+		return fmt.Errorf("QueueTasks: %v", err)
 	}
 
 	log.Printf("%d tasks pushed into queue", cnt)
-	return cnt, nil
+	return nil
+}
+
+func SetFlagPostQueue() error {
+	cnt, err := UpdateStageFlag(2, 3)
+	if err != nil {
+		return fmt.Errorf("SetFlagPostQueue: %v", err)
+	}
+
+	log.Printf("%d tasks migrated to queue", cnt)
+	return nil
 }
 
 func DequeueTask(id int) error {
