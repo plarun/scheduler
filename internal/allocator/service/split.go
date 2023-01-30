@@ -19,5 +19,19 @@ func (t *TaskSplitter) Split() {
 }
 
 func (t *TaskSplitter) checkStartCondition() {
+	// get status of distinct tasks in start condition
+	// su(task1)|(su(task2)&su(task3))|(fa(task4)|nr(task5))
+	/*
+		(
+			su(task1) | (
+				su(task2) &
+				su(task3)
+			) | (
+				fa(task4) |
+				nr(task5)
+			)
+		)
 
+
+	*/
 }
