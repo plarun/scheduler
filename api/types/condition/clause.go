@@ -1,43 +1,44 @@
 package condition
 
-type clause struct {
-	Parent     *wrapper
+type Clause struct {
+	Parent     *Wrapper
 	Status     string
-	JobName    string
+	TaskName   string
 	Operator   Operator
 	Conditions []Expression
+	Result     bool
 }
 
-// newClause creates a new job condition which represents
+// newClause creates a new task condition which represents
 // status, job_name and boolean join operator '&' or '|'.
-func newClause(status, job, op string) *clause {
-	return &clause{
+func newClause(status, task, op string) *Clause {
+	return &Clause{
 		Status:     status,
-		JobName:    job,
+		TaskName:   task,
 		Operator:   stringToCondOperator(op),
 		Conditions: make([]Expression, 0),
 	}
 }
 
-func (c *clause) build() string {
-	return c.Status + "(" + c.JobName + ")" + condOperatorToString(c.Operator)
+func (c *Clause) build() string {
+	return c.Status + "(" + c.TaskName + ")" + condOperatorToString(c.Operator)
 }
 
-func (c *clause) isWrapper() bool {
+func (c *Clause) isWrapper() bool {
 	return false
 }
 
-func (c *clause) addChild(_ Expression) {
+func (c *Clause) addChild(_ Expression) {
 }
 
-func (c *clause) setParent(parent *wrapper) {
+func (c *Clause) setParent(parent *Wrapper) {
 	c.Parent = parent
 }
 
-func (c *clause) getParent() *wrapper {
+func (c *Clause) getParent() *Wrapper {
 	return c.Parent
 }
 
-func (c *clause) String() string {
+func (c *Clause) String() string {
 	return c.build()
 }

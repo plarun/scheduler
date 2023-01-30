@@ -40,14 +40,14 @@ type Expression interface {
 	build() string
 	isWrapper() bool
 	addChild(Expression)
-	setParent(*wrapper)
-	getParent() *wrapper
+	setParent(*Wrapper)
+	getParent() *Wrapper
 	String() string
 }
 
 // addWrapper creates and adds a new wrapper to current condition
 // parent is wrapper and child is also wrapper
-func addWrapper(parent Expression) (*wrapper, error) {
+func addWrapper(parent Expression) (*Wrapper, error) {
 	if !parent.isWrapper() {
 		return nil, fmt.Errorf("addWrapper: parent is not wrapper")
 	}
@@ -57,19 +57,19 @@ func addWrapper(parent Expression) (*wrapper, error) {
 	return child, nil
 }
 
-// addCondition creates and adds a job condition to current condition
+// addCondition creates and adds a task condition to current condition
 // parent is wrapper and child is condclause
-func addCond(parent Expression, status, job, op string) (*clause, error) {
+func addCond(parent Expression, status, tsk, op string) (*Clause, error) {
 	if !parent.isWrapper() {
 		return nil, fmt.Errorf("addCond: parent is not wrapper")
 	}
 
-	child := newClause(status, job, op)
+	child := newClause(status, tsk, op)
 	parent.addChild(child)
 	return child, nil
 }
 
-// getDistinctJobs returns list of distinct jobs in job's start condition
+// getDistinctJobs returns list of distinct tasks in task's start condition
 func GetDistinctTasks(condStr string) []string {
 	cond, _ := Build(condStr)
 	set := make(map[string]bool)
@@ -81,11 +81,11 @@ func GetDistinctTasks(condStr string) []string {
 		curr := que[0]
 		que = que[1:]
 		if curr.isWrapper() {
-			w := curr.(*wrapper)
+			w := curr.(*Wrapper)
 			que = append(que, w.Conditions...)
 		} else {
-			c := curr.(*clause)
-			set[c.JobName] = true
+			c := curr.(*Clause)
+			set[c.TaskName] = true
 		}
 	}
 
@@ -97,7 +97,7 @@ func GetDistinctTasks(condStr string) []string {
 	return jobs
 }
 
-// buildCondition parses the given string representation of job
+// buildCondition parses the given string representation of task
 // condition and builds corresponding tree format (ConditionClause)
 func Build(condition string) (Expression, error) {
 	condition = strings.ReplaceAll(condition, " ", "")
@@ -105,7 +105,7 @@ func Build(condition string) (Expression, error) {
 	isNewCondition, isJobName, closeWrap, mayBeOperator := true, false, false, false
 
 	var status, jobName string
-	var root, curr *wrapper
+	var root, curr *Wrapper
 	root = newWrapper()
 	curr = root
 
@@ -143,7 +143,7 @@ func Build(condition string) (Expression, error) {
 
 			// syntax check
 			if i >= size || condition[i:i+1] == ")" {
-				return nil, fmt.Errorf("BuildCondition: condition has empty job")
+				return nil, fmt.Errorf("BuildCondition: condition has empty task")
 			}
 			isJobName = true
 		}
