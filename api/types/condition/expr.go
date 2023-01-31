@@ -38,7 +38,7 @@ func condOperatorToString(op Operator) string {
 
 type Expression interface {
 	build() string
-	isWrapper() bool
+	IsWrapper() bool
 	addChild(Expression)
 	setParent(*Wrapper)
 	getParent() *Wrapper
@@ -48,7 +48,7 @@ type Expression interface {
 // addWrapper creates and adds a new wrapper to current condition
 // parent is wrapper and child is also wrapper
 func addWrapper(parent Expression) (*Wrapper, error) {
-	if !parent.isWrapper() {
+	if !parent.IsWrapper() {
 		return nil, fmt.Errorf("addWrapper: parent is not wrapper")
 	}
 
@@ -60,7 +60,7 @@ func addWrapper(parent Expression) (*Wrapper, error) {
 // addCondition creates and adds a task condition to current condition
 // parent is wrapper and child is condclause
 func addCond(parent Expression, status, tsk, op string) (*Clause, error) {
-	if !parent.isWrapper() {
+	if !parent.IsWrapper() {
 		return nil, fmt.Errorf("addCond: parent is not wrapper")
 	}
 
@@ -71,16 +71,16 @@ func addCond(parent Expression, status, tsk, op string) (*Clause, error) {
 
 // getDistinctJobs returns list of distinct tasks in task's start condition
 func GetDistinctTasks(condStr string) []string {
-	cond, _ := Build(condStr)
+	expr, _ := Build(condStr)
 	set := make(map[string]bool)
 
 	var que []Expression
-	que = append(que, cond)
+	que = append(que, expr)
 
 	for len(que) != 0 {
 		curr := que[0]
 		que = que[1:]
-		if curr.isWrapper() {
+		if curr.IsWrapper() {
 			w := curr.(*Wrapper)
 			que = append(que, w.Conditions...)
 		} else {

@@ -24,7 +24,7 @@ func (c *Clause) build() string {
 	return c.Status + "(" + c.TaskName + ")" + condOperatorToString(c.Operator)
 }
 
-func (c *Clause) isWrapper() bool {
+func (c *Clause) IsWrapper() bool {
 	return false
 }
 

@@ -31,7 +31,7 @@ func (w *Wrapper) String() string {
 	return str[1 : len(str)-1]
 }
 
-func (w *Wrapper) isWrapper() bool {
+func (w *Wrapper) IsWrapper() bool {
 	return true
 }
 
