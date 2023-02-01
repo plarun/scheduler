@@ -42,3 +42,15 @@ func (c *Clause) getParent() *Wrapper {
 func (c *Clause) String() string {
 	return c.build()
 }
+
+func (c *Clause) SetResult(res bool) {
+	c.Result = res
+}
+
+func (c *Clause) GetResult() bool {
+	return c.Result
+}
+
+func (c *Clause) GetOperator() Operator {
+	return c.Operator
+}

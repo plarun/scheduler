@@ -47,3 +47,15 @@ func (w *Wrapper) setParent(parent *Wrapper) {
 func (w *Wrapper) getParent() *Wrapper {
 	return w.Parent
 }
+
+func (w *Wrapper) SetResult(res bool) {
+	w.Result = res
+}
+
+func (w *Wrapper) GetResult() bool {
+	return w.Result
+}
+
+func (w *Wrapper) GetOperator() Operator {
+	return w.Operator
+}

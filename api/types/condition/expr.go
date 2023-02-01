@@ -43,6 +43,9 @@ type Expression interface {
 	setParent(*Wrapper)
 	getParent() *Wrapper
 	String() string
+	SetResult(bool)
+	GetResult() bool
+	GetOperator() Operator
 }
 
 // addWrapper creates and adds a new wrapper to current condition
@@ -102,9 +105,9 @@ func GetDistinctTasks(condStr string) []string {
 func Build(condition string) (Expression, error) {
 	condition = strings.ReplaceAll(condition, " ", "")
 	size := len(condition)
-	isNewCondition, isJobName, closeWrap, mayBeOperator := true, false, false, false
+	isNewCondition, isTaskName, closeWrap, mayBeOperator := true, false, false, false
 
-	var status, jobName string
+	var status, taskName string
 	var root, curr *Wrapper
 	root = newWrapper()
 	curr = root
@@ -123,7 +126,7 @@ func Build(condition string) (Expression, error) {
 			continue
 		}
 
-		// job condition
+		// task condition
 		if isNewCondition {
 			// status
 			if i+2 < size {
@@ -145,11 +148,11 @@ func Build(condition string) (Expression, error) {
 			if i >= size || condition[i:i+1] == ")" {
 				return nil, fmt.Errorf("BuildCondition: condition has empty task")
 			}
-			isJobName = true
+			isTaskName = true
 		}
 
-		// job name in job condition
-		if isJobName {
+		// task name in start condition
+		if isTaskName {
 			var j int
 			for j = i; condition[i:i+1] != ")"; i++ {
 				if ok := jobRegex.MatchString(condition[i : i+1]); !ok {
@@ -159,15 +162,15 @@ func Build(condition string) (Expression, error) {
 					return nil, fmt.Errorf("BuildCondition: condition syntax expecting )")
 				}
 			}
-			jobName = condition[j:i]
+			taskName = condition[j:i]
 			i++
-			isJobName, mayBeOperator = false, true
+			isTaskName, mayBeOperator = false, true
 		}
 
 		// condition operator
 		if mayBeOperator {
 			if i == size {
-				addCond(curr, status, jobName, "")
+				addCond(curr, status, taskName, "")
 			} else {
 				join := condition[i : i+1]
 				if join == "&" || join == "|" {
@@ -175,16 +178,16 @@ func Build(condition string) (Expression, error) {
 					if i+1 == size {
 						return nil, fmt.Errorf("BuildCondition: incomplete condition clause")
 					}
-					addCond(curr, status, jobName, join)
+					addCond(curr, status, taskName, join)
 				} else {
-					addCond(curr, status, jobName, "")
+					addCond(curr, status, taskName, "")
 					closeWrap, isNewCondition = true, false
 				}
 				// reset
 				status = ""
-				jobName = ""
+				taskName = ""
 			}
-			isJobName, mayBeOperator = false, false
+			isTaskName, mayBeOperator = false, false
 		}
 
 		// closeWrap
