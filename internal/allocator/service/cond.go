@@ -81,13 +81,15 @@ func (c *ConditionChecker) eval(cur condition.Expression) (bool, error) {
 		}
 		// evaluate the result of wrapper
 		// here cond can be either clause or wrapper
+		op := condition.OperatorEmpty
 		for i := 0; i < len(wrapper.Conditions); i++ {
 			cond := wrapper.Conditions[i]
 			if i == 0 {
 				wrapper.SetResult(cond.GetResult())
+				op = cond.GetOperator()
 			} else {
 				res := wrapper.GetResult()
-				switch cond.GetOperator() {
+				switch op {
 				case condition.OperatorAnd:
 					res = res && cond.GetResult()
 				case condition.OperatorOr:
@@ -98,6 +100,7 @@ func (c *ConditionChecker) eval(cur condition.Expression) (bool, error) {
 					}
 				}
 				wrapper.SetResult(res)
+				op = cond.GetOperator()
 			}
 		}
 		return wrapper.GetResult(), nil
@@ -112,6 +115,10 @@ func (c *ConditionChecker) eval(cur condition.Expression) (bool, error) {
 // evalClause is helper function to convert state type in start condition
 // into corresponding state type in task
 func evalClause(st string, state task.State) bool {
+	// ignoring the frozen task
+	if state.IsFrozen() {
+		return true
+	}
 	switch st {
 	case "su":
 		if state.IsSuccess() {
