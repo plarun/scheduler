@@ -19,6 +19,7 @@ func SetFlagPreQueue() error {
 	return nil
 }
 
+// SetStatusQueue changes the task status to 'queued'
 func SetStatusQueue() error {
 	db := mysql.GetDatabase()
 
@@ -71,6 +72,7 @@ func QueueTasks() error {
 	return nil
 }
 
+// SetFlagPostQueue changes the flag of task in stage to Queued
 func SetFlagPostQueue() error {
 	cnt, err := UpdateStageFlag(2, 3)
 	if err != nil {
@@ -81,17 +83,28 @@ func SetFlagPostQueue() error {
 	return nil
 }
 
-func DequeueTask(id int) error {
+// LockForDequeue locks a task in queue for dequeue
+func LockForDequeue(id int) error {
 	db := mysql.GetDatabase()
 
-	db.Lock()
-	defer db.Unlock()
+	qry := `Update sched_queue
+	Set lock_flag=1
+	Where task_id=?`
+
+	if _, err := db.DB.Exec(qry, id); err != nil {
+		return fmt.Errorf("LockForDequeue: %v", err)
+	}
+	return nil
+}
+
+// RemoveTask removes a task from queue
+func RemoveTask(id int) error {
+	db := mysql.GetDatabase()
 
 	qry := `Delete From sched_queue Where task_id=?`
 
-	_, err := db.DB.Exec(qry, id)
-	if err != nil {
-		return fmt.Errorf("DequeueTask: failed to delete task from queue: %v", err)
+	if _, err := db.DB.Exec(qry, id); err != nil {
+		return fmt.Errorf("RemoveTask: failed to delete task from queue: %v", err)
 	}
 	return nil
 }
