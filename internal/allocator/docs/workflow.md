@@ -21,8 +21,8 @@
 ### Steps
 1. For tasks with flag=1 and status=`staged`, set the flag=2 (locked for queuing) on `sched_stage`
 2. For tasks with flag=2,
-    a. If task is callable, put an entry into `sched_queue`
-    b. If task is bundle, put all of its callable tasks into `sched_queue`
+    1. If task is callable, put an entry into `sched_queue`
+    2. If task is bundle, put all of its callable tasks into `sched_queue`
 3. For tasks in `sched_queue` with status!=`queued`, update task status to `queued`
 4. For tasks with flag=2 and status=`queued`, set the flag=3 (queued) on `sched_stage`
 
@@ -30,8 +30,8 @@
 ### Steps
 1. Lock tasks in `sched_queue` for which flag=3 and status=`queued`
 2. Check start condition for locked task
-    a. If satisfied, set the status=`ready` on `sched_task`
-    b. If not satisfied, set the status=`waiting` on `sched_task`
+    1. If satisfied, set the status=`ready` on `sched_task`
+    2. If not satisfied, set the status=`waiting` on `sched_task`
 3. Put an entry for locked task with status=`ready` into `sched_ready`
 4. Put an entry for locked task with status=`waiting` into `sched_wait`
 5. Remove a task from `sched_queue` when status is either `ready` or `waiting`
