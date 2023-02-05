@@ -7,11 +7,14 @@ SVC_EVENTSERVER = ./service/eventserver
 CMD_VALIDATOR = ./cmd/validator
 BIN_VALIDATOR = ./bin/validator
 SVC_VALIDATOR = ./service/validator
+CMD_ALLOCATOR = ./cmd/allocator
+BIN_ALLOCATOR = ./bin/allocator
+SVC_ALLOCATOR = ./service/allocator
 
 all: build
 
 # build all services
-build: bin_dir build_client build_eventserver build_validator
+build: bin_dir build_client build_eventserver build_validator build_allocator
 
 # create build dir
 bin_dir:
@@ -29,12 +32,26 @@ build_eventserver:
 build_validator:
 	go build -o ${BIN_VALIDATOR} ${CMD_VALIDATOR}
 
-# start all services
-run: build
-	./bin/eventserver
-	./bin/validator
+# build allocator service
+build_allocator:
+	go build -o ${BIN_ALLOCATOR} ${CMD_ALLOCATOR}
 
-test: test_client test_eventserver test_validator
+# start all services
+run: build start_eventserver start_validator start_allocator
+
+# start eventserver service in background
+eventserver:
+	./bin/eventserver &
+
+# start validator service in background
+validator:
+	./bin/validator &
+
+# start allocator service in background
+allocator:
+	./bin/allocator &
+
+test: test_client test_eventserver test_validator test_allocator
 
 # test all tests in client service
 test_client:
@@ -47,3 +64,7 @@ test_eventserver:
 # test all tests in validator service
 test_validator:
 	go test ${SVC_VALIDATOR}/...
+
+# test all tests in allocator service
+test_allocator:
+	go test ${SVC_ALLOCATOR}/...
