@@ -15,7 +15,7 @@ var (
 // StageTasks inserts the tasks which are scheduled for given cycle
 // into 'sched_stage'. When staging the tasks, flag will be 0 which
 // indicates newly staged task.
-func StageTasks(window int) error {
+func StageTasks() error {
 	db := mysql.GetDatabase()
 
 	qry := `Insert Into sched_stage (
@@ -29,22 +29,10 @@ func StageTasks(window int) error {
 			t.id, now(), t.priority, 0,
 			Case When t.type = 'bundle' Then 1 Else 0 End
 		From sched_task t
-			Inner Join sched_batch_run b On (t.id=b.task_id)
-		Where t.run_flag='batch'
-			And b.start_time Between current_time And timestampadd(Second, ?, current_time)
-			And b.current_status In (` + stableStates + `)
-		Union
-		Select
-			t.id, now(), t.priority, 0,
-			Case When t.type = 'bundle' Then 1 Else 0 End
-		From sched_task t
-			Inner Join sched_window_run w On (t.id=w.task_id)
-		Where t.run_flag='window'
-			And current_time Between t.start_window And t.end_window
-			And start_min = minute(current_time)
-			And b.current_status In (` + stableStates + `)`
+		Where lock_flag=?
+			And current_status<>'?'`
 
-	result, err := db.DB.Exec(qry, window)
+	result, err := db.DB.Exec(qry, 1, string(task.StateQueued))
 	if err != nil {
 		return fmt.Errorf("StageTasks: %v", err)
 	}
@@ -55,6 +43,44 @@ func StageTasks(window int) error {
 	}
 
 	log.Printf("%d tasks staged", cnt)
+	return nil
+}
+
+// LockForStaging locks the task for staging
+func LockForStaging(cycle int) error {
+	db := mysql.GetDatabase()
+
+	qry := `With tasks As (
+		Select t.id
+		From sched_task t
+			Inner Join sched_batch_run b On (t.id=b.task_id)
+		Where t.run_flag='batch'
+			And b.start_time Between current_time And timestampadd(Second, ?, current_time)
+			And b.current_status In (` + stableStates + `)
+		Union
+		Select t.id
+		From sched_task t
+			Inner Join sched_window_run w On (t.id=w.task_id)
+		Where t.run_flag='window'
+			And current_time Between t.start_window And t.end_window
+			And start_min = minute(current_time)
+			And b.current_status In (` + stableStates + `)
+		)
+		Update sched_task
+		Set lock_flag=1
+		Where id In (Select id From tasks)`
+
+	result, err := db.DB.Exec(qry, cycle)
+	if err != nil {
+		return fmt.Errorf("LockForStaging: %v", err)
+	}
+
+	cnt, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("LockForStaging: %v", err)
+	}
+
+	log.Printf("%d tasks locked for staging", cnt)
 	return nil
 }
 
@@ -80,8 +106,8 @@ func SetStagedStatus() error {
 	return nil
 }
 
-// MigrateStage completes the staging and sets the tasks to ready for queuing
-func MigrateStage() error {
+// SetStagedFlag completes the staging and sets the tasks to ready for queuing
+func SetStagedFlag() error {
 	db := mysql.GetDatabase()
 
 	qry := `Update sched_stage s Join sched_task t On s.task_id=t.id
@@ -90,12 +116,12 @@ func MigrateStage() error {
 
 	result, err := db.DB.Exec(qry, task.StateStaged)
 	if err != nil {
-		return fmt.Errorf("MigrateStage: %v", err)
+		return fmt.Errorf("SetStagedFlag: %v", err)
 	}
 
 	cnt, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("MigrateStage: %v", err)
+		return fmt.Errorf("SetStagedFlag: %v", err)
 	}
 
 	log.Printf("%d tasks ready for migration to queue", cnt)

@@ -4,45 +4,34 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
-// SetFlagPreQueue changes the flag of staged tasks to pre queue state
-func SetFlagPreQueue() error {
-	cnt, err := UpdateStageFlag(1, 2)
-	if err != nil {
-		return fmt.Errorf("MigrateStage: %v", err)
-	}
-
-	log.Printf("%d tasks ready for migration to queue", cnt)
-	return nil
-}
-
-// SetStatusQueue changes the task status to 'queued'
-func SetStatusQueue() error {
+// LockForEnqueue changes the flag of staged tasks to pre queue state
+func LockForEnqueue() error {
 	db := mysql.GetDatabase()
 
 	qry := `Update sched_task t Join sched_stage s On t.id=s.task_id
-	Set t.current_status='?'
-	Where s.flag=2`
+		Set s.flag=2
+		Where s.flag=1
+			And t.current_status='staged'`
 
-	result, err := db.DB.Exec(qry, task.StateQueued)
+	result, err := db.DB.Exec(qry)
 	if err != nil {
-		return fmt.Errorf("SetStatusQueue: %v", err)
+		return fmt.Errorf("LockForEnqueue: %w", err)
 	}
 
 	cnt, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("SetStatusQueue: %v", err)
+		return fmt.Errorf("LockForEnqueue: %w", err)
 	}
 
-	log.Printf("%d tasks changed to status queued", cnt)
+	log.Printf("%d staged tasks are locked for queuing", cnt)
 	return nil
 }
 
-// QueueTasks inserts the staged tasks into sched_stage.
-func QueueTasks() error {
+// EnqueueTasks inserts the staged tasks into sched_stage.
+func EnqueueTasks() error {
 	db := mysql.GetDatabase()
 
 	qry := `Insert Into sched_queue (
@@ -61,25 +50,46 @@ func QueueTasks() error {
 
 	result, err := db.DB.Exec(qry)
 	if err != nil {
-		return fmt.Errorf("QueueTasks: failed to push tasks into queue: %v", err)
+		return fmt.Errorf("EnqueueTasks: failed to push tasks into queue: %v", err)
 	}
 	cnt, err := result.RowsAffected()
 	if err != nil {
-		return fmt.Errorf("QueueTasks: %v", err)
+		return fmt.Errorf("EnqueueTasks: %v", err)
 	}
 
 	log.Printf("%d tasks pushed into queue", cnt)
 	return nil
 }
 
-// SetFlagPostQueue changes the flag of task in stage to Queued
-func SetFlagPostQueue() error {
-	cnt, err := UpdateStageFlag(2, 3)
+// SetQueueStatus sets the state of queued tasks to queued
+func SetQueueStatus() error {
+	db := mysql.GetDatabase()
+
+	qry := `Update sched_task t Join sched_queue q On t.id=q.task_id
+		Set t.current_status='queued'
+		Where t.current_status='staged'`
+
+	_, err := db.DB.Exec(qry)
 	if err != nil {
-		return fmt.Errorf("SetFlagPostQueue: %v", err)
+		return fmt.Errorf("SetQueueStatus: %w", err)
 	}
 
-	log.Printf("%d tasks migrated to queue", cnt)
+	return nil
+}
+
+// SetQueuedFlag changes the flag of task in stage to Queued
+func SetQueuedFlag() error {
+	db := mysql.GetDatabase()
+
+	qry := `Update sched_queue s Join sched_task t On s.task_id=t.id
+	Set s.flag=3
+	Where s.flag=2 And t.current_status='queued'`
+
+	_, err := db.DB.Exec(qry)
+	if err != nil {
+		return fmt.Errorf("SetQueuedFlag: %v", err)
+	}
+
 	return nil
 }
 
