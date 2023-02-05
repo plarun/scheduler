@@ -39,11 +39,11 @@ func EnqueueTasks() error {
 			sys_entry_date,
 			priority
 		)
-		Select task_id
+		Select task_id, now(), priority
 		From sched_stage
 		Where is_bundle=0 And flag=2
 		Union All
-		Select t.task_id 
+		Select t.id, now(), s.priority
 		From sched_task t
 			Inner Join sched_stage s On (t.parent_id=s.task_id)
 		Where s.is_bundle=1 And s.flag=2`
@@ -81,7 +81,7 @@ func SetQueueStatus() error {
 func SetQueuedFlag() error {
 	db := mysql.GetDatabase()
 
-	qry := `Update sched_queue s Join sched_task t On s.task_id=t.id
+	qry := `Update sched_stage s Join sched_task t On s.task_id=t.id
 	Set s.flag=3
 	Where s.flag=2 And t.current_status='queued'`
 
