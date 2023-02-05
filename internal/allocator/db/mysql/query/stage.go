@@ -3,14 +3,55 @@ package query
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
 var (
-	stableStates string = fmt.Sprintf("%s,%s,%s,%s", task.StateIdle, task.StateAborted, task.StateFailure, task.StateSuccess)
+	stableStates string = fmt.Sprintf("'%s','%s','%s','%s'", task.StateIdle, task.StateAborted, task.StateFailure, task.StateSuccess)
 )
+
+// LockForStaging locks the task for staging
+func LockForStaging(cycle time.Duration) error {
+	db := mysql.GetDatabase()
+
+	sec := int(cycle / time.Second)
+
+	qry := `With tasks As (
+		Select t.id
+		From sched_task t
+			Inner Join sched_batch_run b On (t.id=b.task_id)
+		Where t.run_flag='batch'
+			And b.start_time Between current_time And timestampadd(Second, ?, current_time)
+			And t.current_status In (` + stableStates + `)
+		Union All
+		Select t.id
+		From sched_task t
+			Inner Join sched_window_run w On (t.id=w.task_id)
+		Where t.run_flag='window'
+			And current_time Between t.start_window And t.end_window
+			And start_min = minute(current_time)
+			And t.current_status In (` + stableStates + `)
+		)
+		Update sched_task
+		Set lock_flag=1
+		Where id In (Select id From tasks)`
+
+	result, err := db.DB.Exec(qry, sec)
+	if err != nil {
+		return fmt.Errorf("LockForStaging: %v", err)
+	}
+
+	cnt, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("LockForStaging: %v", err)
+	}
+
+	log.Printf("%d tasks locked for staging", cnt)
+	return nil
+}
 
 // StageTasks inserts the tasks which are scheduled for given cycle
 // into 'sched_stage'. When staging the tasks, flag will be 0 which
@@ -30,7 +71,7 @@ func StageTasks() error {
 			Case When t.type = 'bundle' Then 1 Else 0 End
 		From sched_task t
 		Where lock_flag=?
-			And current_status<>'?'`
+			And current_status<>?`
 
 	result, err := db.DB.Exec(qry, 1, string(task.StateQueued))
 	if err != nil {
@@ -46,50 +87,12 @@ func StageTasks() error {
 	return nil
 }
 
-// LockForStaging locks the task for staging
-func LockForStaging(cycle int) error {
-	db := mysql.GetDatabase()
-
-	qry := `With tasks As (
-		Select t.id
-		From sched_task t
-			Inner Join sched_batch_run b On (t.id=b.task_id)
-		Where t.run_flag='batch'
-			And b.start_time Between current_time And timestampadd(Second, ?, current_time)
-			And b.current_status In (` + stableStates + `)
-		Union
-		Select t.id
-		From sched_task t
-			Inner Join sched_window_run w On (t.id=w.task_id)
-		Where t.run_flag='window'
-			And current_time Between t.start_window And t.end_window
-			And start_min = minute(current_time)
-			And b.current_status In (` + stableStates + `)
-		)
-		Update sched_task
-		Set lock_flag=1
-		Where id In (Select id From tasks)`
-
-	result, err := db.DB.Exec(qry, cycle)
-	if err != nil {
-		return fmt.Errorf("LockForStaging: %v", err)
-	}
-
-	cnt, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("LockForStaging: %v", err)
-	}
-
-	log.Printf("%d tasks locked for staging", cnt)
-	return nil
-}
-
 // SetStagedStatus changes the status of newly staged tasks to 'staged'
 func SetStagedStatus() error {
 	db := mysql.GetDatabase()
 
 	qry := `Update sched_task t Join sched_stage s On t.id=s.task_id
-	Set t.current_status='?'
+	Set t.current_status=?
 	Where s.flag=0`
 
 	result, err := db.DB.Exec(qry, task.StateStaged)
@@ -112,7 +115,7 @@ func SetStagedFlag() error {
 
 	qry := `Update sched_stage s Join sched_task t On s.task_id=t.id
 	Set s.flag=1
-	Where s.flag=0 And t.current_status='?'`
+	Where s.flag=0 And t.current_status=?`
 
 	result, err := db.DB.Exec(qry, task.StateStaged)
 	if err != nil {
