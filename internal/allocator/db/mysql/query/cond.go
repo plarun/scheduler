@@ -36,7 +36,7 @@ func GetPrerequisitesTaskStatus(name string) (map[string]string, error) {
 		Select r.cond_task_id 
 		From sched_task_relation r, sched_task t 
 		Where t.id = r.task_id 
-			And t.name='?'
+			And t.name=?
 	) 
 	Select t.name, t.current_status 
 	From sched_task t, cond c 
