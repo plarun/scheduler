@@ -2,31 +2,26 @@ package allocator
 
 import (
 	"log"
+	"time"
 
 	db "github.com/plarun/scheduler/internal/allocator/db/mysql"
+	"github.com/plarun/scheduler/internal/allocator/service"
+)
+
+const (
+	SCHEDULE_CYCLE time.Duration = time.Second * 3
 )
 
 func Serve(port int) {
-	// addr := fmt.Sprintf(":%d", port)
-
-	// listen, err := net.Listen("tcp", addr)
-	// if err != nil {
-	// 	log.Fatalf("failed to create tcp listener on %s", addr)
-	// }
-
-	// log.Printf("tcp listening on %s", addr)
-
+	log.Println("Allocator starting...")
 	// connect to mysql db
 	if err := db.ConnectDB(); err != nil {
 		log.Fatal(err)
 	}
 
-	// ser := grpc.NewServer()
+	alloc := service.NewAllocator()
 
-	// register all grpc services here
-	// proto.RegisterParsedActionServiceServer(ser, handler.NewParsedActionService())
-
-	// if err := ser.Serve(listen); err != nil {
-	// 	log.Fatal("failed to listen")
-	// }
+	if err := alloc.Start(); err != nil {
+		panic(err)
+	}
 }
