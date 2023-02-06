@@ -2,14 +2,9 @@ package allocator
 
 import (
 	"log"
-	"time"
 
 	db "github.com/plarun/scheduler/internal/allocator/db/mysql"
 	"github.com/plarun/scheduler/internal/allocator/service"
-)
-
-const (
-	SCHEDULE_CYCLE time.Duration = time.Second * 3
 )
 
 func Serve(port int) {
