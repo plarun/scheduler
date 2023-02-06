@@ -9,10 +9,6 @@ import (
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
-var (
-	stableStates string = fmt.Sprintf("'%s','%s','%s','%s'", task.StateIdle, task.StateAborted, task.StateFailure, task.StateSuccess)
-)
-
 // LockForStaging locks the task for staging
 func LockForStaging(cycle time.Duration) error {
 	db := mysql.GetDatabase()
@@ -24,8 +20,13 @@ func LockForStaging(cycle time.Duration) error {
 		From sched_task t
 			Inner Join sched_batch_run b On (t.id=b.task_id)
 		Where t.run_flag='batch'
-			And b.start_time Between current_time And timestampadd(Second, ?, current_time)
-			And t.current_status In (` + stableStates + `)
+			And date_format(b.start_time,'%H:%i') >= date_format(now(),'%H:%i')
+			And date_format(b.start_time,'%H:%i') < date_format(timestampadd(Minute, 1, now()), '%H:%i')
+			And t.current_status In ('idle','success','failure','aborted')
+			And t.lock_flag=0
+			And (
+				t.last_end_time Is Null
+				Or t.last_end_time < date_format(now(),'%H:%i'))
 		Union All
 		Select t.id
 		From sched_task t
@@ -33,9 +34,12 @@ func LockForStaging(cycle time.Duration) error {
 		Where t.run_flag='window'
 			And current_time Between t.start_window And t.end_window
 			And start_min = minute(current_time)
-			And t.current_status In (` + stableStates + `)
-		)
-		Update sched_task
+			And t.current_status In ('idle','success','failure','aborted')
+			And t.lock_flag=0
+			And (
+				t.last_end_time Is Null
+				Or t.last_end_time < date_format(now(),'%H:%i'))
+		) Update sched_task
 		Set lock_flag=1
 		Where id In (Select id From tasks)`
 
