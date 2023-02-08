@@ -18,15 +18,15 @@ func NewTaskPoller(cycle time.Duration) *TaskPoller {
 // Stage performs staging the scheduled tasks
 func (t *TaskPoller) Stage() error {
 	// lock tasks for staging
-	if err := db.LockForStaging(t.cycle); err != nil {
+	if err := db.LockForStaging(); err != nil {
 		return fmt.Errorf("Stage: %w", err)
 	}
 	// push locked tasks into staging area
-	if err := db.StageTasks(); err != nil {
+	if err := db.StageLockedTasks(); err != nil {
 		return fmt.Errorf("Stage: %v", err)
 	}
 	// set task status to "staged"
-	if err := db.SetStagedStatus(); err != nil {
+	if err := db.MarkAsStaged(); err != nil {
 		return fmt.Errorf("Stage: %v", err)
 	}
 	// set task flag as staged

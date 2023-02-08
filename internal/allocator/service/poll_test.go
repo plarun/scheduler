@@ -3,7 +3,6 @@ package service
 import (
 	"log"
 	"testing"
-	"time"
 
 	"github.com/plarun/scheduler/config"
 	db "github.com/plarun/scheduler/internal/allocator/db/mysql"
@@ -22,7 +21,7 @@ func init() {
 }
 
 func TestLockForStaging(t *testing.T) {
-	if err := query.LockForStaging(30 * time.Second); err != nil {
+	if err := query.LockForStaging(); err != nil {
 		t.Fatal(err)
 	}
 }

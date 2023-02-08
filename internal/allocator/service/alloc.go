@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	SPLIT_CYCLE time.Duration = 3 * time.Second
-	STAGE_CYCLE time.Duration = 3 * time.Second
-	POLL_CYCLE  time.Duration = 3 * time.Second
+	SPLIT_CYCLE time.Duration = 5 * time.Second
+	STAGE_CYCLE time.Duration = 5 * time.Second
+	POLL_CYCLE  time.Duration = 10 * time.Second
 )
 
 type Allocator struct {
