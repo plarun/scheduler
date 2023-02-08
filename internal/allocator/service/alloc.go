@@ -57,7 +57,9 @@ func (a *Allocator) stage(ch chan (error)) {
 		}
 	}
 
-	ch <- fmt.Errorf("stage: %w", err)
+	if err != nil {
+		ch <- fmt.Errorf("stage: %w", err)
+	}
 }
 
 func (a *Allocator) poll(ch chan (error)) {
@@ -75,7 +77,9 @@ func (a *Allocator) poll(ch chan (error)) {
 		}
 	}
 
-	ch <- fmt.Errorf("poll: %w", err)
+	if err != nil {
+		ch <- fmt.Errorf("poll: %w", err)
+	}
 }
 
 func (a *Allocator) split(ch chan (error)) {
@@ -93,5 +97,7 @@ func (a *Allocator) split(ch chan (error)) {
 		}
 	}
 
-	ch <- fmt.Errorf("split: %w", err)
+	if err != nil {
+		ch <- fmt.Errorf("split: %w", err)
+	}
 }
