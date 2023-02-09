@@ -11,6 +11,13 @@
 - `sched_wait` - Holds the waiting task which are not met to start condition
 
 ## Staging
+### Flags
+- 0 - locked for staging
+- 1 - staged
+- 2 - locked for queuing
+- 3 - queued callable task
+- 4 - locked bundle task for staging its tasks
+
 ### Steps
 1. Lock tasks in `sched_task` which are to be scheduled on the current cycle
 2. Put an entry for locked tasks into `sched_stage` for staging with flag=0 (locked for staging)

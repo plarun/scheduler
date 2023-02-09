@@ -2,12 +2,12 @@ package query
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
-// LockForEnqueue changes the flag of staged tasks to pre queue state
+// LockForEnqueue locks the staged task for queuing
+// so it will be considered for moving into queue
 func LockForEnqueue() error {
 	db := mysql.GetDatabase()
 
@@ -16,21 +16,14 @@ func LockForEnqueue() error {
 		Where s.flag=1
 			And t.current_status='staged'`
 
-	result, err := db.DB.Exec(qry)
-	if err != nil {
+	if _, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("LockForEnqueue: %w", err)
 	}
 
-	cnt, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("LockForEnqueue: %w", err)
-	}
-
-	log.Printf("%d staged tasks are locked for queuing", cnt)
 	return nil
 }
 
-// EnqueueTasks inserts the staged tasks into sched_stage.
+// EnqueueTasks inserts the staged tasks into sched_queue.
 func EnqueueTasks() error {
 	db := mysql.GetDatabase()
 
@@ -41,23 +34,11 @@ func EnqueueTasks() error {
 		)
 		Select task_id, now(), priority
 		From sched_stage
-		Where is_bundle=0 And flag=2
-		Union All
-		Select t.id, now(), s.priority
-		From sched_task t
-			Inner Join sched_stage s On (t.parent_id=s.task_id)
-		Where s.is_bundle=1 And s.flag=2`
+		Where is_bundle=0 And flag=2`
 
-	result, err := db.DB.Exec(qry)
-	if err != nil {
+	if _, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("EnqueueTasks: failed to push tasks into queue: %v", err)
 	}
-	cnt, err := result.RowsAffected()
-	if err != nil {
-		return fmt.Errorf("EnqueueTasks: %v", err)
-	}
-
-	log.Printf("%d tasks pushed into queue", cnt)
 	return nil
 }
 
@@ -69,8 +50,7 @@ func SetQueueStatus() error {
 		Set t.current_status='queued'
 		Where t.current_status='staged'`
 
-	_, err := db.DB.Exec(qry)
-	if err != nil {
+	if _, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("SetQueueStatus: %w", err)
 	}
 
@@ -85,8 +65,7 @@ func SetQueuedFlag() error {
 	Set s.flag=3
 	Where s.flag=2 And t.current_status='queued'`
 
-	_, err := db.DB.Exec(qry)
-	if err != nil {
+	if _, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("SetQueuedFlag: %v", err)
 	}
 

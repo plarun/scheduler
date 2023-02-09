@@ -34,7 +34,7 @@ func (a *Allocator) Start() error {
 
 	go a.stage(fail)
 	go a.poll(fail)
-	go a.split(fail)
+	// go a.split(fail)
 
 	if err := <-fail; err != nil {
 		return fmt.Errorf("Start: %w", err)
@@ -44,60 +44,44 @@ func (a *Allocator) Start() error {
 
 func (a *Allocator) stage(ch chan (error)) {
 	ticker := time.NewTicker(a.stageCycle)
-	stop := make(chan error)
-	var err error
 
-	for err != nil {
-		select {
-		case <-ticker.C:
-			err = a.poller.Stage()
-			stop <- err
-		case <-stop:
-			ticker.Stop()
+	for range ticker.C {
+		if err := a.poller.Stage(); err != nil {
+			ch <- err
+			break
 		}
-	}
-
-	if err != nil {
-		ch <- fmt.Errorf("stage: %w", err)
 	}
 }
 
 func (a *Allocator) poll(ch chan (error)) {
 	ticker := time.NewTicker(a.pollCycle)
-	stop := make(chan error)
-	var err error
 
-	for err != nil {
-		select {
-		case <-ticker.C:
-			err = a.poller.Poll()
-			stop <- err
-		case <-stop:
-			ticker.Stop()
+	for range ticker.C {
+		if err := a.poller.Poll(); err != nil {
+			ch <- err
+			break
 		}
 	}
 
-	if err != nil {
-		ch <- fmt.Errorf("poll: %w", err)
-	}
 }
 
-func (a *Allocator) split(ch chan (error)) {
-	ticker := time.NewTicker(a.splitCycle)
-	stop := make(chan error)
-	var err error
+// func (a *Allocator) split(ch chan (error)) {
+// 	ticker := time.NewTicker(a.splitCycle)
+// 	stop := make(chan error)
+// 	var err error
 
-	for err != nil {
-		select {
-		case <-ticker.C:
-			err = a.poller.Poll()
-			stop <- err
-		case <-stop:
-			ticker.Stop()
-		}
-	}
+// 	for err == nil {
+// 		select {
+// 		case <-ticker.C:
+// 			if err != a.poller.Poll() {
+// 				stop <- err
+// 			}
+// 		case <-stop:
+// 			ticker.Stop()
+// 		}
+// 	}
 
-	if err != nil {
-		ch <- fmt.Errorf("split: %w", err)
-	}
-}
+// 	if err != nil {
+// 		ch <- fmt.Errorf("split: %w", err)
+// 	}
+// }
