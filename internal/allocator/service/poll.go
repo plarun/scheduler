@@ -55,7 +55,7 @@ func (t *TaskPoller) Poll() error {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
-	if err := db.StageBundledTasks(); err != nil {
+	if err := db.LockBundledTasksForStaging(); err != nil {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
