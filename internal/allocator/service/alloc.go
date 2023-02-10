@@ -34,7 +34,7 @@ func (a *Allocator) Start() error {
 
 	go a.stage(fail)
 	go a.poll(fail)
-	// go a.split(fail)
+	go a.split(fail)
 
 	if err := <-fail; err != nil {
 		return fmt.Errorf("Start: %w", err)
@@ -62,26 +62,15 @@ func (a *Allocator) poll(ch chan (error)) {
 			break
 		}
 	}
-
 }
 
-// func (a *Allocator) split(ch chan (error)) {
-// 	ticker := time.NewTicker(a.splitCycle)
-// 	stop := make(chan error)
-// 	var err error
+func (a *Allocator) split(ch chan (error)) {
+	ticker := time.NewTicker(a.splitCycle)
 
-// 	for err == nil {
-// 		select {
-// 		case <-ticker.C:
-// 			if err != a.poller.Poll() {
-// 				stop <- err
-// 			}
-// 		case <-stop:
-// 			ticker.Stop()
-// 		}
-// 	}
-
-// 	if err != nil {
-// 		ch <- fmt.Errorf("split: %w", err)
-// 	}
-// }
+	for range ticker.C {
+		if err := a.splitter.Split(); err != nil {
+			ch <- err
+			break
+		}
+	}
+}

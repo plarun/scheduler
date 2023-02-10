@@ -116,7 +116,7 @@ func LockStagedBundles() error {
 	db := mysql.GetDatabase()
 
 	qry := `Update sched_stage
-		Set flag=5
+		Set flag=4
 		Where flag=2 
 			And is_bundle=1`
 
@@ -126,21 +126,19 @@ func LockStagedBundles() error {
 	return nil
 }
 
-// StageBundledTasks stages the tasks of staged bundle task
-func StageBundledTasks() error {
+// LockBundledTasksForStaging locks the bundled tasks for staging
+// whose bundles are already staged
+func LockBundledTasksForStaging() error {
 	db := mysql.GetDatabase()
 
-	qry := `Insert Into sched_stage (
-			task_id,
-			sys_entry_date,
-			priority,
-			flag,
-			is_bundle
-		)
-		Select t.id, now(), s.priority, 0, Case When type = 'bundle' Then 1 Else 0 End
-		From sched_task t
-			Inner Join sched_stage s On (t.parent_id=s.task_id)
-		Where s.is_bundle=1 And s.flag=5`
+	qry := `With tasks As (
+			Select t.id
+			From sched_task t
+				Inner Join sched_stage s On (t.parent_id=s.task_id)
+			Where s.is_bundle=1 And s.flag=4
+		) Update sched_task
+		Set lock_flag=1
+		Where id In (Select id From tasks)`
 
 	if _, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("StageBundledTasks: failed to stage the tasks under bundle: %v", err)
