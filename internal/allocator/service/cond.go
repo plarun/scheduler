@@ -12,15 +12,15 @@ import (
 // of task is satisfied or not
 type ConditionChecker struct {
 	condTaskStatus map[string]task.State
-	task           string
+	taskid         int
 	cond           string
 	expr           condition.Expression
 	initiated      bool
 }
 
-func NewConditionChecker(name string) *ConditionChecker {
+func NewConditionChecker(id int) *ConditionChecker {
 	return &ConditionChecker{
-		task:      name,
+		taskid:    id,
 		initiated: false,
 	}
 }
@@ -28,14 +28,14 @@ func NewConditionChecker(name string) *ConditionChecker {
 // Init loads the ConditionChecker which are required for evaluation
 func (c *ConditionChecker) Init() error {
 	// get start condition of task
-	if cond, err := db.GetStartCondition(c.task); err != nil {
+	if cond, err := db.GetStartCondition(c.taskid); err != nil {
 		return fmt.Errorf("ConditionChecker.Init: %w", err)
 	} else {
 		c.cond = cond
 	}
 
 	// get current status of distinct tasks in start condition
-	if stat, err := db.GetPrerequisitesTaskStatus(c.task); err != nil {
+	if stat, err := db.GetPrerequisitesTaskStatus(c.taskid); err != nil {
 		return fmt.Errorf("ConditionChecker.Init: %w", err)
 	} else {
 		for tsk, status := range stat {
@@ -57,7 +57,9 @@ func (c *ConditionChecker) Init() error {
 // Check checks whether a start condition is satisfied or not
 func (c *ConditionChecker) Check() (bool, error) {
 	if !c.initiated {
-		return false, fmt.Errorf("ConditionChecker.Check: Initiation required")
+		if err := c.Init(); err != nil {
+			return false, err
+		}
 	}
 	if res, err := c.eval(c.expr); err != nil {
 		return false, fmt.Errorf("ConditionChecker.Check: %w", err)

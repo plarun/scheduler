@@ -56,7 +56,7 @@ func TestConditionCheck(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			chk := NewConditionChecker("")
+			chk := NewConditionChecker(0)
 			chk.initiated = true
 			chk.cond = tc.condition
 			chk.condTaskStatus = tc.stat

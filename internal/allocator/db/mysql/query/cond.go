@@ -8,20 +8,21 @@ import (
 )
 
 // GetStartCondition gets the starting condition of task
-func GetStartCondition(name string) (string, error) {
+func GetStartCondition(id int) (string, error) {
 	db := mysql.GetDatabase()
 
 	qry := `Select start_condition 
 	From sched_task 
-	Where name=?`
+	Where id=?`
 
-	row := db.DB.QueryRow(qry, name)
+	row := db.DB.QueryRow(qry, id)
 
 	var cond string
 	if err := row.Scan(&cond); err != nil {
 		if err == sql.ErrNoRows {
 			return "", fmt.Errorf("GetStartCondition: task not exist")
 		}
+		return "", fmt.Errorf("GetStartCondition: %w", err)
 	}
 
 	return cond, nil
@@ -29,14 +30,14 @@ func GetStartCondition(name string) (string, error) {
 
 // GetPrerequisitesTaskStatus gets the distinct of tasks in the start
 // condition of given task along with its current run status.
-func GetPrerequisitesTaskStatus(name string) (map[string]string, error) {
+func GetPrerequisitesTaskStatus(id int) (map[string]string, error) {
 	db := mysql.GetDatabase()
 
 	qry := `With cond As (
 		Select r.cond_task_id 
 		From sched_task_relation r, sched_task t 
 		Where t.id = r.task_id 
-			And t.name=?
+			And t.id=?
 	) 
 	Select t.name, t.current_status 
 	From sched_task t, cond c 
@@ -44,11 +45,12 @@ func GetPrerequisitesTaskStatus(name string) (map[string]string, error) {
 
 	res := make(map[string]string)
 
-	rows, err := db.DB.Query(qry, name)
+	rows, err := db.DB.Query(qry, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, nil
 		}
+		return res, fmt.Errorf("GetPrerequisitesTaskStatus: %w", err)
 	}
 
 	for rows.Next() {
