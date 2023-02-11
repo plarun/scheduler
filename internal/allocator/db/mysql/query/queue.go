@@ -1,9 +1,17 @@
 package query
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
+)
+
+const (
+	QueueLockNew      int = 0
+	QueueLockChecking int = 1
+	QueueLockReady    int = 2
+	QueueLockWait     int = 3
 )
 
 // LockForEnqueue locks the staged task for queuing
@@ -62,38 +70,106 @@ func SetQueuedFlag() error {
 	db := mysql.GetDatabase()
 
 	qry := `Update sched_stage s Join sched_task t On s.task_id=t.id
-	Set s.flag=3
-	Where s.flag=2 And t.current_status='queued'`
+		Set s.flag=3
+		Where s.flag=2 And t.current_status='queued'`
 
 	if _, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("SetQueuedFlag: %v", err)
 	}
-
 	return nil
 }
 
-// LockForDequeue locks a task in queue for dequeue
-func LockForDequeue(id int) error {
+// LockForConditionCheck locks the queued tasks in sched_queue for start condition check
+func LockForConditionCheck() error {
+	db := mysql.GetDatabase()
+
+	qry := `With tasks As (
+			Select q.task_id
+			From sched_task t, sched_queue q
+			Where t.id=q.task_id
+				And q.lock_flag=0
+				And t.current_status='queued'
+		) Update sched_queue
+		Set lock_flag=?
+		Where task_id In (
+			Select task_id 
+			From tasks)`
+
+	if _, err := db.DB.Exec(qry, QueueLockChecking); err != nil {
+		return fmt.Errorf("LockForConditionCheck: %v", err)
+	}
+	return nil
+}
+
+func PickQueueLockedTasks() ([]int, error) {
+	db := mysql.GetDatabase()
+
+	qry := `Select task_id
+		From sched_queue
+		Where lock_flag=?`
+
+	res := make([]int, 0)
+
+	rows, err := db.DB.Query(qry, QueueLockChecking)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return res, nil
+		}
+		return res, fmt.Errorf("PickQueueLockedTasks: %w", err)
+	}
+
+	for rows.Next() {
+		var taskId int
+		rows.Scan(&taskId)
+		res = append(res, taskId)
+	}
+	return res, nil
+}
+
+// SetQueueLockFlag sets the given lock flag on queued task
+func SetQueueLockFlag(id, flag int) error {
 	db := mysql.GetDatabase()
 
 	qry := `Update sched_queue
-	Set lock_flag=1
+	Set lock_flag=?
 	Where task_id=?`
 
-	if _, err := db.DB.Exec(qry, id); err != nil {
+	if _, err := db.DB.Exec(qry, id, flag); err != nil {
 		return fmt.Errorf("LockForDequeue: %v", err)
 	}
 	return nil
 }
 
-// RemoveTask removes a task from queue
-func RemoveTask(id int) error {
+func MoveQueueToReady(id int) error {
+	if err := InsertReadyTask(id); err != nil {
+		return fmt.Errorf("MoveQueueToReady: %w", err)
+	}
+
+	if err := DequeueTask(id); err != nil {
+		return fmt.Errorf("MoveQueueToReady: %w", err)
+	}
+	return nil
+}
+
+func MoveQueueToWait(id int) error {
+	if err := InsertWaitTask(id); err != nil {
+		return fmt.Errorf("MoveQueueToWait: %w", err)
+	}
+
+	if err := DequeueTask(id); err != nil {
+		return fmt.Errorf("MoveQueueToWait: %w", err)
+	}
+	return nil
+}
+
+// DequeueTask removes a task from queue
+func DequeueTask(id int) error {
 	db := mysql.GetDatabase()
 
 	qry := `Delete From sched_queue Where task_id=?`
 
 	if _, err := db.DB.Exec(qry, id); err != nil {
-		return fmt.Errorf("RemoveTask: failed to delete task from queue: %v", err)
+		return fmt.Errorf("DequeueTask: failed to remove task from queue: %v", err)
 	}
 	return nil
 }

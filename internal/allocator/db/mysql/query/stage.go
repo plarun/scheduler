@@ -99,18 +99,6 @@ func SetStagedFlag() error {
 	return nil
 }
 
-// UpdateStageFlag changes the flag of the staged task
-// func UpdateStageFlag(from, to int) error {
-// 	db := mysql.GetDatabase()
-
-// 	qry := `Update sched_stage Set flag=? Where flag=?`
-
-// 	if _, err := db.DB.Exec(qry, to, from); err != nil {
-// 		return fmt.Errorf("UpdateStageFlag: failed to update flags: %v", err)
-// 	}
-// 	return nil
-// }
-
 // LockStagedBundles locks the staged bundle tasks for staging its tasks
 func LockStagedBundles() error {
 	db := mysql.GetDatabase()
