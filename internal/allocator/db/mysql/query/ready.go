@@ -16,7 +16,7 @@ func InsertReadyTask(id int) error {
 	)
 	Select task_id, now(), priority
 	From sched_queue
-	Where task_id=? And flag=1`
+	Where task_id=? And lock_flag=1`
 
 	_, err := db.DB.Exec(qry, id)
 	if err != nil {

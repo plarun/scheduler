@@ -17,7 +17,7 @@ func GetStartCondition(id int) (string, error) {
 
 	row := db.DB.QueryRow(qry, id)
 
-	var cond string
+	var cond sql.NullString
 	if err := row.Scan(&cond); err != nil {
 		if err == sql.ErrNoRows {
 			return "", fmt.Errorf("GetStartCondition: task not exist")
@@ -25,7 +25,10 @@ func GetStartCondition(id int) (string, error) {
 		return "", fmt.Errorf("GetStartCondition: %w", err)
 	}
 
-	return cond, nil
+	if !cond.Valid {
+		return "", nil
+	}
+	return cond.String, nil
 }
 
 // GetPrerequisitesTaskStatus gets the distinct of tasks in the start

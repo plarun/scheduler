@@ -20,8 +20,9 @@ type ConditionChecker struct {
 
 func NewConditionChecker(id int) *ConditionChecker {
 	return &ConditionChecker{
-		taskid:    id,
-		initiated: false,
+		condTaskStatus: make(map[string]task.State),
+		taskid:         id,
+		initiated:      false,
 	}
 }
 
@@ -60,6 +61,10 @@ func (c *ConditionChecker) Check() (bool, error) {
 		if err := c.Init(); err != nil {
 			return false, err
 		}
+	}
+	// no start_condition for task
+	if c.cond == "" {
+		return true, nil
 	}
 	if res, err := c.eval(c.expr); err != nil {
 		return false, fmt.Errorf("ConditionChecker.Check: %w", err)

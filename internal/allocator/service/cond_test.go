@@ -52,6 +52,7 @@ func TestConditionCheck(t *testing.T) {
 				"task1": task.StateFailure, "task2": task.StateSuccess,
 				"task3": task.StateSuccess, "task4": task.StateSuccess,
 			}, want: false},
+		"good 8": {condition: "", stat: stat{}, want: true},
 	}
 
 	for name, tc := range tests {
