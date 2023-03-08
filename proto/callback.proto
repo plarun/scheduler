@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/plarun/scheduler/proto";
+
+enum TaskStatus {
+    SUCCESS = 0;
+    FAILURE = 1;
+    ABORTED = 2;
+    RUNNING = 3;
+}
+
+// Service to communicate between Worker and EventServer services
+// Requests the EventServer to get task info and set task status
+service TaskExecService {
+    // Submit sends the parsed entities to eventserver
+    rpc PullReadyTasks(ReadyTasksPullRequest) returns (ReadyTasksPullResponse) {}
+	rpc GetTask(TaskInfoRequest) returns (TaskInfoResponse) {}
+    rpc SetTaskStatus(TaskStatusRequest) returns (TaskStatusResponse) {}
+}
+
+// Request message to pull ready tasks for execution
+message ReadyTasksPullRequest {}
+
+// Response message contains ready tasks for execution
+message ReadyTasksPullResponse {
+    repeated int64 TaskIds = 1;
+}
+
+// Request message of parsed actions
+message TaskInfoRequest {
+	int64 TaskId = 1;
+}
+
+// Response for validated list of jobs
+message TaskInfoResponse {
+    int64 TaskId = 1;
+    string Command = 2;
+    string OutLogFile = 3;
+    string ErrLogFile = 4;
+}
+
+// Request message to set task status
+message TaskStatusRequest {
+    int64 TaskId = 1;
+    TaskStatus Status = 2;
+}
+
+// Response message for task status update
+message TaskStatusResponse {}
