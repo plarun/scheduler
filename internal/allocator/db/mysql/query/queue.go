@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
@@ -55,10 +56,10 @@ func SetQueueStatus() error {
 	db := mysql.GetDatabase()
 
 	qry := `Update sched_task t Join sched_queue q On t.id=q.task_id
-		Set t.current_status='queued'
-		Where t.current_status='staged'`
+		Set t.current_status=?
+		Where t.current_status=?`
 
-	if _, err := db.DB.Exec(qry); err != nil {
+	if _, err := db.DB.Exec(qry, string(task.StateQueued), string(task.StateStaged)); err != nil {
 		return fmt.Errorf("SetQueueStatus: %w", err)
 	}
 
@@ -71,9 +72,9 @@ func SetQueuedFlag() error {
 
 	qry := `Update sched_stage s Join sched_task t On s.task_id=t.id
 		Set s.flag=3
-		Where s.flag=2 And t.current_status='queued'`
+		Where s.flag=2 And t.current_status=?`
 
-	if _, err := db.DB.Exec(qry); err != nil {
+	if _, err := db.DB.Exec(qry, string(task.StateQueued)); err != nil {
 		return fmt.Errorf("SetQueuedFlag: %v", err)
 	}
 	return nil
@@ -88,14 +89,14 @@ func LockForConditionCheck() error {
 			From sched_task t, sched_queue q
 			Where t.id=q.task_id
 				And q.lock_flag=0
-				And t.current_status='queued'
+				And t.current_status=?
 		) Update sched_queue
 		Set lock_flag=?
 		Where task_id In (
 			Select task_id 
 			From tasks)`
 
-	if _, err := db.DB.Exec(qry, QueueLockChecking); err != nil {
+	if _, err := db.DB.Exec(qry, QueueLockChecking, string(task.StateQueued)); err != nil {
 		return fmt.Errorf("LockForConditionCheck: %v", err)
 	}
 	return nil

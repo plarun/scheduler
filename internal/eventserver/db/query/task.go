@@ -3,6 +3,9 @@ package query
 import (
 	"database/sql"
 	"fmt"
+
+	"github.com/plarun/scheduler/api/types/entity/task"
+	mysql "github.com/plarun/scheduler/internal/eventserver/db"
 )
 
 // taskExists checks whether a task is available in database
@@ -63,9 +66,42 @@ func getRunFlag(tx *sql.Tx, name string) (int64, string, error) {
 
 	if err := row.Scan(&id, &runFlag); err != nil {
 		if err == sql.ErrNoRows {
-			return id, runFlag, fmt.Errorf("task not found for id %v", id)
+			return id, runFlag, fmt.Errorf("getRunFlags: task not found for id %v", id)
 		}
 		return id, runFlag, fmt.Errorf("getRunFlags: %v", err)
 	}
 	return id, runFlag, nil
+}
+
+func GetTaskCommand(id int64) (string, string, string, error) {
+	var command, fout, ferr string
+
+	db := mysql.GetDatabase()
+
+	qry := `Select command, std_out_log, std_err_log
+		From sched_task
+		Where id=?`
+
+	row := db.QueryRow(qry, id)
+
+	if err := row.Scan(&id, &command, &fout, &ferr); err != nil {
+		if err == sql.ErrNoRows {
+			return "", "", "", fmt.Errorf("GetTaskCommand: task not found for id %v", id)
+		}
+		return "", "", "", fmt.Errorf("GetTaskCommand: %v", err)
+	}
+	return command, fout, ferr, nil
+}
+
+func SetTaskStatus(id int64, state task.State) error {
+	db := mysql.GetDatabase()
+
+	qry := `Update sched_task
+		Set current_status=?
+		Where id=?`
+
+	if _, err := db.Exec(qry, string(state), id); err != nil {
+		return fmt.Errorf("SetTaskStatus: %v", err)
+	}
+	return nil
 }
