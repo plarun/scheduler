@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/plarun/scheduler/proto";
+
+// Service to communicate between EventServer and Allocator services
+// Requests the Allocator to check start condition of dependent tasks
+// if any on the waiting zone then trigger it for execution
+service WaitTaskService {
+    // Submit sends the parsed entities to eventserver
+    rpc Awake(DependentTaskAwakeRequest) returns (DependentTaskAwakeResponse) {}
+}
+
+// Request message to awake waiting dependent tasks for execution
+message DependentTaskAwakeRequest {
+    int64 TaskId = 1;
+}
+
+// Response message of awake waiting dependent tasks
+message DependentTaskAwakeResponse {}

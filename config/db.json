@@ -1,7 +1,7 @@
 {
     "User": "root",
     "Password": "#bubble@me",
-    "Host": "172.27.240.1",
+    "Host": "172.25.128.1",
     "Port": "3306",
     "Schema": "sched_test"
 }

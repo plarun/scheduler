@@ -42,6 +42,11 @@ type AppConfig struct {
 			Port int    `json:"Port"`
 			Logs logs   `json:"Logs"`
 		} `json:"Validator"`
+		Worker struct {
+			Name string `json:"Name"`
+			Port int    `json:"Port"`
+			Logs logs   `json:"Logs"`
+		} `json:"Worker"`
 	} `json:"Service"`
 }
 

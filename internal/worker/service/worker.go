@@ -1,6 +1,9 @@
 package service
 
-import "sync"
+import (
+	"log"
+	"sync"
+)
 
 type WorkerPool struct {
 	count int
@@ -31,6 +34,8 @@ func (w *WorkerPool) Start() {
 
 func worker(wg *sync.WaitGroup, tasks <-chan Executable) {
 	defer wg.Done()
+
+	log.Println("worker created...")
 
 	for task := range tasks {
 		task.Execute()

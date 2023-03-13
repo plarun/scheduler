@@ -10,8 +10,10 @@ func Serve(port int) {
 	log.Println("Worker starting...")
 
 	wk := service.NewWorker(10)
-	wk.Start()
+	go wk.Start()
 
 	fd := service.NewTaskFeed(wk)
-	fd.Feed()
+	if err := fd.Start(); err != nil {
+		log.Fatal(err)
+	}
 }

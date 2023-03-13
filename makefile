@@ -10,15 +10,19 @@ SVC_VALIDATOR = ./service/validator
 CMD_ALLOCATOR = ./cmd/allocator
 BIN_ALLOCATOR = ./bin/allocator
 SVC_ALLOCATOR = ./service/allocator
+CMD_WORKER = ./cmd/worker
+BIN_WORKER = ./bin/worker
+SVC_WORKER = ./service/worker
 
 all: build
 
 # build all services
-build: bin_dir build_client build_eventserver build_validator build_allocator
+build: bin_dir build_client build_eventserver build_validator build_allocator build_worker
 
 # create build dir
 bin_dir:
 	mkdir -p bin
+	mkdir -p cmd ${CMD_CLIENT} ${CMD_EVENTSERVER} ${CMD_VALIDATOR} ${CMD_ALLOCATOR} ${CMD_WORKER}
 
 # build client service
 build_client:
@@ -36,8 +40,12 @@ build_validator:
 build_allocator:
 	go build -o ${BIN_ALLOCATOR} ${CMD_ALLOCATOR}
 
+# build worker service
+build_worker:
+	go build -o ${BIN_WORKER} ${CMD_WORKER}
+
 # start all services
-run: build start_eventserver start_validator start_allocator
+run: build start_eventserver start_validator start_allocator start_worker
 
 # start eventserver service in background
 eventserver:
@@ -51,7 +59,11 @@ validator:
 allocator:
 	./bin/allocator &
 
-test: test_client test_eventserver test_validator test_allocator
+# start worker service in background
+worker:
+	./bin/worker &
+
+test: test_client test_eventserver test_validator test_allocator test_worker
 
 # test all tests in client service
 test_client:
@@ -68,3 +80,7 @@ test_validator:
 # test all tests in allocator service
 test_allocator:
 	go test ${SVC_ALLOCATOR}/...
+
+# test all tests in worker service
+test_worker:
+	go test ${SVC_WORKER}/...

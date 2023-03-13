@@ -30,6 +30,7 @@ func Serve(port int) {
 
 	// register all grpc services here
 	proto.RegisterParsedActionServiceServer(ser, handler.NewParsedActionService())
+	proto.RegisterTaskExecServiceServer(ser, handler.NewTaskExecService())
 
 	if err := ser.Serve(listen); err != nil {
 		log.Fatal("failed to listen")

@@ -2,15 +2,22 @@ package service
 
 import (
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/plarun/scheduler/config"
 	"github.com/plarun/scheduler/pkg/grpcconn"
 	"github.com/plarun/scheduler/proto"
 )
 
+const (
+	FEED_CYCLE time.Duration = 5 * time.Second
+)
+
 type TaskFeed struct {
 	conn       grpcconn.GrpcConnecter
 	workerPool *WorkerPool
+	feedCycle time.Duration
 }
 
 func NewTaskFeed(pool *WorkerPool) *TaskFeed {
@@ -22,17 +29,42 @@ func NewTaskFeed(pool *WorkerPool) *TaskFeed {
 	return &TaskFeed{
 		conn:       conn,
 		workerPool: pool,
+		feedCycle: FEED_CYCLE,
 	}
 }
 
-func (t *TaskFeed) Feed() error {
+func (t *TaskFeed) Start() error {
+	fail := make(chan error)
+
+	go t.feed(fail)
+
+	if err := <-fail; err != nil {
+		return fmt.Errorf("Start: %w", err)
+	}
+	return nil
+}
+
+func (t *TaskFeed) feed(ch chan (error)) {
+	ticker := time.NewTicker(t.feedCycle)
+
+	for range ticker.C {
+		if err := t.pullReadyTasks(); err != nil {
+			ch <- err
+			break
+		}
+	}
+}
+
+func (t *TaskFeed) pullReadyTasks() error {
+	log.Println("Pull ready tasks")
+
 	if err := t.conn.Connect(); err != nil {
-		return fmt.Errorf("Feed: %w", err)
+		return fmt.Errorf("pullReadyTasks: %w", err)
 	}
 
 	r, err := t.conn.Request()
 	if err != nil {
-		return fmt.Errorf("Feed: %w", err)
+		return fmt.Errorf("pullReadyTasks: %w", err)
 	}
 
 	var res *proto.ReadyTasksPullResponse
@@ -47,7 +79,7 @@ func (t *TaskFeed) Feed() error {
 	for _, taskId := range tasks {
 		cmd, fout, ferr, err := getTaskInfo(taskId)
 		if err != nil {
-			return fmt.Errorf("Feed: %w", err)
+			return fmt.Errorf("pullReadyTasks: %w", err)
 		}
 		ex := NewExecutable(taskId, cmd, fout, ferr)
 		t.workerPool.Add(ex)
@@ -56,7 +88,7 @@ func (t *TaskFeed) Feed() error {
 	// feed tasks into worker pool for execution
 
 	if err := t.conn.Close(); err != nil {
-		return fmt.Errorf("Feed: %w", err)
+		return fmt.Errorf("pullReadyTasks: %w", err)
 	}
 	return nil
 }

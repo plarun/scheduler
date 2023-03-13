@@ -11,4 +11,3 @@
 8. If exit code is 1, mark the task status as 'FAILURE' on sched_exec
 9. Periodically check sched_exec for status in ('SUCCESS', 'FAILURE')
 
- 

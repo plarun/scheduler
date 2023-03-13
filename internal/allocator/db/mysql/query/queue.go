@@ -96,7 +96,7 @@ func LockForConditionCheck() error {
 			Select task_id 
 			From tasks)`
 
-	if _, err := db.DB.Exec(qry, QueueLockChecking, string(task.StateQueued)); err != nil {
+	if _, err := db.DB.Exec(qry, string(task.StateQueued), QueueLockChecking); err != nil {
 		return fmt.Errorf("LockForConditionCheck: %v", err)
 	}
 	return nil
