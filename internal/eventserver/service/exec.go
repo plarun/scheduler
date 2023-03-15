@@ -14,12 +14,13 @@ func PullReadyTasks(ctx context.Context) ([]int64, error) {
 		return empty, fmt.Errorf("PullReadyTasks: %w", err)
 	}
 
+	// pull locked tasks for execution
 	tasks, err := query.PullReadyTasks()
 	if err != nil {
 		return empty, fmt.Errorf("PullReadyTasks: %w", err)
 	}
 
-	// lock pulled tasks for execution
+	// lock as tasks pulled for execution
 	if err := query.SwitchLockReadyTasks(1, 2); err != nil {
 		return empty, fmt.Errorf("PullReadyTasks: %w", err)
 	}

@@ -84,7 +84,7 @@ func GetTaskCommand(id int64) (string, string, string, error) {
 
 	row := db.QueryRow(qry, id)
 
-	if err := row.Scan(&id, &command, &fout, &ferr); err != nil {
+	if err := row.Scan(&command, &fout, &ferr); err != nil {
 		if err == sql.ErrNoRows {
 			return "", "", "", fmt.Errorf("GetTaskCommand: task not found for id %v", id)
 		}

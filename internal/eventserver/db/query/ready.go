@@ -38,7 +38,7 @@ func PullReadyTasks() ([]int64, error) {
 func SwitchLockReadyTasks(from, to int) error {
 	db := mysql.GetDatabase()
 
-	qry := `Update sched_queue
+	qry := `Update sched_ready
 	Set lock_flag=?
 	Where lock_flag=?`
 
