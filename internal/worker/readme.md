@@ -11,3 +11,7 @@
 8. If exit code is 1, mark the task status as 'FAILURE' on sched_exec
 9. Periodically check sched_exec for status in ('SUCCESS', 'FAILURE')
 
+# Locks on sched_ready
+- 0 - newly inserted ready tasks
+- 1 - locked for readyTaskPull
+- 2 - pulled for execution

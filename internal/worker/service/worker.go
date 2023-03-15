@@ -22,6 +22,7 @@ func (w *WorkerPool) Add(ex Executable) {
 }
 
 func (w *WorkerPool) Start() {
+	log.Println("Workerpool started")
 	var wg sync.WaitGroup
 
 	for i := 0; i < w.count; i++ {
@@ -38,6 +39,7 @@ func worker(wg *sync.WaitGroup, tasks <-chan Executable) {
 	log.Println("worker created...")
 
 	for task := range tasks {
+		log.Println("about to execute task: ", task.command)
 		task.Execute()
 	}
 }

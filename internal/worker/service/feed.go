@@ -56,8 +56,6 @@ func (t *TaskFeed) feed(ch chan (error)) {
 }
 
 func (t *TaskFeed) pullReadyTasks() error {
-	log.Println("Pull ready tasks")
-
 	if err := t.conn.Connect(); err != nil {
 		return fmt.Errorf("pullReadyTasks: %w", err)
 	}
@@ -69,12 +67,14 @@ func (t *TaskFeed) pullReadyTasks() error {
 
 	var res *proto.ReadyTasksPullResponse
 	var ok bool
-	if _, ok = r.(*proto.ReadyTasksPullResponse); !ok {
+	if res, ok = r.(*proto.ReadyTasksPullResponse); !ok {
 		panic("invalid type")
 	}
 
 	// ids of tasks which are ready for execution
 	tasks := res.TaskIds
+
+	log.Printf("Ready tasks: %v\n", tasks)
 
 	for _, taskId := range tasks {
 		cmd, fout, ferr, err := getTaskInfo(taskId)
@@ -83,6 +83,7 @@ func (t *TaskFeed) pullReadyTasks() error {
 		}
 		ex := NewExecutable(taskId, cmd, fout, ferr)
 		t.workerPool.Add(ex)
+		log.Println("added to workpool for exec: ", ex.taskId, ex.command, ex.errFile, ex.outFile)
 	}
 
 	// feed tasks into worker pool for execution

@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 
@@ -55,6 +56,7 @@ func (e *Executable) setStatus(status proto.TaskStatus) error {
 }
 
 func (e *Executable) Execute() {
+	log.Println("executing...", e.command)
 	failed := true
 
 	e.setStatus(proto.TaskStatus_RUNNING)
