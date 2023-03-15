@@ -3,6 +3,7 @@ package query
 import (
 	"fmt"
 
+	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
@@ -21,6 +22,10 @@ func InsertReadyTask(id int) error {
 	_, err := db.DB.Exec(qry, id)
 	if err != nil {
 		return fmt.Errorf("InsertReadyTask: failed to move task from queue to ready queue: %v", err)
+	}
+
+	if err := setTaskstatus(id, task.StateReady); err != nil {
+		return fmt.Errorf("InsertReadyTask: %w", err)
 	}
 	return nil
 }
