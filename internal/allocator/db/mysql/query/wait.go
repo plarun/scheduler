@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
@@ -19,9 +20,11 @@ func InsertWaitTask(id int) error {
 		From sched_queue
 		Where task_id=? And lock_flag=1`
 
-	_, err := db.DB.Exec(qry, id)
+	result, err := db.DB.Exec(qry, id)
 	if err != nil {
 		return fmt.Errorf("InsertWaitTask: failed to move task from queue to wait: %v", err)
+	} else if n, _ := result.RowsAffected(); n > 0 {
+		log.Printf("InsertWaitTask: %d - task id inserted into sched_wait", id)
 	}
 
 	if err := setTaskstatus(id, task.StateReady); err != nil {
@@ -35,9 +38,11 @@ func DeleteWaitTask(id int) error {
 
 	qry := `Delete From sched_wait Where task_id=?`
 
-	_, err := db.DB.Exec(qry, id)
+	result, err := db.DB.Exec(qry, id)
 	if err != nil {
 		return fmt.Errorf("DeleteWaitTask: failed to delete task from wait: %v", err)
+	} else if n, _ := result.RowsAffected(); n > 0 {
+		log.Printf("DeleteWaitTask: %d - task id removed from sched_wait", id)
 	}
 	return nil
 }

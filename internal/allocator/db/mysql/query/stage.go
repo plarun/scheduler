@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
@@ -39,8 +40,10 @@ func LockForStaging() error {
 		Set lock_flag=1
 		Where id In (Select id From tasks)`
 
-	if _, err := db.DB.Exec(qry); err != nil {
+	if r, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("LockForStaging: %w", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("LockForStaging: %d tasks are locked for scheduling", n)
 	}
 	return nil
 }
@@ -64,8 +67,10 @@ func StageLockedTasks() error {
 		Where lock_flag=?
 			And current_status Not In ('staged', 'queued', 'ready', 'waiting', 'running')`
 
-	if _, err := db.DB.Exec(qry, 1); err != nil {
+	if r, err := db.DB.Exec(qry, 1); err != nil {
 		return fmt.Errorf("StageLockedTasks: %w", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("StageLockedTasks: %d tasks are locked after staging", n)
 	}
 	return nil
 }
@@ -79,8 +84,10 @@ func MarkAsStaged() error {
 	Set t.current_status='staged'
 	Where s.flag=0`
 
-	if _, err := db.DB.Exec(qry); err != nil {
+	if r, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("MarkAsStaged: %w", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("MarkAsStaged: %d tasks are marked as staged", n)
 	}
 	return nil
 }
@@ -93,8 +100,10 @@ func SetStagedFlag() error {
 	Set s.flag=1
 	Where s.flag=0 And t.current_status='staged'`
 
-	if _, err := db.DB.Exec(qry); err != nil {
+	if r, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("SetStagedFlag: %w", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("SetStagedFlag: %d tasks are flaged as staged", n)
 	}
 	return nil
 }
@@ -108,8 +117,10 @@ func LockStagedBundles() error {
 		Where flag=2 
 			And is_bundle=1`
 
-	if _, err := db.DB.Exec(qry); err != nil {
+	if r, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("LockStagedBundles: %v", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("LockStagedBundles: %d bundle tasks are locked for staging its tasks", n)
 	}
 	return nil
 }
@@ -128,8 +139,10 @@ func LockBundledTasksForStaging() error {
 		Set lock_flag=1
 		Where id In (Select id From tasks)`
 
-	if _, err := db.DB.Exec(qry); err != nil {
+	if r, err := db.DB.Exec(qry); err != nil {
 		return fmt.Errorf("StageBundledTasks: failed to stage the tasks under bundle: %v", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("StageBundledTasks: %d tasks of bundle are locked as staged", n)
 	}
 	return nil
 }
