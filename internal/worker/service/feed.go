@@ -17,7 +17,7 @@ const (
 type TaskFeed struct {
 	conn       grpcconn.GrpcConnecter
 	workerPool *WorkerPool
-	feedCycle time.Duration
+	feedCycle  time.Duration
 }
 
 func NewTaskFeed(pool *WorkerPool) *TaskFeed {
@@ -29,7 +29,7 @@ func NewTaskFeed(pool *WorkerPool) *TaskFeed {
 	return &TaskFeed{
 		conn:       conn,
 		workerPool: pool,
-		feedCycle: FEED_CYCLE,
+		feedCycle:  FEED_CYCLE,
 	}
 }
 
@@ -74,7 +74,9 @@ func (t *TaskFeed) pullReadyTasks() error {
 	// ids of tasks which are ready for execution
 	tasks := res.TaskIds
 
-	log.Printf("Ready tasks: %v\n", tasks)
+	if len(tasks) > 0 {
+		log.Printf("Ready tasks: %v\n", tasks)
+	}
 
 	for _, taskId := range tasks {
 		cmd, fout, ferr, err := getTaskInfo(taskId)

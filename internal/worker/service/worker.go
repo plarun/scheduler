@@ -39,7 +39,6 @@ func worker(wg *sync.WaitGroup, tasks <-chan Executable) {
 	log.Println("worker created...")
 
 	for task := range tasks {
-		log.Println("about to execute task: ", task.command)
 		task.Execute()
 	}
 }

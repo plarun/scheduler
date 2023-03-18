@@ -13,5 +13,24 @@ func ChangeTaskState(ctx context.Context, id int64, state task.State) error {
 	if err := query.SetTaskStatus(id, state); err != nil {
 		return fmt.Errorf("ChangeTaskState: %w", err)
 	}
+
+	// remove from ready queue
+	if state.IsRunning() {
+		if err := query.RemoveFromReady(id); err != nil {
+			return fmt.Errorf("ChangeTaskState: %w", err)
+		}
+	}
+
+	// unstage the task
+	if state.IsFailure() || state.IsSuccess() || state.IsAborted() || state.IsFrozen() {
+		if err := query.UnstageTask(id); err != nil {
+			return fmt.Errorf("ChangeTaskState: %w", err)
+		}
+
+		// unlock the task
+		if err := query.UnlockUnstagedTask(id); err != nil {
+			return fmt.Errorf("ChangeTaskState: %w", err)
+		}
+	}
 	return nil
 }

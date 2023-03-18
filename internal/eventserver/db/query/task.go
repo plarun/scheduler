@@ -3,25 +3,11 @@ package query
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	mysql "github.com/plarun/scheduler/internal/eventserver/db"
 )
-
-// taskExists checks whether a task is available in database
-// func taskExists(name string) (bool, error) {
-// 	db := db.GetDatabase()
-// 	var isExists int
-
-// 	qry := "Select Exists(Select 1 From sched_task Where name=?)"
-// 	row := db.QueryRow(qry, name)
-
-// 	err := row.Scan(&isExists)
-// 	if err != nil && err != sql.ErrNoRows {
-// 		return false, fmt.Errorf("taskExists: %v", err)
-// 	}
-// 	return isExists == 1, nil
-// }
 
 // getTaskId gets task ID by task name
 func getTaskId(tx *sql.Tx, name string) (int64, error) {
@@ -100,8 +86,10 @@ func SetTaskStatus(id int64, state task.State) error {
 		Set current_status=?
 		Where id=?`
 
-	if _, err := db.Exec(qry, string(state), id); err != nil {
+	if r, err := db.Exec(qry, string(state), id); err != nil {
 		return fmt.Errorf("SetTaskStatus: %v", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("SetTaskStatus: %d - task id set to status %s", id, string(state))
 	}
 	return nil
 }

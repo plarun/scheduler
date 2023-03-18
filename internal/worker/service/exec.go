@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/plarun/scheduler/config"
 	"github.com/plarun/scheduler/proto"
@@ -57,17 +58,26 @@ func (e *Executable) setStatus(status proto.TaskStatus) error {
 
 func (e *Executable) Execute() {
 	log.Println("executing...", e.command)
-	failed := true
+	failed := false
 
-	e.setStatus(proto.TaskStatus_RUNNING)
-
-	fout, foutErr := os.OpenFile(e.outFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	ferr, ferrErr := os.OpenFile(e.outFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if foutErr != nil || ferrErr != nil {
-		e.setStatus(proto.TaskStatus_FAILURE)
+	if err := e.setStatus(proto.TaskStatus_RUNNING); err != nil {
+		log.Printf("Execute: Error - %v", err)
+		return
 	}
 
-	cmd := exec.Command(e.command)
+	fout, foutErr := os.OpenFile(e.outFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if foutErr != nil {
+		log.Printf("Execute: %v", foutErr)
+	}
+
+	ferr, ferrErr := os.OpenFile(e.errFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if ferrErr != nil {
+		log.Printf("Execute: %v", ferrErr)
+	}
+
+	ex := strings.Split(e.command, " ")
+
+	cmd := exec.Command(ex[0], ex[1:]...)
 	if fout != nil {
 		cmd.Stdout = fout
 	}
@@ -77,11 +87,21 @@ func (e *Executable) Execute() {
 
 	if err := cmd.Start(); err != nil {
 		failed = true
+		log.Printf("Error - failed to execute the command %s : %v", e.command, err)
+		return
 	}
 
 	if err := cmd.Wait(); err != nil || failed {
-		e.setStatus(proto.TaskStatus_FAILURE)
+		if err := e.setStatus(proto.TaskStatus_FAILURE); err != nil {
+			log.Printf("Execute: Error - %v", err)
+		}
+		log.Printf("Error - failed to wait for the command %s : %v", e.command, err)
+		return
 	}
 
-	e.setStatus(proto.TaskStatus_SUCCESS)
+	if err := e.setStatus(proto.TaskStatus_SUCCESS); err != nil {
+		log.Printf("Execute: Error - %v", err)
+		return
+	}
+	log.Println("executed", e.command)
 }

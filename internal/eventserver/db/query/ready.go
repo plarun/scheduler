@@ -3,6 +3,7 @@ package query
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	mysql "github.com/plarun/scheduler/internal/eventserver/db"
 )
@@ -44,6 +45,20 @@ func SwitchLockReadyTasks(from, to int) error {
 
 	if _, err := db.Exec(qry, to, from); err != nil {
 		return fmt.Errorf("SwitchLockReadyTasks: %v", err)
+	}
+	return nil
+}
+
+func RemoveFromReady(id int64) error {
+	db := mysql.GetDatabase()
+
+	qry := `Delete From sched_ready
+	Where task_id=?`
+
+	if r, err := db.Exec(qry, id); err != nil {
+		return fmt.Errorf("UnstageTask: %v", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("RemoveFromReady: %d - task id removed from sched_ready", id)
 	}
 	return nil
 }
