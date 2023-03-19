@@ -103,3 +103,23 @@ func SetTaskStatus(id int64, state task.State) error {
 	}
 	return nil
 }
+
+func GetStartCondition(id int64) (string, error) {
+	var cond string
+
+	db := mysql.GetDatabase()
+
+	qry := `Select start_condition
+		From sched_task
+		Where id=?`
+
+	row := db.QueryRow(qry, id)
+
+	if err := row.Scan(&cond); err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("GetStartCondition: task not found for id %v", id)
+		}
+		return "", fmt.Errorf("GetStartCondition: %v", err)
+	}
+	return cond, nil
+}
