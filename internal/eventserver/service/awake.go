@@ -2,44 +2,32 @@ package service
 
 import (
 	"context"
+	"fmt"
+
+	"github.com/plarun/scheduler/config"
+	"github.com/plarun/scheduler/proto"
 )
 
 func AwakeWaitingDependentTasks(ctx context.Context, id int64) error {
-	// // check if start condition satisfied
-	// condStr, err := query.GetStartCondition(id)
-	// if err != nil {
-	// 	return fmt.Errorf("AwakeWaitingDependentTasks: %w", err)
-	// }
+	// todo: call rpc to allocator for awake
+	addr := fmt.Sprintf(":%d", config.GetAppConfig().Service.Allocator.Port)
+	req := &proto.DependentTaskAwakeRequest{}
 
-	// // build task's start condition string into expression to evaluate
-	// expr, err := condition.Build(condStr)
-	// if err != nil {
-	// 	return fmt.Errorf("AwakeWaitingDependentTasks: %w", err)
-	// }
+	conn := NewWaitTaskGrpcConnection(addr, req)
 
-	// // get status of dependent tasks'status
-	// depStatus, err := query.GetDependentTasksStatus(id)
-	// if err != nil {
-	// 	return fmt.Errorf("AwakeWaitingDependentTasks: %w", err)
-	// }
+	if err := conn.Connect(); err != nil {
+		return fmt.Errorf("AwakeWaitingDependentTasks: %w", err)
+	}
 
-	// if len(depStatus) == 0 {
-	// 	return nil
-	// }
+	r, err := conn.Request()
+	if err != nil {
+		return fmt.Errorf("AwakeWaitingDependentTasks: %w", err)
+	}
 
-	// if ok, err := expr.Check(depStatus); err != nil {
-	// 	return fmt.Errorf("AwakeWaitingDependentTasks: %w", err)
-	// }
-
-	// depTasks := make([]int64, 0)
-	// for _, ts := range depStatus {
-	// 	depTasks = append(depTasks, ts.GetId())
-	// }
-
-	// // move the dependent tasks into ready queue from waiting queue
-	// if err := query.MoveWaitToReady(depStatus); err != nil {
-	// 	return fmt.Errorf("AwakeWaitingDependentTasks: %w", err)
-	// }
+	var ok bool
+	if _, ok = r.(*proto.DependentTaskAwakeResponse); !ok {
+		panic("invalid type")
+	}
 
 	return nil
 }
