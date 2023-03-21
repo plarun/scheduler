@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
 // GetStartCondition gets the starting condition of task
-func GetStartCondition(id int) (string, error) {
+func GetStartCondition(id int64) (string, error) {
 	db := mysql.GetDatabase()
 
 	qry := `Select start_condition 
@@ -33,35 +34,33 @@ func GetStartCondition(id int) (string, error) {
 
 // GetPrerequisitesTaskStatus gets the distinct of tasks in the start
 // condition of given task along with its current run status.
-func GetPrerequisitesTaskStatus(id int) (map[string]string, error) {
+func GetDependentTasksStatus(id int64) ([]*task.TaskStatus, error) {
 	db := mysql.GetDatabase()
 
-	qry := `With cond As (
-		Select r.cond_task_id 
-		From sched_task_relation r, sched_task t 
-		Where t.id = r.task_id 
-			And t.id=?
-	) 
-	Select t.name, t.current_status 
-	From sched_task t, cond c 
-	Where t.id=c.cond_task_id`
+	qry := `Select t.id, t.name, t.current_status
+		From sched_task t, sched_task_relation r
+		Where t.id=r.task_id And r.cond_task_id=?`
 
-	res := make(map[string]string)
+	res := make([]*task.TaskStatus, 0)
 
 	rows, err := db.DB.Query(qry, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, nil
 		}
-		return res, fmt.Errorf("GetPrerequisitesTaskStatus: %w", err)
+		return res, fmt.Errorf("GetDependentTasksStatus: %w", err)
 	}
 
 	for rows.Next() {
-		var tsk, status string
-		rows.Scan(&tsk)
-		rows.Scan(&status)
-		res[tsk] = status
-	}
+		var taskId int64
+		var name, status string
 
+		rows.Scan(&taskId)
+		rows.Scan(&name)
+		rows.Scan(&status)
+
+		ts := task.NewTaskStatus(taskId, name, task.State(status))
+		res = append(res, ts)
+	}
 	return res, nil
 }

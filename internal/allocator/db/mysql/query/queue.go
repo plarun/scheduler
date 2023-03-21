@@ -113,14 +113,14 @@ func LockForConditionCheck() error {
 	return nil
 }
 
-func PickQueueLockedTasks() ([]int, error) {
+func PickQueueLockedTasks() ([]int64, error) {
 	db := mysql.GetDatabase()
 
 	qry := `Select task_id
 		From sched_queue
 		Where lock_flag=?`
 
-	res := make([]int, 0)
+	res := make([]int64, 0)
 
 	rows, err := db.DB.Query(qry, QueueLockChecking)
 	if err != nil {
@@ -131,7 +131,7 @@ func PickQueueLockedTasks() ([]int, error) {
 	}
 
 	for rows.Next() {
-		var taskId int
+		var taskId int64
 		rows.Scan(&taskId)
 		res = append(res, taskId)
 	}
@@ -154,7 +154,7 @@ func SetQueueLockFlag(id, flag int) error {
 	return nil
 }
 
-func MoveQueueToReady(id int) error {
+func MoveQueueToReady(id int64) error {
 	if err := InsertReadyTask(id); err != nil {
 		return fmt.Errorf("MoveQueueToReady: %w", err)
 	}
@@ -165,7 +165,7 @@ func MoveQueueToReady(id int) error {
 	return nil
 }
 
-func MoveQueueToWait(id int) error {
+func MoveQueueToWait(id int64) error {
 	if err := InsertWaitTask(id); err != nil {
 		return fmt.Errorf("MoveQueueToWait: %w", err)
 	}
@@ -177,7 +177,7 @@ func MoveQueueToWait(id int) error {
 }
 
 // DequeueTask removes a task from queue
-func DequeueTask(id int) error {
+func DequeueTask(id int64) error {
 	db := mysql.GetDatabase()
 
 	qry := `Delete From sched_queue Where task_id=?`

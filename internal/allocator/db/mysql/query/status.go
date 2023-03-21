@@ -8,7 +8,7 @@ import (
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
-func setTaskstatus(id int, state task.State) error {
+func setTaskstatus(id int64, state task.State) error {
 	db := mysql.GetDatabase()
 
 	qry := `Update sched_task

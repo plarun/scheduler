@@ -8,7 +8,7 @@ import (
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
-func InsertWaitTask(id int) error {
+func InsertWaitTask(id int64) error {
 	db := mysql.GetDatabase()
 
 	qry := `Insert Into sched_wait (
@@ -33,7 +33,7 @@ func InsertWaitTask(id int) error {
 	return nil
 }
 
-func DeleteWaitTask(id int) error {
+func DeleteWaitTask(id int64) error {
 	db := mysql.GetDatabase()
 
 	qry := `Delete From sched_wait Where task_id=?`

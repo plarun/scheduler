@@ -8,7 +8,7 @@ import (
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
-func InsertReadyTask(id int) error {
+func InsertReadyTask(id int64) error {
 	db := mysql.GetDatabase()
 
 	qry := `Insert Into sched_ready (
@@ -33,7 +33,7 @@ func InsertReadyTask(id int) error {
 	return nil
 }
 
-func DeleteReadyTask(id int) error {
+func DeleteReadyTask(id int64) error {
 	db := mysql.GetDatabase()
 
 	qry := `Delete From sched_ready Where task_id=?`
