@@ -3,70 +3,44 @@ package service
 import (
 	"testing"
 
-	"github.com/plarun/scheduler/api/types/condition"
 	"github.com/plarun/scheduler/api/types/entity/task"
 )
 
-type stat map[string]task.State
-
-// func initAllocator() {
-// 	// export configs
-// 	if err := config.LoadConfig(); err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	// connect to mysql db
-// 	mysql.ConnectDB()
-// }
-
 func TestConditionCheck(t *testing.T) {
+	ts1 := task.NewTaskStatus(1, "task1", task.StateSuccess)
+	ts2 := task.NewTaskStatus(2, "task2", task.StateSuccess)
+	ts3 := task.NewTaskStatus(3, "task3", task.StateSuccess)
+	ts4 := task.NewTaskStatus(3, "task3", task.StateFailure)
+	ts5 := task.NewTaskStatus(4, "task4", task.StateFailure)
+	ts6 := task.NewTaskStatus(4, "task4", task.StateSuccess)
+	ts7 := task.NewTaskStatus(1, "task1", task.StateFailure)
+
 	tests := map[string]struct {
 		condition string
-		stat      stat
+		stat      []*task.TaskStatus
 		want      bool
 	}{
-		"good 1": {condition: "su(task1)", stat: stat{"task1": task.StateSuccess}, want: true},
-		"good 2": {condition: "su(task2)", stat: stat{"task2": task.StateSuccess}, want: true},
-		"good 3": {condition: "su(task3)", stat: stat{"task3": task.StateSuccess}, want: true},
+		"good 1": {condition: "su(task1)", stat: []*task.TaskStatus{ts1}, want: true},
+		"good 2": {condition: "su(task2)", stat: []*task.TaskStatus{ts2}, want: true},
+		"good 3": {condition: "su(task3)", stat: []*task.TaskStatus{ts3}, want: true},
 		"good 4": {
 			condition: "su(task1)&su(task2)&(fa(task3)|nr(task4))",
-			stat: stat{
-				"task1": task.StateSuccess, "task2": task.StateSuccess,
-				"task3": task.StateFailure, "task4": task.StateFailure,
-			}, want: true},
+			stat:      []*task.TaskStatus{ts1, ts2, ts4, ts5}, want: true},
 		"good 5": {
 			condition: "su(task1)&su(task2)&su(task3)&su(task4)",
-			stat: stat{
-				"task1": task.StateSuccess, "task2": task.StateSuccess,
-				"task3": task.StateSuccess, "task4": task.StateSuccess,
-			}, want: true},
+			stat:      []*task.TaskStatus{ts1, ts2, ts3, ts6}, want: true},
 		"good 6": {
 			condition: "su(task1)&su(task2)&su(task3)&su(task4)",
-			stat: stat{
-				"task1": task.StateSuccess, "task2": task.StateSuccess,
-				"task3": task.StateSuccess, "task4": task.StateFailure,
-			}, want: false},
+			stat:      []*task.TaskStatus{ts1, ts2, ts3, ts5}, want: false},
 		"good 7": {
 			condition: "su(task1)&su(task2)&su(task3)&su(task4)",
-			stat: stat{
-				"task1": task.StateFailure, "task2": task.StateSuccess,
-				"task3": task.StateSuccess, "task4": task.StateSuccess,
-			}, want: false},
-		"good 8": {condition: "", stat: stat{}, want: true},
+			stat:      []*task.TaskStatus{ts7, ts2, ts3, ts6}, want: false},
+		"good 8": {condition: "", stat: []*task.TaskStatus{}, want: true},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			chk := NewConditionChecker(0)
-			chk.initiated = true
-			chk.cond = tc.condition
-			chk.condTaskStatus = tc.stat
-
-			if expr, err := condition.Build(chk.cond); err != nil {
-				t.Fatalf("Build: %v", err)
-			} else {
-				chk.expr = expr
-			}
+			chk := task.NewConditionChecker(0, tc.condition, tc.stat)
 
 			if got, err := chk.Check(); err != nil {
 				t.Fatalf("Check: %v", err)

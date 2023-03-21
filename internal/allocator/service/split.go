@@ -29,8 +29,7 @@ func (t *TaskSplitter) Split() error {
 	// check start_condition for each task taken into in memory
 	// then update the lock flag
 	for _, taskid := range tasks {
-		chk := NewConditionChecker(taskid)
-		ready, err := chk.Check()
+		ready, err := CheckStartCondition(taskid)
 		if err != nil {
 			return fmt.Errorf("Split: %w", err)
 		}
