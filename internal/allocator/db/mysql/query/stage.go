@@ -23,7 +23,7 @@ func LockForStaging() error {
 			And t.lock_flag=0
 			And (
 				t.last_end_time Is Null
-				Or date_format(t.last_end_time,'%H:%i') < date_format(now(),'%H:%i'))
+				Or Timestampdiff(Minute, t.last_end_time, now()))
 		Union All
 		Select t.id
 		From sched_task t
@@ -35,7 +35,7 @@ func LockForStaging() error {
 			And t.lock_flag=0
 			And (
 				t.last_end_time Is Null
-				Or date_format(t.last_end_time,'%H:%i') < date_format(now(),'%H:%i'))
+				Or Timestampdiff(Minute, t.last_end_time, now()))
 		) Update sched_task
 		Set lock_flag=1
 		Where id In (Select id From tasks)`
