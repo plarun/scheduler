@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
 )
 
@@ -143,6 +144,24 @@ func ChangeStagedBundleLock(from, to int) error {
 		return fmt.Errorf("ChangeStagedBundleLock: %v", err)
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("ChangeStagedBundleLock: %d bundle tasks are changed from flag %d to %d", n, from, to)
+	}
+	return nil
+}
+
+func MarkBundleAsRunning() error {
+	db := mysql.GetDatabase()
+
+	qry := `Update sched_task
+		Set current_status=?, last_start_time=now(), last_end_time=null
+		Where id In (
+			Select task_id
+			From sched_stage
+			Where flag=5 And is_bundle=1)`
+
+	if r, err := db.DB.Exec(qry, string(task.StateRunning)); err != nil {
+		return fmt.Errorf("MarkBundleAsRunning: %v", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("MarkBundleAsRunning: %d bundle tasks status set to running", n)
 	}
 	return nil
 }

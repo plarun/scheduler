@@ -64,6 +64,11 @@ func (t *TaskPoller) Poll() error {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
+	// set bundle task state to running when flag=5
+	if err := db.MarkBundleAsRunning(); err != nil {
+		return fmt.Errorf("Poll: %v", err)
+	}
+
 	// set status of queued tasks to 'queued'
 	if err := db.SetQueueStatus(); err != nil {
 		return fmt.Errorf("Poll: %v", err)

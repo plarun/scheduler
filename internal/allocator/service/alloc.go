@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	SPLIT_CYCLE time.Duration = 5 * time.Second
-	STAGE_CYCLE time.Duration = 5 * time.Second
+	SPLIT_CYCLE time.Duration = 2 * time.Second
+	STAGE_CYCLE time.Duration = 2 * time.Second
 	POLL_CYCLE  time.Duration = 10 * time.Second
 )
 

@@ -88,9 +88,9 @@ func SetTaskStatus(id int64, state task.State) error {
 
 	if state.IsRunning() {
 		qry = `Update sched_task
-		Set current_status=?, last_start_time=current_time
+		Set current_status=?, last_start_time=current_time, last_end_time=null
 		Where id=?`
-	} else if state.IsAborted() || state.IsFailure() || state.IsSuccess() || state.IsFrozen() {
+	} else if task.IsRunnable(state) {
 		qry = `Update sched_task
 		Set current_status=?, last_end_time=current_time
 		Where id=?`

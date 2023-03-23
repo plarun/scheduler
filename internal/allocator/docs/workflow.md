@@ -17,6 +17,7 @@
 - 2 - locked for queuing
 - 3 - queued callable task
 - 4 - locked bundle task for staging its tasks
+- 5 - tasks of bundle are staged
 
 ### Steps
 1. Lock tasks in `sched_task` which are to be scheduled on the current cycle
