@@ -35,6 +35,36 @@ func ChangeTaskState(ctx context.Context, id int64, state task.State) error {
 		// if its bundle task is in staging area then
 		// check if its any of tasks are running else
 		// set the status for bundle and unstage it
+
+		hasParent, parentId, badRuns, err := query.BundleAndSiblingsStatus(id)
+		if err != nil {
+			return fmt.Errorf("ChangeTaskState: %w", err)
+		}
+
+		if !hasParent {
+			return nil
+		}
+
+		pend, err := query.HasStagedSiblings(id)
+		if err != nil {
+			return fmt.Errorf("ChangeTaskState: %w", err)
+		}
+
+		if state.IsSuccess() {
+			if pend {
+				return nil
+			}
+			// all siblings are successfully completed
+			if badRuns == 0 {
+				query.SetTaskStatus(parentId, task.StateSuccess)
+			} else {
+				query.SetTaskStatus(parentId, task.StateFailure)
+			}
+		} else if state.IsFailure() || state.IsAborted() {
+			if !pend {
+				query.SetTaskStatus(parentId, task.StateFailure)
+			}
+		}
 	}
 	return nil
 }

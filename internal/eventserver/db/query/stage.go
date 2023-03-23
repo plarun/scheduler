@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/plarun/scheduler/api/types/entity/task"
 	mysql "github.com/plarun/scheduler/internal/eventserver/db"
 )
 
@@ -34,4 +35,50 @@ func UnlockUnstagedTask(id int64) error {
 		log.Printf("UnlockUnstagedTask: %d - task id is unlocked after unstaged", n)
 	}
 	return nil
+}
+
+func HasStagedSiblings(id int64) (bool, error) {
+	db := mysql.GetDatabase()
+
+	qry := `Select Count(id)
+		From sched_task
+		Where parent_id In (
+			Select parent_id
+			From sched_task
+			Where id=?) And id<>?`
+
+	row := db.QueryRow(qry, id, id)
+
+	var n int
+	if err := row.Scan(&n); err != nil {
+		return false, fmt.Errorf("hasStagedSibling: %v", err)
+	}
+	return n > 0, nil
+}
+
+func BundleAndSiblingsStatus(id int64) (bool, int64, int64, error) {
+	db := mysql.GetDatabase()
+
+	qry := `Select
+		parent_id, 
+		(
+			Select count(id) 
+			From sched_task 
+			Where parent_id In (
+				Select parent_id 
+				From sched_task 
+				Where id=?
+			) And current_status In (?,?)
+			And id = ?
+		)
+	From sched_task where id=?`
+
+	row := db.QueryRow(qry, id, string(task.StateFailure), string(task.StateAborted), id, id)
+
+	var parentId, n int64
+	if err := row.Scan(&parentId, &n); err != nil {
+		return false, 0, 0, fmt.Errorf("BundleAndSiblingsStatus: %v", err)
+	}
+
+	return true, parentId, n, nil
 }
