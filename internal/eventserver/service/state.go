@@ -31,6 +31,10 @@ func ChangeTaskState(ctx context.Context, id int64, state task.State) error {
 		if err := query.UnlockUnstagedTask(id); err != nil {
 			return fmt.Errorf("ChangeTaskState: %w", err)
 		}
+
+		// if its bundle task is in staging area then
+		// check if its any of tasks are running else
+		// set the status for bundle and unstage it
 	}
 	return nil
 }
