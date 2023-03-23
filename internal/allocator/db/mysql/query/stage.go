@@ -140,9 +140,9 @@ func LockBundledTasksForStaging() error {
 		Where id In (Select id From tasks)`
 
 	if r, err := db.DB.Exec(qry); err != nil {
-		return fmt.Errorf("StageBundledTasks: failed to stage the tasks under bundle: %v", err)
+		return fmt.Errorf("LockBundledTasksForStaging: failed to stage the tasks under bundle: %v", err)
 	} else if n, _ := r.RowsAffected(); n > 0 {
-		log.Printf("StageBundledTasks: %d tasks of bundle are locked as staged", n)
+		log.Printf("LockBundledTasksForStaging: %d tasks of bundle are locked as staged", n)
 	}
 	return nil
 }
