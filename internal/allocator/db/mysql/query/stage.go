@@ -108,23 +108,6 @@ func SetStagedFlag() error {
 	return nil
 }
 
-// LockStagedBundles locks the staged bundle tasks for staging its tasks
-func LockStagedBundles() error {
-	db := mysql.GetDatabase()
-
-	qry := `Update sched_stage
-		Set flag=4
-		Where flag=2 
-			And is_bundle=1`
-
-	if r, err := db.DB.Exec(qry); err != nil {
-		return fmt.Errorf("LockStagedBundles: %v", err)
-	} else if n, _ := r.RowsAffected(); n > 0 {
-		log.Printf("LockStagedBundles: %d bundle tasks are locked for staging its tasks", n)
-	}
-	return nil
-}
-
 // LockBundledTasksForStaging locks the bundled tasks for staging
 // whose bundles are already staged
 func LockBundledTasksForStaging() error {
@@ -143,6 +126,23 @@ func LockBundledTasksForStaging() error {
 		return fmt.Errorf("LockBundledTasksForStaging: failed to stage the tasks under bundle: %v", err)
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("LockBundledTasksForStaging: %d tasks of bundle are locked as staged", n)
+	}
+	return nil
+}
+
+// ChangeStagedBundleLock changes the lock of staged bundles
+func ChangeStagedBundleLock(from, to int) error {
+	db := mysql.GetDatabase()
+
+	qry := `Update sched_stage
+		Set flag=?
+		Where flag=?
+			And is_bundle=1`
+
+	if r, err := db.DB.Exec(qry, to, from); err != nil {
+		return fmt.Errorf("ChangeStagedBundleLock: %v", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("ChangeStagedBundleLock: %d bundle tasks are changed from flag %d to %d", n, from, to)
 	}
 	return nil
 }
