@@ -2,8 +2,9 @@ package handler
 
 import (
 	"errors"
+	"log"
 
-	es "github.com/plarun/scheduler/internal/eventserver/service"
+	alloc "github.com/plarun/scheduler/internal/allocator/service"
 	"github.com/plarun/scheduler/proto"
 	"golang.org/x/net/context"
 )
@@ -20,8 +21,10 @@ func NewTaskExecService() *WaitingTaskAwakeService {
 func (w WaitingTaskAwakeService) Awake(ctx context.Context, req *proto.DependentTaskAwakeRequest) (*proto.DependentTaskAwakeResponse, error) {
 	res := &proto.DependentTaskAwakeResponse{}
 
+	log.Printf("Request to Awake the task id - %d", req.TaskId)
+
 	// process the validated task entities' actions
-	if err := es.AwakeWaitingDependentTasks(ctx, req.TaskId); err != nil {
+	if err := alloc.AwakeWaitingDependentTasks(ctx, req.TaskId); err != nil {
 		for errors.Unwrap(err) != nil {
 			err = errors.Unwrap(err)
 		}
