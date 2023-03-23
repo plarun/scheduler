@@ -1,6 +1,7 @@
 package query
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
@@ -186,6 +187,86 @@ func DequeueTask(id int64) error {
 		return fmt.Errorf("DequeueTask: failed to remove task from queue: %v", err)
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("DequeueTask: %d - task id removed from sched_queue", id)
+	}
+	return nil
+}
+
+// DependentConditionCheck locks the queued tasks in sched_queue for start condition check
+func MoveDependentToQueue(ctx context.Context, id int64) error {
+	tx, err := mysql.GetDatabase().DB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("MoveDependentToQueue: %v", err)
+	}
+
+	if err := moveWaitToQueue(tx, id); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("MoveDependentToQueue: %w", err)
+	}
+
+	if err := setStatusAfterAwaken(tx, id, task.StateQueued); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("MoveDependentToQueue: %w", err)
+	}
+
+	if err := clearWaitAfterAwaken(tx, id); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("MoveDependentToQueue: %w", err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("MoveDependentToQueue: %v", err)
+	}
+
+	return nil
+}
+
+// move dependent tasks from waiting area to queue
+func moveWaitToQueue(tx *sql.Tx, id int64) error {
+	qry := `Insert Into sched_queue (task_id, sys_entry_date, priority)
+		Select task_id, now(), priority
+		From sched_wait 
+		Where task_id in (
+			Select task_id
+			From sched_task_relation
+			Where cond_task_id=?)`
+
+	if r, err := tx.Exec(qry, id); err != nil {
+		return fmt.Errorf("moveWaitToQueue: %v", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("moveWaitToQueue: %d tasks are moved to queue from wait", n)
+	}
+	return nil
+}
+
+// setStatusAfterAwaken set status to queued after awaken
+func setStatusAfterAwaken(tx *sql.Tx, id int64, state task.State) error {
+	qry := `Update sched_task
+		Set current_status=? 
+		Where id in (
+			Select task_id
+			From sched_task_relation
+			Where cond_task_id=?)`
+
+	if r, err := tx.Exec(qry, string(state), id); err != nil {
+		return fmt.Errorf("setStatusAfterAwaken: %v", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("setStatusAfterAwaken: %d tasks are set to status queued", n)
+	}
+	return nil
+}
+
+func clearWaitAfterAwaken(tx *sql.Tx, id int64) error {
+	qry := `Delete From sched_wait
+	Where task_id In (
+		Select task_id
+		From sched_task_relation
+		Where cond_task_id=?
+	)`
+
+	if r, err := tx.Exec(qry, id); err != nil {
+		return fmt.Errorf("clearWaitAfterAwaken: %v", err)
+	} else if n, _ := r.RowsAffected(); n > 0 {
+		log.Printf("clearWaitAfterAwaken: %d tasks are cleared from wait", n)
 	}
 	return nil
 }
