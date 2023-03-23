@@ -80,9 +80,12 @@ func (s TaskExecService) SetTaskStatus(ctx context.Context, req *proto.TaskStatu
 		}
 		return res, err
 	} else {
-		// if err := awakeWaitingDependentTasks(ctx, req.TaskId, state); err != nil {
-		// 	return res, err
-		// }
+		if err := awakeWaitingDependentTasks(ctx, req.TaskId, state); err != nil {
+			for errors.Unwrap(err) != nil {
+				err = errors.Unwrap(err)
+			}
+			return res, err
+		}
 		return res, nil
 	}
 }
