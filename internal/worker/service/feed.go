@@ -88,8 +88,6 @@ func (t *TaskFeed) pullReadyTasks() error {
 		log.Println("added to workpool for exec: ", ex.taskId, ex.command, ex.errFile, ex.outFile)
 	}
 
-	// feed tasks into worker pool for execution
-
 	if err := t.conn.Close(); err != nil {
 		return fmt.Errorf("pullReadyTasks: %w", err)
 	}
