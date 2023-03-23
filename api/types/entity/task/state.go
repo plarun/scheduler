@@ -72,9 +72,14 @@ func IsStable(s State) bool {
 	return s.IsAborted() || s.IsFailure() || s.IsIdle() || s.IsSuccess()
 }
 
+// IsStable checks if state is schedulable
+func IsSchedulable(s State) bool {
+	return s.IsAborted() || s.IsFailure() || s.IsIdle() || s.IsSuccess()
+}
+
 // IsRunnable checks if it can be triggered to run
 func IsRunnable(s State) bool {
-	return !s.IsQueued() || !s.IsReady() || !s.IsStaged() || !s.IsRunning()
+	return IsSchedulable(s) || s.IsFrozen()
 }
 
 // IsTriggered checks if task is staged or set for execution

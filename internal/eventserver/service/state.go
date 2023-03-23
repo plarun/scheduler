@@ -66,6 +66,11 @@ func ChangeTaskState(ctx context.Context, id int64, state task.State) error {
 			if err := query.UnstageTask(parentId); err != nil {
 				return fmt.Errorf("ChangeTaskState: %w", err)
 			}
+
+			// unlock bundle
+			if err := query.UnlockUnstagedTask(parentId); err != nil {
+				return fmt.Errorf("ChangeTaskState: %w", err)
+			}
 		}
 	}
 	return nil
