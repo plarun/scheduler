@@ -27,7 +27,7 @@ func InsertWaitTask(id int64) error {
 		log.Printf("InsertWaitTask: %d - task id inserted into sched_wait", id)
 	}
 
-	if err := setTaskstatus(id, task.StateReady); err != nil {
+	if err := setTaskstatus(id, task.StateWaiting); err != nil {
 		return fmt.Errorf("InsertReadyTask: %w", err)
 	}
 	return nil
