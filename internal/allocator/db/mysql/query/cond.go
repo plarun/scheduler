@@ -3,6 +3,7 @@ package query
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db/mysql"
@@ -37,9 +38,13 @@ func GetStartCondition(id int64) (string, error) {
 func GetDependentTasksStatus(id int64) ([]*task.TaskStatus, error) {
 	db := mysql.GetDatabase()
 
-	qry := `Select t.id, t.name, t.current_status
-		From sched_task t, sched_task_relation r
-		Where t.id=r.task_id And r.cond_task_id=?`
+	qry := `Select id, name, current_status
+		From sched_task
+		Where id In (
+			Select cond_task_id
+			From sched_task_relation
+			Where task_id=?
+		)`
 
 	res := make([]*task.TaskStatus, 0)
 
@@ -55,12 +60,14 @@ func GetDependentTasksStatus(id int64) ([]*task.TaskStatus, error) {
 		var taskId int64
 		var name, status string
 
-		rows.Scan(&taskId)
-		rows.Scan(&name)
-		rows.Scan(&status)
+		rows.Scan(&taskId, &name, &status)
 
 		ts := task.NewTaskStatus(taskId, name, task.State(status))
 		res = append(res, ts)
+	}
+
+	if len(res) > 0 {
+		log.Printf("GetDependentTasksStatus: %v", res)
 	}
 	return res, nil
 }
