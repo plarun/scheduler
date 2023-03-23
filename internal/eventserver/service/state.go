@@ -40,7 +40,6 @@ func ChangeTaskState(ctx context.Context, id int64, state task.State) error {
 		if err != nil {
 			return fmt.Errorf("ChangeTaskState: %w", err)
 		}
-
 		if !hasParent {
 			return nil
 		}
@@ -50,19 +49,22 @@ func ChangeTaskState(ctx context.Context, id int64, state task.State) error {
 			return fmt.Errorf("ChangeTaskState: %w", err)
 		}
 
-		if state.IsSuccess() {
-			if pend {
-				return nil
+		if !state.IsFrozen() {
+			if state.IsSuccess() {
+				if !pend && badRuns == 0 {
+					if err := query.SetTaskStatus(parentId, task.StateSuccess); err != nil {
+						return fmt.Errorf("ChangeTaskState: %w", err)
+					}
+				}
+			} else if state.IsAborted() || state.IsFailure() || badRuns > 0 {
+				if err := query.SetTaskStatus(parentId, task.StateSuccess); err != nil {
+					return fmt.Errorf("ChangeTaskState: %w", err)
+				}
 			}
-			// all siblings are successfully completed
-			if badRuns == 0 {
-				query.SetTaskStatus(parentId, task.StateSuccess)
-			} else {
-				query.SetTaskStatus(parentId, task.StateFailure)
-			}
-		} else if state.IsFailure() || state.IsAborted() {
-			if !pend {
-				query.SetTaskStatus(parentId, task.StateFailure)
+
+			// unstage bundle
+			if err := query.UnstageTask(parentId); err != nil {
+				return fmt.Errorf("ChangeTaskState: %w", err)
 			}
 		}
 	}

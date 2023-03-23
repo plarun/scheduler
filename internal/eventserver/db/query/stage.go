@@ -40,12 +40,13 @@ func UnlockUnstagedTask(id int64) error {
 func HasStagedSiblings(id int64) (bool, error) {
 	db := mysql.GetDatabase()
 
-	qry := `Select Count(id)
-		From sched_task
+	qry := `Select Count(t.id)
+		From sched_task t, sched_stage s
 		Where parent_id In (
 			Select parent_id
 			From sched_task
-			Where id=?) And id<>?`
+			Where id=?) And id<>?
+		And t.id = s.task_id`
 
 	row := db.QueryRow(qry, id, id)
 
