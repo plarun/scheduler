@@ -45,7 +45,7 @@ func (d *dependentAwakeGrpcConnection) Request() (interface{}, error) {
 
 	res, err := d.client.Awake(context.Background(), d.request)
 	if err != nil {
-		return nil, err
+		return res, err
 	}
 
 	return res, nil
@@ -75,24 +75,26 @@ func awakeWaitingDependentTasks(ctx context.Context, id int64, state task.State)
 		addr := fmt.Sprintf(":%d", config.GetAppConfig().Service.Allocator.Port)
 		allocConn := NewDependentAwakeGrpcConnection(addr, req)
 
-		log.Println("Routing the request to awake waiting dependent task from allocator")
+		log.Println("Routing the request to awake waiting dependent task")
 
 		if err := allocConn.Connect(); err != nil {
-			return err
+			return fmt.Errorf("awakeWaitingDependentTasks: %w", err)
 		}
 
 		valRes, err := allocConn.Request()
 		if err != nil {
-			return err
+			return fmt.Errorf("awakeWaitingDependentTasks: %w", err)
 		}
 
-		_, ok := valRes.(*proto.DependentTaskAwakeResponse)
+		res, ok := valRes.(*proto.DependentTaskAwakeResponse)
 		if !ok {
-			return fmt.Errorf("internal err")
+			return fmt.Errorf("awakeWaitingDependentTasks: %w", err)
 		}
+
+		log.Printf("Dep tasks awaken: %v", res)
 
 		if err := allocConn.Close(); err != nil {
-			return err
+			return fmt.Errorf("awakeWaitingDependentTasks: %w", err)
 		}
 		return nil
 	}
