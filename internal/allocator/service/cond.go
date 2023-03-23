@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
@@ -27,4 +28,13 @@ func CheckStartCondition(id int64) (bool, error) {
 	} else {
 		return ok, nil
 	}
+}
+
+// AwakeWaitingDependentTasks moves the dependent tasks of given task
+// from waiting area to queue for condition check
+func AwakeWaitingDependentTasks(ctx context.Context, taskId int64) error {
+	if err := db.MoveDependentToQueue(ctx, taskId); err != nil {
+		return fmt.Errorf("AwakeWaitingDependentTasks: %w", err)
+	}
+	return nil
 }
