@@ -104,7 +104,9 @@ func SetTaskStatus(id int64, state task.State) error {
 
 	// add entry to run history
 	if task.IsRunnable(state) {
-		AddTaskRun(id)
+		if err := AddTaskRun(id); err != nil {
+			return fmt.Errorf("SetTaskStatus: %w", err)
+		}
 	}
 	return nil
 }
