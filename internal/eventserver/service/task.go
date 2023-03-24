@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
@@ -183,4 +184,12 @@ func ProcessTaskActions(ctx context.Context, tasks []*proto.ValidatedTaskEntity)
 	}
 
 	return nil
+}
+
+func GetTaskDefinition(ctx context.Context, name string) (*proto.TaskDefinition, error) {
+	if res, err := query.GetTaskDetails(name); err != nil {
+		return nil, fmt.Errorf("GetTaskDefinition: %w", err)
+	} else {
+		return res, nil
+	}
 }
