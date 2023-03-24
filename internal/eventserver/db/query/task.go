@@ -118,7 +118,7 @@ func GetTaskDetails(name string) (*proto.TaskDefinition, error) {
 	qry := `Select
 		(Select p.name From sched_task p Where p.id = t.parent_id) As parent,
 		t.name, t.type, t.machine, t.command, t.start_condition, t.std_out_log, t.std_err_log, t.label, t.profile, t.run_days_bit,
-		t.start_window, t.end_window,
+		t.start_window, t.end_window, priority,
 		(Select Group_concat(start_time Order By start_time Asc Separator ',') From sched_batch_run b Where b.task_id=t.id) start_times,
 		(Select Group_concat(start_min Order By start_min Asc Separator ',') From sched_window_run w Where w.task_id=t.id) start_mins
 	From sched_task t
@@ -142,6 +142,7 @@ func GetTaskDetails(name string) (*proto.TaskDefinition, error) {
 		runDaysBit     sql.NullString
 		startWindow    sql.NullString
 		endWindow      sql.NullString
+		priority       sql.NullString
 		startTimes     sql.NullString
 		startMins      sql.NullString
 	)
@@ -160,6 +161,7 @@ func GetTaskDetails(name string) (*proto.TaskDefinition, error) {
 		&runDaysBit,
 		&startWindow,
 		&endWindow,
+		&priority,
 		&startTimes,
 		&startMins)
 	if err != nil {
@@ -198,6 +200,9 @@ func GetTaskDetails(name string) (*proto.TaskDefinition, error) {
 	if startWindow.Valid && endWindow.Valid {
 		win := fmt.Sprintf("%s-%s", startWindow.String, endWindow.String)
 		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_RUN_WINDOW), Value: win})
+	}
+	if priority.Valid {
+		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_PRIORITY), Value: priority.String})
 	}
 	if startTimes.Valid {
 		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_START_TIMES), Value: startTimes.String})
