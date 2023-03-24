@@ -101,5 +101,10 @@ func SetTaskStatus(id int64, state task.State) error {
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("SetTaskStatus: %d - task id set to status %s", id, string(state))
 	}
+
+	// add entry to run history
+	if task.IsRunnable(state) {
+		AddTaskRun(id)
+	}
 	return nil
 }
