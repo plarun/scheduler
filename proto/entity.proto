@@ -19,6 +19,11 @@ service ValidatedActionService {
 	rpc Route(ParsedEntitiesRequest) returns (ValidatedEntitiesResponse) {}
 }
 
+service TaskService {
+    // GetDefinition gets the existing task's definition
+	rpc GetDefinition(TaskDefinitionRequest) returns (TaskDefinitionResponse) {}
+}
+
 // Request message of parsed actions
 message ParsedEntitiesRequest {
 	repeated ParsedTaskEntity Tasks = 1;
@@ -69,6 +74,28 @@ message ValidatedTaskEntity {
 	NullableTimeRange RunWindow = 14;
 	NullableInt32s StartMins = 15;
 	NullableInt32 Priority = 16;
+}
+
+// Request message to get task definition
+message TaskDefinitionRequest {
+	string TaskName = 1;
+}
+
+message TaskDefinitionResponse {
+	bool IsValid = 1;
+	TaskDefinition Task = 2;
+}
+
+message KeyValue {
+	string key = 1;
+	string value = 2;
+}
+
+// Response message of task definition
+message TaskDefinition {
+	string Name = 1;
+	repeated KeyValue Params = 2;
+	repeated TaskDefinition ChildrenTasks = 3;
 }
 
 enum NullableFlag {
