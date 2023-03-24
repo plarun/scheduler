@@ -126,7 +126,7 @@ func GetTaskDetails(name string) (*proto.TaskDefinition, error) {
 
 	row := db.QueryRow(qry, name)
 
-	var res *proto.TaskDefinition
+	res := &proto.TaskDefinition{}
 
 	var (
 		parent         sql.NullString
@@ -241,7 +241,7 @@ func getChildTasks(name string) ([]string, error) {
 
 	res := make([]string, 0)
 
-	rows, err := db.Query(qry, getChildTasks)
+	rows, err := db.Query(qry, name)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, nil
