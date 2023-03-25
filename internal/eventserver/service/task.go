@@ -201,3 +201,11 @@ func GetTaskLatestStatus(ctx context.Context, name string) (*proto.TaskRunStatus
 		return res, nil
 	}
 }
+
+func GetTaskRuns(ctx context.Context, name string, n int32, date string) ([]*proto.TaskRunStatus, error) {
+	if res, err := query.GetRuns(name, n, date); err != nil {
+		return nil, fmt.Errorf("GetTaskLatestStatus: %w", err)
+	} else {
+		return res, nil
+	}
+}

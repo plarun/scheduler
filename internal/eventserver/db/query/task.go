@@ -323,3 +323,108 @@ func GetLatestStatus(name string) (*proto.TaskRunStatus, error) {
 	}
 	return res, nil
 }
+
+func GetRuns(name string, n int32, date string) ([]*proto.TaskRunStatus, error) {
+	db := mysql.GetDatabase()
+
+	var rows *sql.Rows
+	res := make([]*proto.TaskRunStatus, 0)
+
+	if len(date) == 0 {
+		qry := `Select
+			t.type, t.name, h.start_time, h.end_time, h.status
+		From sched_task t, sched_run_history h
+		Where
+			t.id = h.task_id
+			And t.name=?
+		Order By h.seq_id Desc
+		Limit ?`
+
+		if r, err := db.Query(qry, name, n); err != nil {
+			if err == sql.ErrNoRows {
+				return res, nil
+			}
+			return res, fmt.Errorf("GetRuns: %w", err)
+		} else {
+			rows = r
+		}
+	} else {
+		qry := `Select
+			t.type, t.name, h.start_time, h.end_time, h.status
+		From sched_task t, sched_run_history h
+		Where
+			t.id = h.task_id
+			And t.name=?
+			And date_format(h.start_time, '%Y-%m-%d') = str_to_date(?, '%d/%m/%Y')
+		Order By h.seq_id Desc
+		Limit ?`
+
+		if r, err := db.Query(qry, name, date, n); err != nil {
+			if err == sql.ErrNoRows {
+				return res, nil
+			}
+			return res, fmt.Errorf("GetRuns: %w", err)
+		} else {
+			rows = r
+		}
+	}
+
+	var (
+		taskType      string
+		taskName      string
+		lastStartTime sql.NullTime
+		lastEndTime   sql.NullTime
+		currentStatus sql.NullString
+	)
+
+	for rows.Next() {
+
+		err := rows.Scan(
+			&taskType,
+			&taskName,
+			&lastStartTime,
+			&lastEndTime,
+			&currentStatus)
+		if err != nil {
+			return res, fmt.Errorf("GetLatestStatus: %w", err)
+		}
+
+		run := &proto.TaskRunStatus{}
+
+		run.TaskName = taskName
+
+		layout, _ := tm.GetLayout("yyyymmddHHMMSS")
+
+		if lastStartTime.Valid {
+			run.LastStartTime = lastStartTime.Time.Format(layout)
+		} else {
+			run.LastStartTime = ""
+		}
+
+		if lastEndTime.Valid {
+			run.LastEndTime = lastEndTime.Time.Format(layout)
+		} else {
+			run.LastEndTime = ""
+		}
+
+		run.Status = currentStatus.String
+
+		if taskType == "bundle" {
+			childTasks, err := getChildTasks(name)
+			if err != nil {
+				return res, fmt.Errorf("GetLatestStatus: %w", err)
+			}
+
+			for _, ctask := range childTasks {
+				if child, err := GetLatestStatus(ctask); err != nil {
+					return res, fmt.Errorf("GetLatestStatus: %w", err)
+				} else {
+					run.Children = append(run.Children, child)
+				}
+			}
+		}
+
+		res = append(res, run)
+	}
+	return res, nil
+}
