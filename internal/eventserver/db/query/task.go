@@ -291,12 +291,20 @@ func GetLatestStatus(name string) (*proto.TaskLatestStatus, error) {
 	}
 
 	res.TaskName = taskName
-	layout, ok := tm.GetLayout("yyyymmddHHMMSS")
-	if !ok {
-		return res, fmt.Errorf("GetLatestStatus: Invalid datetime layout")
+
+	layout, _ := tm.GetLayout("yyyymmddHHMMSS")
+
+	if lastStartTime.Valid {
+		res.LastStartTime = lastStartTime.Time.Format(layout)
+	} else {
+		res.LastStartTime = ""
 	}
-	res.LastStartTime = lastStartTime.Time.Format(layout)
-	res.LastEndTime = lastEndTime.Time.Format(layout)
+
+	if lastEndTime.Valid {
+		res.LastEndTime = lastEndTime.Time.Format(layout)
+	} else {
+		res.LastEndTime = ""
+	}
 	res.Status = currentStatus.String
 
 	if taskType == "bundle" {
