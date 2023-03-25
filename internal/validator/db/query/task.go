@@ -1,13 +1,13 @@
 package query
 
 import (
-	"github.com/plarun/scheduler/internal/validator/db/mysql"
+	"github.com/plarun/scheduler/internal/validator/db"
 	"github.com/plarun/scheduler/internal/validator/errors"
 )
 
 // TaskExists checks whether a task is already exist
 func TaskExists(name string) (bool, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 	var isExists int
 
 	qry := "Select Exists(Select 1 From sched_task Where name=?)"
@@ -25,7 +25,7 @@ func TaskExists(name string) (bool, error) {
 
 // GetTaskType gets the task type value of exising task
 func GetTaskType(name string) (string, error) {
-	database := mysql.GetDatabase()
+	database := db.GetDatabase()
 	var typ string
 
 	qry := "Select type From sched_task Where name=?"

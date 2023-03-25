@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
-	db "github.com/plarun/scheduler/internal/validator/db/mysql/query"
+	"github.com/plarun/scheduler/internal/validator/db/query"
 	er "github.com/plarun/scheduler/internal/validator/errors"
 	"github.com/plarun/scheduler/proto"
 )
@@ -47,7 +47,7 @@ func (del *deleteValidation) Validate() error {
 	otask.Name = tsk.Name()
 
 	// task should already exist
-	if exist, err := db.TaskExists(otask.Name); err != nil {
+	if exist, err := query.TaskExists(otask.Name); err != nil {
 		return err
 	} else if !exist {
 		return badErr(er.ErrTaskNotExist)

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/plarun/scheduler/config"
-	"github.com/plarun/scheduler/internal/validator/db/mysql"
+	"github.com/plarun/scheduler/internal/validator/db"
 	"github.com/plarun/scheduler/proto"
 )
 
@@ -17,7 +17,7 @@ func initValidator() {
 	}
 
 	// connect to mysql db
-	mysql.ConnectDB()
+	db.ConnectDB()
 }
 
 func compareTaskEntity(t1, t2 *proto.ValidatedTaskEntity) bool {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/plarun/scheduler/api/types/condition"
 	"github.com/plarun/scheduler/api/types/entity/task"
-	db "github.com/plarun/scheduler/internal/validator/db/mysql/query"
+	"github.com/plarun/scheduler/internal/validator/db/query"
 	"github.com/plarun/scheduler/internal/validator/errors"
 	"github.com/plarun/scheduler/proto"
 )
@@ -101,7 +101,7 @@ func (chk *Checker) checkTask(tsk *proto.ValidatedTaskEntity, pos int) error {
 }
 
 func (chk *Checker) checkInsertTask(tsk *proto.ValidatedTaskEntity, pos int) error {
-	if exists, err := db.TaskExists(tsk.Name); err != nil {
+	if exists, err := query.TaskExists(tsk.Name); err != nil {
 		return fmt.Errorf("checkInsertTask: %w", err)
 	} else if exists {
 		return errors.ErrTaskAlreadyExist
@@ -112,7 +112,7 @@ func (chk *Checker) checkInsertTask(tsk *proto.ValidatedTaskEntity, pos int) err
 }
 
 func (chk *Checker) checkUpdateTask(tsk *proto.ValidatedTaskEntity, pos int) error {
-	if exists, err := db.TaskExists(tsk.Name); err != nil {
+	if exists, err := query.TaskExists(tsk.Name); err != nil {
 		return fmt.Errorf("CheckExistance: %w", err)
 	} else if !exists {
 		return errors.ErrTaskNotExist
@@ -123,7 +123,7 @@ func (chk *Checker) checkUpdateTask(tsk *proto.ValidatedTaskEntity, pos int) err
 }
 
 func (chk *Checker) checkDeleteTask(tsk *proto.ValidatedTaskEntity, pos int) error {
-	if exists, err := db.TaskExists(tsk.Name); err != nil {
+	if exists, err := query.TaskExists(tsk.Name); err != nil {
 		return fmt.Errorf("CheckExistance: %w", err)
 	} else if !exists {
 		return errors.ErrTaskNotExist
@@ -142,7 +142,7 @@ func (chk *Checker) checkParent(tsk *proto.ValidatedTaskEntity, pos int) error {
 			}
 		} else {
 			// check bundle task in db
-			tasktype, err := db.GetTaskType(tsk.Parent.Value)
+			tasktype, err := query.GetTaskType(tsk.Parent.Value)
 			if err != nil {
 				return fmt.Errorf("checkParent: %v", err)
 			} else if task.Type(tasktype).IsBundle() {
@@ -164,7 +164,7 @@ func (chk *Checker) checkPredecessors(tsk *proto.ValidatedTaskEntity) error {
 		lTsk := chk.insertTasks[condTask]
 
 		if lTsk == nil { // task doesn't exist in current JIL
-			if exists, err := db.TaskExists(condTask); err != nil {
+			if exists, err := query.TaskExists(condTask); err != nil {
 				return fmt.Errorf("CheckExistance: %v", err)
 			} else if !exists {
 				return errors.ErrTaskNotExist

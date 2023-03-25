@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
-	db "github.com/plarun/scheduler/internal/validator/db/mysql/query"
+	"github.com/plarun/scheduler/internal/validator/db/query"
 	er "github.com/plarun/scheduler/internal/validator/errors"
 	"github.com/plarun/scheduler/proto"
 )
@@ -64,7 +64,7 @@ func (upd *updateValidation) Validate() error {
 	otask.Name = tsk.Name()
 
 	// task should already exist
-	if exist, err := db.TaskExists(otask.Name); err != nil {
+	if exist, err := query.TaskExists(otask.Name); err != nil {
 		return err
 	} else if !exist {
 		return badErr(er.ErrTaskNotExist)
@@ -72,14 +72,14 @@ func (upd *updateValidation) Validate() error {
 
 	// task should already exist for an update and get the run flag of task
 	var runFlag task.RunType
-	if rf, err := db.GetRunDetails(otask.Name); err != nil {
+	if rf, err := query.GetRunDetails(otask.Name); err != nil {
 		return fmt.Errorf("updateValidation.validate: %w", err)
 	} else {
 		runFlag = convertRunFlag(rf)
 	}
 
 	// type of the task
-	typ, err := db.GetTaskType(otask.Name)
+	typ, err := query.GetTaskType(otask.Name)
 	if err != nil {
 		return fmt.Errorf("updateValidation.validate: %w", err)
 	}
