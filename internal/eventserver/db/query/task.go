@@ -127,7 +127,9 @@ func GetTaskDetails(name string) (*proto.TaskDefinition, error) {
 
 	row := db.QueryRow(qry, name)
 
-	res := &proto.TaskDefinition{}
+	res := &proto.TaskDefinition{
+		Params: make(map[string]string),
+	}
 
 	var (
 		parent         sql.NullString
