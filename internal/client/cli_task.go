@@ -89,11 +89,7 @@ func printTaskDefinition(def *proto.TaskDefinition) {
 }
 
 func printTask(def *proto.TaskDefinition, prefix string) {
-	params := make(map[string]string)
-
-	for _, p := range def.Params {
-		params[p.Key] = p.Value
-	}
+	params := def.Params
 
 	fmt.Printf("%sTask Name: %s\n", prefix, def.Name)
 

@@ -169,46 +169,46 @@ func GetTaskDetails(name string) (*proto.TaskDefinition, error) {
 	}
 
 	res.Name = taskName
-	res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_TYPE), Value: taskType})
+	res.Params[string(task.FIELD_TYPE)] = taskType
 	if parent.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_PARENT), Value: parent.String})
+		res.Params[string(task.FIELD_PARENT)] = parent.String
 	}
 	if machine.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_MACHINE), Value: machine.String})
+		res.Params[string(task.FIELD_MACHINE)] = machine.String
 	}
 	if command.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_COMMAND), Value: command.String})
+		res.Params[string(task.FIELD_COMMAND)] = command.String
 	}
 	if startCondition.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_CONDITION), Value: startCondition.String})
+		res.Params[string(task.FIELD_CONDITION)] = startCondition.String
 	}
 	if stdOutLog.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_OUT_LOG_FILE), Value: stdOutLog.String})
+		res.Params[string(task.FIELD_OUT_LOG_FILE)] = stdOutLog.String
 	}
 	if stdErrLog.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_ERR_LOG_FILE), Value: stdErrLog.String})
+		res.Params[string(task.FIELD_ERR_LOG_FILE)] = stdErrLog.String
 	}
 	if label.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_LABEL), Value: label.String})
+		res.Params[string(task.FIELD_LABEL)] = label.String
 	}
 	if profile.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_PROFILE), Value: profile.String})
+		res.Params[string(task.FIELD_PROFILE)] = profile.String
 	}
 	if runDaysBit.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_RUN_DAYS), Value: runDaysBit.String})
+		res.Params[string(task.FIELD_RUN_DAYS)] = runDaysBit.String
 	}
 	if startWindow.Valid && endWindow.Valid {
 		win := fmt.Sprintf("%s-%s", startWindow.String, endWindow.String)
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_RUN_WINDOW), Value: win})
+		res.Params[string(task.FIELD_RUN_WINDOW)] = win
 	}
 	if priority.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_PRIORITY), Value: priority.String})
+		res.Params[string(task.FIELD_PRIORITY)] = priority.String
 	}
 	if startTimes.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_START_TIMES), Value: startTimes.String})
+		res.Params[string(task.FIELD_START_TIMES)] = startTimes.String
 	}
 	if startMins.Valid {
-		res.Params = append(res.Params, &proto.KeyValue{Key: string(task.FIELD_START_MINS), Value: startMins.String})
+		res.Params[string(task.FIELD_START_MINS)] = startMins.String
 	}
 
 	if taskType == "bundle" {

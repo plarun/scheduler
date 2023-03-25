@@ -86,15 +86,10 @@ message TaskDefinitionResponse {
 	TaskDefinition Task = 2;
 }
 
-message KeyValue {
-	string key = 1;
-	string value = 2;
-}
-
 // Response message of task definition
 message TaskDefinition {
 	string Name = 1;
-	repeated KeyValue Params = 2;
+	map<string, string> Params = 2;
 	repeated TaskDefinition ChildrenTasks = 3;
 }
 
