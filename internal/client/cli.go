@@ -20,6 +20,7 @@ OPTION:
 FILE:
     -f, --file          input file containing task definition
                         and action for one or more tasks`
+
 	// usage message for sub command schd_event
 	USAGE_CMD_EVENT string = `
 Usage:
@@ -36,6 +37,7 @@ EVENT:
                         reset - change the status of task to IDLE
                         chg_succ - change the status of task to SUCCESS
                         chg_fail - change the status of task to FAILURE`
+
 	// usage message for sub command schd_task
 	USAGE_CMD_TASK string = `
 Usage:
@@ -44,6 +46,7 @@ Print task definition.
 
 TASK:
     -j, --task=string   task name`
+
 	// usage message for sub command schd_runs
 	USAGE_CMD_RUNS string = `
 Usage:
@@ -51,10 +54,11 @@ Usage:
 Display previous runs and status of the task.
 
 OPTION:
-    -c, --count=NUM     number of runs
-    -d, --date=strings  only runs of given date
+    -c, --count=NUM     number of last runs
+    -d, --date=strings  only runs of given date if any
 TASK:
     -j, --task=string    task name`
+
 	// usage message for sub command schd_status
 	USAGE_CMD_STATUS string = `
 Usage:
