@@ -1,4 +1,4 @@
-package client
+package conn
 
 import (
 	"context"
@@ -9,21 +9,21 @@ import (
 	"google.golang.org/grpc"
 )
 
-type taskRunsGrpcConnection struct {
+type taskGrpcConnection struct {
 	addr    string
 	client  proto.TaskServiceClient
 	conn    *grpc.ClientConn
-	request *proto.TaskRunsRequest
+	request *proto.TaskDefinitionRequest
 }
 
-func NewTaskRunsGrpcConnection(addr string, req *proto.TaskRunsRequest) grpcconn.GrpcConnecter {
-	return &taskRunsGrpcConnection{
+func NewTaskGrpcConnection(addr string, req *proto.TaskDefinitionRequest) grpcconn.GrpcConnecter {
+	return &taskGrpcConnection{
 		addr:    addr,
 		request: req,
 	}
 }
 
-func (t *taskRunsGrpcConnection) Connect() error {
+func (t *taskGrpcConnection) Connect() error {
 	conn, err := grpc.Dial(t.addr, grpc.WithInsecure())
 	if err != nil {
 		return fmt.Errorf("failed to get grpc client connnection")
@@ -33,21 +33,21 @@ func (t *taskRunsGrpcConnection) Connect() error {
 	return nil
 }
 
-func (t *taskRunsGrpcConnection) Request() (interface{}, error) {
+func (t *taskGrpcConnection) Request() (interface{}, error) {
 	if t.client == nil {
 		if err := t.Connect(); err != nil {
 			return nil, err
 		}
 	}
 
-	res, err := t.client.GetRuns(context.Background(), t.request)
+	res, err := t.client.GetDefinition(context.Background(), t.request)
 	if err != nil {
 		return nil, err
 	}
 	return res, nil
 }
 
-func (t *taskRunsGrpcConnection) Close() error {
+func (t *taskGrpcConnection) Close() error {
 	if t.client != nil {
 		if err := t.conn.Close(); err != nil {
 			return fmt.Errorf("failed to close grpc client connection")

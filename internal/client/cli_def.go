@@ -8,6 +8,7 @@ import (
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/config"
+	"github.com/plarun/scheduler/internal/client/conn"
 	"github.com/plarun/scheduler/proto"
 )
 
@@ -68,7 +69,7 @@ func (c *definitionCommand) Exec() error {
 	req := c.NewRequest(actions)
 
 	addr := fmt.Sprintf(":%d", config.GetAppConfig().Service.EventServer.Port)
-	grpcConnect := NewDefinitionGrpcConnection(addr, c.onlyCheck, req)
+	grpcConnect := conn.NewDefinitionGrpcConnection(addr, c.onlyCheck, req)
 
 	if err := grpcConnect.Connect(); err != nil {
 		return err

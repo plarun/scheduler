@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/plarun/scheduler/config"
+	"github.com/plarun/scheduler/internal/client/conn"
 	"github.com/plarun/scheduler/proto"
 )
 
@@ -46,7 +47,7 @@ func (sc *statusCommand) Exec() error {
 	}
 
 	addr := fmt.Sprintf(":%d", config.GetAppConfig().Service.EventServer.Port)
-	conn := NewStatusGrpcConnection(addr, req)
+	conn := conn.NewStatusGrpcConnection(addr, req)
 
 	if err := conn.Connect(); err != nil {
 		return err
