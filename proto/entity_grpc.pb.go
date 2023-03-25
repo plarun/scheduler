@@ -203,10 +203,8 @@ type TaskServiceClient interface {
 	GetDefinition(ctx context.Context, in *TaskDefinitionRequest, opts ...grpc.CallOption) (*TaskDefinitionResponse, error)
 	// GetStatus gets the current status with last start time and last end time of task
 	GetStatus(ctx context.Context, in *TaskLatestStatusRequest, opts ...grpc.CallOption) (*TaskLatestStatusResponse, error)
-	// GetNRuns gets the last N runs of task
-	GetNRuns(ctx context.Context, in *TaskRunsRequest, opts ...grpc.CallOption) (*TaskRunsResponse, error)
-	// GetRunsOn gets the runs on given date of task
-	GetRunsOn(ctx context.Context, in *TaskRunsOnRequest, opts ...grpc.CallOption) (*TaskRunsOnResponse, error)
+	// GetRuns gets the runs of task
+	GetRuns(ctx context.Context, in *TaskRunsRequest, opts ...grpc.CallOption) (*TaskRunsResponse, error)
 }
 
 type taskServiceClient struct {
@@ -235,18 +233,9 @@ func (c *taskServiceClient) GetStatus(ctx context.Context, in *TaskLatestStatusR
 	return out, nil
 }
 
-func (c *taskServiceClient) GetNRuns(ctx context.Context, in *TaskRunsRequest, opts ...grpc.CallOption) (*TaskRunsResponse, error) {
+func (c *taskServiceClient) GetRuns(ctx context.Context, in *TaskRunsRequest, opts ...grpc.CallOption) (*TaskRunsResponse, error) {
 	out := new(TaskRunsResponse)
-	err := c.cc.Invoke(ctx, "/proto.TaskService/GetNRuns", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *taskServiceClient) GetRunsOn(ctx context.Context, in *TaskRunsOnRequest, opts ...grpc.CallOption) (*TaskRunsOnResponse, error) {
-	out := new(TaskRunsOnResponse)
-	err := c.cc.Invoke(ctx, "/proto.TaskService/GetRunsOn", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto.TaskService/GetRuns", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -261,10 +250,8 @@ type TaskServiceServer interface {
 	GetDefinition(context.Context, *TaskDefinitionRequest) (*TaskDefinitionResponse, error)
 	// GetStatus gets the current status with last start time and last end time of task
 	GetStatus(context.Context, *TaskLatestStatusRequest) (*TaskLatestStatusResponse, error)
-	// GetNRuns gets the last N runs of task
-	GetNRuns(context.Context, *TaskRunsRequest) (*TaskRunsResponse, error)
-	// GetRunsOn gets the runs on given date of task
-	GetRunsOn(context.Context, *TaskRunsOnRequest) (*TaskRunsOnResponse, error)
+	// GetRuns gets the runs of task
+	GetRuns(context.Context, *TaskRunsRequest) (*TaskRunsResponse, error)
 	mustEmbedUnimplementedTaskServiceServer()
 }
 
@@ -278,11 +265,8 @@ func (UnimplementedTaskServiceServer) GetDefinition(context.Context, *TaskDefini
 func (UnimplementedTaskServiceServer) GetStatus(context.Context, *TaskLatestStatusRequest) (*TaskLatestStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStatus not implemented")
 }
-func (UnimplementedTaskServiceServer) GetNRuns(context.Context, *TaskRunsRequest) (*TaskRunsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetNRuns not implemented")
-}
-func (UnimplementedTaskServiceServer) GetRunsOn(context.Context, *TaskRunsOnRequest) (*TaskRunsOnResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetRunsOn not implemented")
+func (UnimplementedTaskServiceServer) GetRuns(context.Context, *TaskRunsRequest) (*TaskRunsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRuns not implemented")
 }
 func (UnimplementedTaskServiceServer) mustEmbedUnimplementedTaskServiceServer() {}
 
@@ -333,38 +317,20 @@ func _TaskService_GetStatus_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TaskService_GetNRuns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TaskService_GetRuns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(TaskRunsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TaskServiceServer).GetNRuns(ctx, in)
+		return srv.(TaskServiceServer).GetRuns(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto.TaskService/GetNRuns",
+		FullMethod: "/proto.TaskService/GetRuns",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServiceServer).GetNRuns(ctx, req.(*TaskRunsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _TaskService_GetRunsOn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TaskRunsOnRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TaskServiceServer).GetRunsOn(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.TaskService/GetRunsOn",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TaskServiceServer).GetRunsOn(ctx, req.(*TaskRunsOnRequest))
+		return srv.(TaskServiceServer).GetRuns(ctx, req.(*TaskRunsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -385,12 +351,8 @@ var TaskService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TaskService_GetStatus_Handler,
 		},
 		{
-			MethodName: "GetNRuns",
-			Handler:    _TaskService_GetNRuns_Handler,
-		},
-		{
-			MethodName: "GetRunsOn",
-			Handler:    _TaskService_GetRunsOn_Handler,
+			MethodName: "GetRuns",
+			Handler:    _TaskService_GetRuns_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
