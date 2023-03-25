@@ -8,6 +8,7 @@ import (
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/config"
+	"github.com/plarun/scheduler/internal/client/check"
 	"github.com/plarun/scheduler/internal/client/conn"
 	"github.com/plarun/scheduler/proto"
 )
@@ -42,7 +43,7 @@ func (tc *taskCommand) Parse(args []string) error {
 
 func (tc *taskCommand) Exec() error {
 	if !tc.IsParsed() {
-		return ErrCommandNotParsed
+		return check.ErrCommandNotParsed
 	}
 
 	req := &proto.TaskDefinitionRequest{

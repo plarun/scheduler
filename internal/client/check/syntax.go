@@ -1,4 +1,4 @@
-package client
+package check
 
 import (
 	"bufio"
@@ -20,7 +20,7 @@ type Definition struct {
 	HasParser bool
 }
 
-func newDefinition(file *os.File) *Definition {
+func NewDefinition(file *os.File) *Definition {
 	return &Definition{
 		File:      file,
 		Actions:   make([]Actioner, 0),

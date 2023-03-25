@@ -1,4 +1,4 @@
-package client
+package check
 
 import (
 	"os"
@@ -28,7 +28,7 @@ func TestDefSyntax(t *testing.T) {
 			panic("file not found: " + testCase.filename)
 		}
 
-		syntax := newDefinition(file)
+		syntax := NewDefinition(file)
 		err = syntax.Parse()
 
 		if err != nil && !testCase.shouldFail {

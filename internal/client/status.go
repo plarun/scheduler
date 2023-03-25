@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/plarun/scheduler/config"
+	"github.com/plarun/scheduler/internal/client/check"
 	"github.com/plarun/scheduler/internal/client/conn"
 	"github.com/plarun/scheduler/proto"
 )
@@ -39,7 +40,7 @@ func (sc *statusCommand) Parse(args []string) error {
 
 func (sc *statusCommand) Exec() error {
 	if !sc.IsParsed() {
-		return ErrCommandNotParsed
+		return check.ErrCommandNotParsed
 	}
 
 	req := &proto.TaskLatestStatusRequest{

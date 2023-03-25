@@ -3,6 +3,8 @@ package client
 import (
 	"flag"
 	"fmt"
+
+	"github.com/plarun/scheduler/internal/client/check"
 )
 
 type eventCommand struct {
@@ -40,7 +42,7 @@ func (ec *eventCommand) Parse(args []string) error {
 
 func (ec *eventCommand) Exec() error {
 	if !ec.IsParsed() {
-		return ErrCommandNotParsed
+		return check.ErrCommandNotParsed
 	}
 	return nil
 }

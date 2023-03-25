@@ -1,4 +1,4 @@
-package client
+package check
 
 // Actioner interface type represents the entity
 type Actioner interface {

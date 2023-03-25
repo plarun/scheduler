@@ -8,6 +8,7 @@ import (
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/config"
+	"github.com/plarun/scheduler/internal/client/check"
 	"github.com/plarun/scheduler/internal/client/conn"
 	"github.com/plarun/scheduler/proto"
 )
@@ -56,11 +57,11 @@ func (c *definitionCommand) Parse(args []string) error {
 
 func (c *definitionCommand) Exec() error {
 	if !c.IsParsed() {
-		return ErrCommandNotParsed
+		return check.ErrCommandNotParsed
 	}
 	defer c.file.Close()
 
-	syntax := newDefinition(c.file)
+	syntax := check.NewDefinition(c.file)
 	if err := syntax.Parse(); err != nil {
 		return err
 	}
@@ -113,7 +114,7 @@ func (c *definitionCommand) String() string {
 	return fmt.Sprintf("command=%s file=%v only_check_flag=%v", CMD_DEF, c.file, c.onlyCheck)
 }
 
-func (c *definitionCommand) NewRequest(actions []Actioner) *proto.ParsedEntitiesRequest {
+func (c *definitionCommand) NewRequest(actions []check.Actioner) *proto.ParsedEntitiesRequest {
 	req := &proto.ParsedEntitiesRequest{
 		Tasks: make([]*proto.ParsedTaskEntity, 0),
 	}
@@ -122,7 +123,7 @@ func (c *definitionCommand) NewRequest(actions []Actioner) *proto.ParsedEntities
 		action := act.GetAction()
 		// task entity action
 		if task.Action(action).IsValid() {
-			ent := act.(*TaskEntity)
+			ent := act.(*check.TaskEntity)
 			tsk := &proto.ParsedTaskEntity{
 				Action: action,
 				Target: act.GetTarget(),
