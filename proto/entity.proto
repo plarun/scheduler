@@ -24,6 +24,10 @@ service TaskService {
 	rpc GetDefinition(TaskDefinitionRequest) returns (TaskDefinitionResponse) {}
 	// GetStatus gets the current status with last start time and last end time of task
 	rpc GetStatus(TaskLatestStatusRequest) returns (TaskLatestStatusResponse) {}
+	// GetNRuns gets the last N runs of task
+	rpc GetNRuns(TaskRunsRequest) returns (TaskRunsResponse) {}
+	// GetRunsOn gets the runs on given date of task
+	rpc GetRunsOn(TaskRunsOnRequest) returns (TaskRunsOnResponse) {}
 }
 
 // Request message of parsed actions
@@ -103,15 +107,39 @@ message TaskLatestStatusRequest {
 // Response message of task status
 message TaskLatestStatusResponse {
 	bool IsValid = 1;
-	TaskLatestStatus Status = 2;
+	TaskRunStatus Status = 2;
 }
 
-message TaskLatestStatus {
+message TaskRunStatus {
 	string TaskName = 1;
 	string LastStartTime = 2;
 	string LastEndTime = 3;
 	string Status = 4;
-	repeated TaskLatestStatus Children = 5;
+	repeated TaskRunStatus Children = 5;
+}
+
+// Request message to get last n runs of task
+message TaskRunsRequest {
+	string TaskName = 1;
+	int32 Count = 2;
+}
+
+// Response message of last n runs of task
+message TaskRunsResponse {
+	bool IsValid = 1;
+	TaskRunStatus Status = 2;
+}
+
+// Request message to get task runs on specific date
+message TaskRunsOnRequest {
+	string TaskName = 1;
+	string RunDate = 2;
+}
+
+// Response message of task runs on specific date
+message TaskRunsOnResponse {
+	bool IsValid = 1;
+	TaskRunStatus Status = 2;
 }
 
 enum NullableFlag {

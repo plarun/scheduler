@@ -260,7 +260,7 @@ func getChildTasks(name string) ([]string, error) {
 	return res, nil
 }
 
-func GetLatestStatus(name string) (*proto.TaskLatestStatus, error) {
+func GetLatestStatus(name string) (*proto.TaskRunStatus, error) {
 	db := mysql.GetDatabase()
 
 	qry := `Select
@@ -270,7 +270,7 @@ func GetLatestStatus(name string) (*proto.TaskLatestStatus, error) {
 
 	row := db.QueryRow(qry, name)
 
-	res := &proto.TaskLatestStatus{}
+	res := &proto.TaskRunStatus{}
 
 	var (
 		taskType      string

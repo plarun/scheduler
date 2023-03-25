@@ -77,7 +77,7 @@ func (sc *statusCommand) Usage() string {
 	return USAGE_CMD_STATUS
 }
 
-func printTaskStatus(st *proto.TaskLatestStatus, hasHeader bool, prefix string) {
+func printTaskStatus(st *proto.TaskRunStatus, hasHeader bool, prefix string) {
 	if hasHeader {
 		fmt.Printf("\n%-65s %-17s %-17s %-10s\n", "Task Name", "Start Time", "End Time", "Status")
 		fmt.Println("_________________________________________________________________ _________________ _________________ __________")
