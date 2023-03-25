@@ -6,7 +6,7 @@ schd_home=/root/go/src/github.com/plarun/scheduler
 schd_bin=${schd_home}/bin
 
 schd_cli=${schd_bin}/client
-sub_command=schd_def
+sub_command=schd_runs
 
 # call client service
 ${schd_cli} ${sub_command} $@
