@@ -201,6 +201,8 @@ var ValidatedActionService_ServiceDesc = grpc.ServiceDesc{
 type TaskServiceClient interface {
 	// GetDefinition gets the existing task's definition
 	GetDefinition(ctx context.Context, in *TaskDefinitionRequest, opts ...grpc.CallOption) (*TaskDefinitionResponse, error)
+	// GetStatus gets the current status with last start time and last end time of task
+	GetStatus(ctx context.Context, in *TaskLatestStatusRequest, opts ...grpc.CallOption) (*TaskLatestStatusResponse, error)
 }
 
 type taskServiceClient struct {
@@ -220,12 +222,23 @@ func (c *taskServiceClient) GetDefinition(ctx context.Context, in *TaskDefinitio
 	return out, nil
 }
 
+func (c *taskServiceClient) GetStatus(ctx context.Context, in *TaskLatestStatusRequest, opts ...grpc.CallOption) (*TaskLatestStatusResponse, error) {
+	out := new(TaskLatestStatusResponse)
+	err := c.cc.Invoke(ctx, "/proto.TaskService/GetStatus", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TaskServiceServer is the server API for TaskService service.
 // All implementations must embed UnimplementedTaskServiceServer
 // for forward compatibility
 type TaskServiceServer interface {
 	// GetDefinition gets the existing task's definition
 	GetDefinition(context.Context, *TaskDefinitionRequest) (*TaskDefinitionResponse, error)
+	// GetStatus gets the current status with last start time and last end time of task
+	GetStatus(context.Context, *TaskLatestStatusRequest) (*TaskLatestStatusResponse, error)
 	mustEmbedUnimplementedTaskServiceServer()
 }
 
@@ -235,6 +248,9 @@ type UnimplementedTaskServiceServer struct {
 
 func (UnimplementedTaskServiceServer) GetDefinition(context.Context, *TaskDefinitionRequest) (*TaskDefinitionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDefinition not implemented")
+}
+func (UnimplementedTaskServiceServer) GetStatus(context.Context, *TaskLatestStatusRequest) (*TaskLatestStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStatus not implemented")
 }
 func (UnimplementedTaskServiceServer) mustEmbedUnimplementedTaskServiceServer() {}
 
@@ -267,6 +283,24 @@ func _TaskService_GetDefinition_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TaskService_GetStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TaskLatestStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TaskServiceServer).GetStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.TaskService/GetStatus",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TaskServiceServer).GetStatus(ctx, req.(*TaskLatestStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TaskService_ServiceDesc is the grpc.ServiceDesc for TaskService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -277,6 +311,10 @@ var TaskService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDefinition",
 			Handler:    _TaskService_GetDefinition_Handler,
+		},
+		{
+			MethodName: "GetStatus",
+			Handler:    _TaskService_GetStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

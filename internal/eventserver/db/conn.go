@@ -31,11 +31,12 @@ func ConnectDB() error {
 	addr := fmt.Sprintf("%s:%s", dc.Host, dc.Port)
 
 	cfg := mysql.Config{
-		User:   dc.User,
-		Passwd: dc.Password,
-		Net:    "tcp",
-		Addr:   addr,
-		DBName: dc.Schema,
+		User:      dc.User,
+		Passwd:    dc.Password,
+		Net:       "tcp",
+		Addr:      addr,
+		DBName:    dc.Schema,
+		ParseTime: true,
 	}
 
 	// get db handle

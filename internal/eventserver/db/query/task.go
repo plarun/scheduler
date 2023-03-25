@@ -7,6 +7,7 @@ import (
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	mysql "github.com/plarun/scheduler/internal/eventserver/db"
+	tm "github.com/plarun/scheduler/pkg/time"
 	"github.com/plarun/scheduler/proto"
 )
 
@@ -255,6 +256,62 @@ func getChildTasks(name string) ([]string, error) {
 			return nil, fmt.Errorf("getChildTasks: %w", err)
 		}
 		res = append(res, childName)
+	}
+	return res, nil
+}
+
+func GetLatestStatus(name string) (*proto.TaskLatestStatus, error) {
+	db := mysql.GetDatabase()
+
+	qry := `Select
+		type, name, last_start_time, last_end_time, current_status
+	From sched_task
+	Where name=?`
+
+	row := db.QueryRow(qry, name)
+
+	res := &proto.TaskLatestStatus{}
+
+	var (
+		taskType      string
+		taskName      string
+		lastStartTime sql.NullTime
+		lastEndTime   sql.NullTime
+		currentStatus sql.NullString
+	)
+
+	err := row.Scan(
+		&taskType,
+		&taskName,
+		&lastStartTime,
+		&lastEndTime,
+		&currentStatus)
+	if err != nil {
+		return res, fmt.Errorf("GetLatestStatus: %w", err)
+	}
+
+	res.TaskName = taskName
+	layout, ok := tm.GetLayout("yyyymmddHHMMSS")
+	if !ok {
+		return res, fmt.Errorf("GetLatestStatus: Invalid datetime layout")
+	}
+	res.LastStartTime = lastStartTime.Time.Format(layout)
+	res.LastEndTime = lastEndTime.Time.Format(layout)
+	res.Status = currentStatus.String
+
+	if taskType == "bundle" {
+		childTasks, err := getChildTasks(name)
+		if err != nil {
+			return res, fmt.Errorf("GetLatestStatus: %w", err)
+		}
+
+		for _, ctask := range childTasks {
+			if child, err := GetLatestStatus(ctask); err != nil {
+				return res, fmt.Errorf("GetLatestStatus: %w", err)
+			} else {
+				res.Children = append(res.Children, child)
+			}
+		}
 	}
 	return res, nil
 }

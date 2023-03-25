@@ -193,3 +193,11 @@ func GetTaskDefinition(ctx context.Context, name string) (*proto.TaskDefinition,
 		return res, nil
 	}
 }
+
+func GetTaskLatestStatus(ctx context.Context, name string) (*proto.TaskLatestStatus, error) {
+	if res, err := query.GetLatestStatus(name); err != nil {
+		return nil, fmt.Errorf("GetTaskLatestStatus: %w", err)
+	} else {
+		return res, nil
+	}
+}

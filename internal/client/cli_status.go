@@ -3,6 +3,9 @@ package client
 import (
 	"flag"
 	"fmt"
+
+	"github.com/plarun/scheduler/config"
+	"github.com/plarun/scheduler/proto"
 )
 
 type statusCommand struct {
@@ -34,9 +37,55 @@ func (sc *statusCommand) Parse(args []string) error {
 }
 
 func (sc *statusCommand) Exec() error {
+	if !sc.IsParsed() {
+		return ErrCommandNotParsed
+	}
+
+	req := &proto.TaskLatestStatusRequest{
+		TaskName: sc.task,
+	}
+
+	addr := fmt.Sprintf(":%d", config.GetAppConfig().Service.EventServer.Port)
+	conn := NewStatusGrpcConnection(addr, req)
+
+	if err := conn.Connect(); err != nil {
+		return err
+	}
+
+	r, err := conn.Request()
+	if err != nil {
+		return err
+	}
+
+	var res *proto.TaskLatestStatusResponse
+	var ok bool
+	if res, ok = r.(*proto.TaskLatestStatusResponse); !ok {
+		panic("invalid type")
+	}
+
+	// print task definition
+	printTaskStatus(res.Status, true, "")
+
+	if err := conn.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (sc *statusCommand) Usage() string {
 	return USAGE_CMD_STATUS
+}
+
+func printTaskStatus(st *proto.TaskLatestStatus, hasHeader bool, prefix string) {
+	if hasHeader {
+		fmt.Printf("\n%-65s %-17s %-17s %-10s\n", "Task Name", "Start Time", "End Time", "Status")
+		fmt.Println("_________________________________________________________________ _________________ _________________ __________")
+	}
+
+	fmt.Printf("%-65s %-17s %-17s %-10s\n", prefix+st.TaskName, st.LastStartTime, st.LastEndTime, st.Status)
+
+	for _, child := range st.Children {
+		printTaskStatus(child, false, prefix+" ")
+	}
 }

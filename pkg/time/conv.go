@@ -8,10 +8,10 @@ const (
 	fmtyyddmm         string = "060201"
 	fmtyyyymmdd       string = "20060102"
 	fmtyyyyddmm       string = "20060201"
-	fmtyyyymmddHHMM   string = fmtyyyymmdd + fmtHHMM
-	fmtyyyymmddHHMMSS string = fmtyyyymmdd + fmtHHMMSS
-	fmtyyyyddmmHHMM   string = fmtyyyyddmm + fmtHHMM
-	fmtyyyyddmmHHMMSS string = fmtyyyyddmm + fmtHHMMSS
+	fmtyyyymmddHHMM   string = fmtyyyymmdd + " " + fmtHHMM
+	fmtyyyymmddHHMMSS string = fmtyyyymmdd + " " + fmtHHMMSS
+	fmtyyyyddmmHHMM   string = fmtyyyyddmm + " " + fmtHHMM
+	fmtyyyyddmmHHMMSS string = fmtyyyyddmm + " " + fmtHHMMSS
 
 	default_Time     string = fmtHHMM
 	default_Date     string = fmtyyyymmdd

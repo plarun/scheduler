@@ -22,6 +22,8 @@ service ValidatedActionService {
 service TaskService {
     // GetDefinition gets the existing task's definition
 	rpc GetDefinition(TaskDefinitionRequest) returns (TaskDefinitionResponse) {}
+	// GetStatus gets the current status with last start time and last end time of task
+	rpc GetStatus(TaskLatestStatusRequest) returns (TaskLatestStatusResponse) {}
 }
 
 // Request message of parsed actions
@@ -91,6 +93,25 @@ message TaskDefinition {
 	string Name = 1;
 	map<string, string> Params = 2;
 	repeated TaskDefinition ChildrenTasks = 3;
+}
+
+// Request message to get task status
+message TaskLatestStatusRequest {
+	string TaskName = 1;
+}
+
+// Response message of task status
+message TaskLatestStatusResponse {
+	bool IsValid = 1;
+	TaskLatestStatus Status = 2;
+}
+
+message TaskLatestStatus {
+	string TaskName = 1;
+	string LastStartTime = 2;
+	string LastEndTime = 3;
+	string Status = 4;
+	repeated TaskLatestStatus Children = 5;
 }
 
 enum NullableFlag {
