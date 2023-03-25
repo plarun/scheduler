@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	db "github.com/plarun/scheduler/internal/allocator/db/mysql/query"
+	"github.com/plarun/scheduler/internal/allocator/db/query"
 )
 
 type TaskSplitter struct{}
@@ -16,12 +16,12 @@ func NewTaskSplitter() *TaskSplitter {
 // based on their start condition status
 func (t *TaskSplitter) Split() error {
 	// lock the queued tasks for start condition check
-	if err := db.LockForConditionCheck(); err != nil {
+	if err := query.LockForConditionCheck(); err != nil {
 		return fmt.Errorf("Split: %w", err)
 	}
 
 	// pick the locked tasks to in memory
-	tasks, err := db.PickQueueLockedTasks()
+	tasks, err := query.PickQueueLockedTasks()
 	if err != nil {
 		return fmt.Errorf("Split: %w", err)
 	}
@@ -35,11 +35,11 @@ func (t *TaskSplitter) Split() error {
 		}
 
 		if ready {
-			if err := db.MoveQueueToReady(taskid); err != nil {
+			if err := query.MoveQueueToReady(taskid); err != nil {
 				return fmt.Errorf("Split: %w", err)
 			}
 		} else {
-			if err := db.MoveQueueToWait(taskid); err != nil {
+			if err := query.MoveQueueToWait(taskid); err != nil {
 				return fmt.Errorf("Split: %w", err)
 			}
 		}

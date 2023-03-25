@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/plarun/scheduler/config"
-	db "github.com/plarun/scheduler/internal/allocator/db/mysql"
-	"github.com/plarun/scheduler/internal/allocator/db/mysql/query"
+	"github.com/plarun/scheduler/internal/allocator/db"
+	"github.com/plarun/scheduler/internal/allocator/db/query"
 )
 
 func init() {

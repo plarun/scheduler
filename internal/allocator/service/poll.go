@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/plarun/scheduler/internal/allocator/db/mysql/query"
+	"github.com/plarun/scheduler/internal/allocator/db/query"
 )
 
 type TaskPoller struct {
@@ -18,19 +18,19 @@ func NewTaskPoller(cycle time.Duration) *TaskPoller {
 // Stage performs staging the scheduled tasks
 func (t *TaskPoller) Stage() error {
 	// lock tasks for staging
-	if err := db.LockForStaging(); err != nil {
+	if err := query.LockForStaging(); err != nil {
 		return fmt.Errorf("Stage: %w", err)
 	}
 	// push locked tasks into staging area
-	if err := db.StageLockedTasks(); err != nil {
+	if err := query.StageLockedTasks(); err != nil {
 		return fmt.Errorf("Stage: %v", err)
 	}
 	// set task status to "staged"
-	if err := db.MarkAsStaged(); err != nil {
+	if err := query.MarkAsStaged(); err != nil {
 		return fmt.Errorf("Stage: %v", err)
 	}
 	// set task flag as staged
-	if err := db.SetStagedFlag(); err != nil {
+	if err := query.SetStagedFlag(); err != nil {
 		return fmt.Errorf("Stage: %v", err)
 	}
 
@@ -40,41 +40,41 @@ func (t *TaskPoller) Stage() error {
 // Poll performs queuing the staged tasks into queue
 func (t *TaskPoller) Poll() error {
 	// lock staged tasks for queuing
-	if err := db.LockForEnqueue(); err != nil {
+	if err := query.LockForEnqueue(); err != nil {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
 	// push staged tasks which are locked into queue
-	if err := db.EnqueueTasks(); err != nil {
+	if err := query.EnqueueTasks(); err != nil {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
 	// mark staged bundle tasks for queuing its tasks (flag=4)
-	if err := db.ChangeStagedBundleLock(2, 4); err != nil {
+	if err := query.ChangeStagedBundleLock(2, 4); err != nil {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
 	// mark tasks of locked bundle for staging
-	if err := db.LockBundledTasksForStaging(); err != nil {
+	if err := query.LockBundledTasksForStaging(); err != nil {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
 	// mark staged bundle tasks after queueing its tasks (flag=5)
-	if err := db.ChangeStagedBundleLock(4, 5); err != nil {
+	if err := query.ChangeStagedBundleLock(4, 5); err != nil {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
 	// set bundle task state to running when flag=5
-	if err := db.MarkBundleAsRunning(); err != nil {
+	if err := query.MarkBundleAsRunning(); err != nil {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
 	// set status of queued tasks to 'queued'
-	if err := db.SetQueueStatus(); err != nil {
+	if err := query.SetQueueStatus(); err != nil {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
-	if err := db.SetQueuedFlag(); err != nil {
+	if err := query.SetQueuedFlag(); err != nil {
 		return fmt.Errorf("Poll: %v", err)
 	}
 
