@@ -5,13 +5,13 @@ import (
 	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
-	"github.com/plarun/scheduler/internal/allocator/db/mysql"
+	"github.com/plarun/scheduler/internal/allocator/db"
 )
 
 // LockForStaging locks the tasks for staging which are having scheduled run
 // either batch run or window run
 func LockForStaging() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `With tasks As (
 		Select t.id
@@ -53,7 +53,7 @@ func LockForStaging() error {
 // into 'sched_stage'. When staging the tasks, flag will be 0 which
 // indicates newly staged task.
 func StageLockedTasks() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Insert Into sched_stage (
 			task_id,
@@ -78,7 +78,7 @@ func StageLockedTasks() error {
 
 // MarkAsStaged changes the status of newly staged tasks to 'staged'
 func MarkAsStaged() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_task t 
 	Join sched_stage s On t.id=s.task_id
@@ -95,7 +95,7 @@ func MarkAsStaged() error {
 
 // SetStagedFlag completes the staging and sets the tasks to ready for queuing
 func SetStagedFlag() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_stage s Join sched_task t On s.task_id=t.id
 	Set s.flag=1
@@ -112,7 +112,7 @@ func SetStagedFlag() error {
 // LockBundledTasksForStaging locks the bundled tasks for staging
 // whose bundles are already staged
 func LockBundledTasksForStaging() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `With tasks As (
 			Select t.id
@@ -133,7 +133,7 @@ func LockBundledTasksForStaging() error {
 
 // ChangeStagedBundleLock changes the lock of staged bundles
 func ChangeStagedBundleLock(from, to int) error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_stage
 		Set flag=?
@@ -149,7 +149,7 @@ func ChangeStagedBundleLock(from, to int) error {
 }
 
 func MarkBundleAsRunning() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_task
 		Set current_status=?, last_start_time=now(), last_end_time=null

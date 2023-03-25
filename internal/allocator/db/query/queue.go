@@ -7,7 +7,7 @@ import (
 	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
-	"github.com/plarun/scheduler/internal/allocator/db/mysql"
+	"github.com/plarun/scheduler/internal/allocator/db"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 // LockForEnqueue locks the staged task for queuing
 // so it will be considered for moving into queue
 func LockForEnqueue() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_task t Join sched_stage s On t.id=s.task_id
 		Set s.flag=2
@@ -38,7 +38,7 @@ func LockForEnqueue() error {
 
 // EnqueueTasks inserts the staged tasks into sched_queue.
 func EnqueueTasks() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Insert Into sched_queue (
 			task_id,
@@ -59,7 +59,7 @@ func EnqueueTasks() error {
 
 // SetQueueStatus sets the state of queued tasks to queued
 func SetQueueStatus() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_task t Join sched_queue q On t.id=q.task_id
 		Set t.current_status=?
@@ -76,7 +76,7 @@ func SetQueueStatus() error {
 
 // SetQueuedFlag changes the flag of task in stage to Queued
 func SetQueuedFlag() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_stage s Join sched_task t On s.task_id=t.id
 		Set s.flag=3
@@ -92,7 +92,7 @@ func SetQueuedFlag() error {
 
 // LockForConditionCheck locks the queued tasks in sched_queue for start condition check
 func LockForConditionCheck() error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `With tasks As (
 			Select q.task_id
@@ -115,7 +115,7 @@ func LockForConditionCheck() error {
 }
 
 func PickQueueLockedTasks() ([]int64, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Select task_id
 		From sched_queue
@@ -141,7 +141,7 @@ func PickQueueLockedTasks() ([]int64, error) {
 
 // SetQueueLockFlag sets the given lock flag on queued task
 func SetQueueLockFlag(id, flag int) error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_queue
 	Set lock_flag=?
@@ -179,7 +179,7 @@ func MoveQueueToWait(id int64) error {
 
 // DequeueTask removes a task from queue
 func DequeueTask(id int64) error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Delete From sched_queue Where task_id=?`
 
@@ -193,7 +193,7 @@ func DequeueTask(id int64) error {
 
 // DependentConditionCheck locks the queued tasks in sched_queue for start condition check
 func MoveDependentToQueue(ctx context.Context, id int64) error {
-	tx, err := mysql.GetDatabase().DB.BeginTx(ctx, nil)
+	tx, err := db.GetDatabase().DB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("MoveDependentToQueue: %v", err)
 	}

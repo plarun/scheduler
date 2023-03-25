@@ -6,12 +6,12 @@ import (
 	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
-	"github.com/plarun/scheduler/internal/allocator/db/mysql"
+	"github.com/plarun/scheduler/internal/allocator/db"
 )
 
 // GetStartCondition gets the starting condition of task
 func GetStartCondition(id int64) (string, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Select start_condition 
 	From sched_task 
@@ -36,7 +36,7 @@ func GetStartCondition(id int64) (string, error) {
 // GetPrerequisitesTaskStatus gets the distinct of tasks in the start
 // condition of given task along with its current run status.
 func GetDependentTasksStatus(id int64) ([]*task.TaskStatus, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Select id, name, current_status
 		From sched_task

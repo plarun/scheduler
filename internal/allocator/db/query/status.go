@@ -5,11 +5,11 @@ import (
 	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
-	"github.com/plarun/scheduler/internal/allocator/db/mysql"
+	"github.com/plarun/scheduler/internal/allocator/db"
 )
 
 func setTaskstatus(id int64, state task.State) error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_task
 		Set current_status=?
