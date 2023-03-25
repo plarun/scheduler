@@ -39,7 +39,7 @@ func (s TaskService) GetDefinition(ctx context.Context, req *proto.TaskDefinitio
 func (s TaskService) GetStatus(ctx context.Context, req *proto.TaskLatestStatusRequest) (*proto.TaskLatestStatusResponse, error) {
 	res := &proto.TaskLatestStatusResponse{
 		IsValid: false,
-		Status:  &proto.TaskLatestStatus{},
+		Status:  &proto.TaskRunStatus{},
 	}
 
 	// get task latest status
