@@ -96,6 +96,10 @@ func printTask(def *proto.TaskDefinition, prefix string) {
 	taskType := params[string(task.FIELD_TYPE)]
 	fmt.Printf("%sType: %s\n", prefix, taskType)
 
+	if val, ok := params[string(task.FIELD_PARENT)]; ok {
+		fmt.Printf("%sParent: %s\n", prefix, val)
+	}
+
 	if val, ok := params[string(task.FIELD_MACHINE)]; ok {
 		fmt.Printf("%sMachine: %s\n", prefix, val)
 	}
@@ -140,7 +144,7 @@ func printTask(def *proto.TaskDefinition, prefix string) {
 	if taskType == "bundle" {
 		for _, child := range def.ChildrenTasks {
 			fmt.Println()
-			printTask(child, prefix+"    ")
+			printTask(child, prefix+"  ")
 		}
 	}
 }
