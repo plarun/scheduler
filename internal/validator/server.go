@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	db "github.com/plarun/scheduler/internal/validator/db/mysql"
+	"github.com/plarun/scheduler/internal/validator/db"
 	"github.com/plarun/scheduler/internal/validator/handler"
 
 	"github.com/plarun/scheduler/proto"
