@@ -1,16 +1,19 @@
 package task
 
-type Event string
+// Type represents send event type
+type SendEvent string
 
 const (
-	// EventStart is an event to start the task execution
-	EventStart Event = "start"
-	// EventAbort is an event to abort the running task
-	EventAbort Event = "abort"
-	// EventFroze is an event to freeze the task
-	EventFroze Event = "froze"
-	// EventReset is an event to change the status of task to default state
-	EventReset Event = "reset"
-	// EventGreen is an event to change the status of task to success
-	EventGreen Event = "green"
+	// start event pushes the stable or waiting task to ready state for execution
+	SendEventStart SendEvent = "start"
+	// abort event terminates the running task or stops the triggered task from running
+	SendEventAbort SendEvent = "abort"
+	// freeze event sets the stable task to be ignored one, so wont be considered during scheduling
+	SendEventFreeze SendEvent = "freeze"
+	// reset event sets the state of stable task to default idle state
+	SendEventReset SendEvent = "reset"
+	// green event changes the state of stable task to success
+	SendEventGreen SendEvent = "green"
+	// red event changes the state of stable task to failure
+	SendEventRed SendEvent = "red"
 )
