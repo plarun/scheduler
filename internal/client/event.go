@@ -4,7 +4,12 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/plarun/scheduler/api/types/task"
+	"github.com/plarun/scheduler/config"
 	"github.com/plarun/scheduler/internal/client/check"
+	"github.com/plarun/scheduler/internal/client/conn"
+	er "github.com/plarun/scheduler/internal/client/error"
+	"github.com/plarun/scheduler/proto"
 )
 
 type eventCommand struct {
@@ -44,6 +49,54 @@ func (ec *eventCommand) Exec() error {
 	if !ec.IsParsed() {
 		return check.ErrCommandNotParsed
 	}
+
+	var event task.SendEvent
+
+	if ec.event == string(task.SendEventAbort) {
+		event = task.SendEventAbort
+	} else if ec.event == string(task.SendEventFreeze) {
+		event = task.SendEventFreeze
+	} else if ec.event == string(task.SendEventGreen) {
+		event = task.SendEventRed
+	} else if ec.event == string(task.SendEventReset) {
+		event = task.SendEventReset
+	} else if ec.event == string(task.SendEventStart) {
+		event = task.SendEventStart
+	} else {
+		return er.ErrInvalidSendEvent
+	}
+
+	req := &proto.TaskEventRequest{
+		TaskName: ec.task,
+		Event:    string(event),
+	}
+
+	addr := fmt.Sprintf(":%d", config.GetAppConfig().Service.EventServer.Port)
+	conn := conn.NewSendEventGrpcConnection(addr, req)
+
+	if err := conn.Connect(); err != nil {
+		return err
+	}
+
+	r, err := conn.Request()
+	if err != nil {
+		return err
+	}
+
+	var res *proto.TaskEventResponse
+	var ok bool
+	if res, ok = r.(*proto.TaskEventResponse); !ok {
+		panic("invalid type")
+	}
+
+	if !res.Success {
+		fmt.Println(res.Msg)
+	}
+
+	if err := conn.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
