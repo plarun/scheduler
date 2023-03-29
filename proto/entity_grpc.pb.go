@@ -205,6 +205,8 @@ type TaskServiceClient interface {
 	GetStatus(ctx context.Context, in *TaskLatestStatusRequest, opts ...grpc.CallOption) (*TaskLatestStatusResponse, error)
 	// GetRuns gets the runs of task
 	GetRuns(ctx context.Context, in *TaskRunsRequest, opts ...grpc.CallOption) (*TaskRunsResponse, error)
+	// SendEvent sends an event for task
+	SendEvent(ctx context.Context, in *TaskEventRequest, opts ...grpc.CallOption) (*TaskEventResponse, error)
 }
 
 type taskServiceClient struct {
@@ -242,6 +244,15 @@ func (c *taskServiceClient) GetRuns(ctx context.Context, in *TaskRunsRequest, op
 	return out, nil
 }
 
+func (c *taskServiceClient) SendEvent(ctx context.Context, in *TaskEventRequest, opts ...grpc.CallOption) (*TaskEventResponse, error) {
+	out := new(TaskEventResponse)
+	err := c.cc.Invoke(ctx, "/proto.TaskService/SendEvent", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TaskServiceServer is the server API for TaskService service.
 // All implementations must embed UnimplementedTaskServiceServer
 // for forward compatibility
@@ -252,6 +263,8 @@ type TaskServiceServer interface {
 	GetStatus(context.Context, *TaskLatestStatusRequest) (*TaskLatestStatusResponse, error)
 	// GetRuns gets the runs of task
 	GetRuns(context.Context, *TaskRunsRequest) (*TaskRunsResponse, error)
+	// SendEvent sends an event for task
+	SendEvent(context.Context, *TaskEventRequest) (*TaskEventResponse, error)
 	mustEmbedUnimplementedTaskServiceServer()
 }
 
@@ -267,6 +280,9 @@ func (UnimplementedTaskServiceServer) GetStatus(context.Context, *TaskLatestStat
 }
 func (UnimplementedTaskServiceServer) GetRuns(context.Context, *TaskRunsRequest) (*TaskRunsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRuns not implemented")
+}
+func (UnimplementedTaskServiceServer) SendEvent(context.Context, *TaskEventRequest) (*TaskEventResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendEvent not implemented")
 }
 func (UnimplementedTaskServiceServer) mustEmbedUnimplementedTaskServiceServer() {}
 
@@ -335,6 +351,24 @@ func _TaskService_GetRuns_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TaskService_SendEvent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TaskEventRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TaskServiceServer).SendEvent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.TaskService/SendEvent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TaskServiceServer).SendEvent(ctx, req.(*TaskEventRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // TaskService_ServiceDesc is the grpc.ServiceDesc for TaskService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -353,6 +387,10 @@ var TaskService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRuns",
 			Handler:    _TaskService_GetRuns_Handler,
+		},
+		{
+			MethodName: "SendEvent",
+			Handler:    _TaskService_SendEvent_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

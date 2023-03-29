@@ -26,6 +26,8 @@ service TaskService {
 	rpc GetStatus(TaskLatestStatusRequest) returns (TaskLatestStatusResponse) {}
 	// GetRuns gets the runs of task
 	rpc GetRuns(TaskRunsRequest) returns (TaskRunsResponse) {}
+	// SendEvent sends an event for task
+	rpc SendEvent(TaskEventRequest) returns (TaskEventResponse) {}
 }
 
 // Request message of parsed actions
@@ -127,6 +129,18 @@ message TaskRunsRequest {
 message TaskRunsResponse {
 	bool IsValid = 1;
 	repeated TaskRunStatus Runs = 2;
+}
+
+// Request message to get last n runs of task
+message TaskEventRequest {
+	string TaskName = 1;
+	string Event = 2;
+}
+
+// Response message of last n runs of task
+message TaskEventResponse {
+	bool Success = 1;
+	string Msg = 2;
 }
 
 enum NullableFlag {
