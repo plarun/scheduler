@@ -9,6 +9,7 @@ import (
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/eventserver/db"
 	"github.com/plarun/scheduler/internal/eventserver/db/query"
+	er "github.com/plarun/scheduler/pkg/error"
 	"github.com/plarun/scheduler/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -208,4 +209,25 @@ func GetTaskRuns(ctx context.Context, name string, n int32, date string) ([]*pro
 	} else {
 		return res, nil
 	}
+}
+
+func ActionTaskEvent(ctx context.Context, name, event string) (*EventResult, error) {
+	ev := task.SendEvent(event)
+
+	taskId, err := query.GetTaskId(name)
+	if err != nil {
+		return NewEventResult(false, nil), fmt.Errorf("ActionTaskEvent: %w", err)
+	}
+
+	if err := query.SetTaskStatusByEvent(taskId, ev); err != nil {
+		for errors.Unwrap(err) != nil {
+			err = errors.Unwrap(err)
+		}
+		if errors.Is(err, &er.TaskEventError{}) {
+			return NewEventResult(false, err), nil
+		} else {
+			return nil, err
+		}
+	}
+	return NewEventResult(true, nil), nil
 }
