@@ -6,6 +6,7 @@ import (
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db"
+	er "github.com/plarun/scheduler/pkg/error"
 )
 
 func setTaskstatus(id int64, state task.State) error {
@@ -17,7 +18,7 @@ func setTaskstatus(id int64, state task.State) error {
 
 	result, err := db.DB.Exec(qry, string(state), id)
 	if err != nil {
-		return fmt.Errorf("setTaskstatus: failed to update status of task: %v", err)
+		return fmt.Errorf("setTaskstatus: failed to update status of task: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := result.RowsAffected(); n > 0 {
 		log.Printf("setTaskstatus: %d - task id set to status %s", id, string(state))
 	}

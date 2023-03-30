@@ -6,6 +6,7 @@ import (
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db"
+	er "github.com/plarun/scheduler/pkg/error"
 )
 
 func InsertWaitTask(id int64) error {
@@ -22,7 +23,7 @@ func InsertWaitTask(id int64) error {
 
 	result, err := db.DB.Exec(qry, id)
 	if err != nil {
-		return fmt.Errorf("InsertWaitTask: failed to move task from queue to wait: %v", err)
+		return fmt.Errorf("InsertWaitTask: failed to move task from queue to wait: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := result.RowsAffected(); n > 0 {
 		log.Printf("InsertWaitTask: %d - task id inserted into sched_wait", id)
 	}
@@ -40,7 +41,7 @@ func DeleteWaitTask(id int64) error {
 
 	result, err := db.DB.Exec(qry, id)
 	if err != nil {
-		return fmt.Errorf("DeleteWaitTask: failed to delete task from wait: %v", err)
+		return fmt.Errorf("DeleteWaitTask: failed to delete task from wait: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := result.RowsAffected(); n > 0 {
 		log.Printf("DeleteWaitTask: %d - task id removed from sched_wait", id)
 	}

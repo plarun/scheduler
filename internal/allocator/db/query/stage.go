@@ -8,6 +8,15 @@ import (
 	"github.com/plarun/scheduler/internal/allocator/db"
 )
 
+const (
+	StageFlag_CTaskStaging int = 0 // callable task staging
+	StageFlag_CTaskStaged  int = 1 // callable task staged
+	StageFlag_CTaskQueuing int = 2 // callable task queuing
+	StageFlag_CTaskQueued  int = 3 // callable task queued
+	StageFlag_BTaskStaging int = 4 // bundle task staging
+	StageFlag_BTaskStaged  int = 5 // bundle task's child tasks are staged so bundle task is staged
+)
+
 // LockForStaging locks the tasks for staging which are having scheduled run
 // either batch run or window run
 func LockForStaging() error {
@@ -63,12 +72,12 @@ func StageLockedTasks() error {
 			is_bundle
 		)
 		Select
-			id, now(), priority, 0, Case When type = 'bundle' Then 1 Else 0 End
+			id, now(), priority, ?, Case When type = 'bundle' Then 1 Else 0 End
 		From sched_task
 		Where lock_flag=?
 			And current_status Not In ('staged', 'queued', 'ready', 'waiting', 'running')`
 
-	if r, err := db.DB.Exec(qry, 1); err != nil {
+	if r, err := db.DB.Exec(qry, StageFlag_CTaskStaging, 1); err != nil {
 		return fmt.Errorf("StageLockedTasks: %w", err)
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("StageLockedTasks: %d tasks are locked after staging", n)
@@ -83,9 +92,9 @@ func MarkAsStaged() error {
 	qry := `Update sched_task t 
 	Join sched_stage s On t.id=s.task_id
 	Set t.current_status='staged'
-	Where s.flag=0`
+	Where s.flag=?`
 
-	if r, err := db.DB.Exec(qry); err != nil {
+	if r, err := db.DB.Exec(qry, StageFlag_CTaskStaging); err != nil {
 		return fmt.Errorf("MarkAsStaged: %w", err)
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("MarkAsStaged: %d tasks are marked as staged", n)
@@ -98,10 +107,10 @@ func SetStagedFlag() error {
 	db := db.GetDatabase()
 
 	qry := `Update sched_stage s Join sched_task t On s.task_id=t.id
-	Set s.flag=1
+	Set s.flag=?
 	Where s.flag=0 And t.current_status='staged'`
 
-	if r, err := db.DB.Exec(qry); err != nil {
+	if r, err := db.DB.Exec(qry, StageFlag_CTaskStaged); err != nil {
 		return fmt.Errorf("SetStagedFlag: %w", err)
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("SetStagedFlag: %d tasks are flaged as staged", n)
@@ -118,12 +127,12 @@ func LockBundledTasksForStaging() error {
 			Select t.id
 			From sched_task t
 				Inner Join sched_stage s On (t.parent_id=s.task_id)
-			Where s.is_bundle=1 And s.flag=4
+			Where s.is_bundle=1 And s.flag=?
 		) Update sched_task
 		Set lock_flag=1
 		Where id In (Select id From tasks)`
 
-	if r, err := db.DB.Exec(qry); err != nil {
+	if r, err := db.DB.Exec(qry, StageFlag_BTaskStaging); err != nil {
 		return fmt.Errorf("LockBundledTasksForStaging: failed to stage the tasks under bundle: %v", err)
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("LockBundledTasksForStaging: %d tasks of bundle are locked as staged", n)
@@ -148,7 +157,7 @@ func ChangeStagedBundleLock(from, to int) error {
 	return nil
 }
 
-func MarkBundleAsRunning() error {
+func MarkStagedBundleAsRunning() error {
 	db := db.GetDatabase()
 
 	qry := `Update sched_task
@@ -156,12 +165,12 @@ func MarkBundleAsRunning() error {
 		Where id In (
 			Select task_id
 			From sched_stage
-			Where flag=5 And is_bundle=1)`
+			Where flag=? And is_bundle=1)`
 
-	if r, err := db.DB.Exec(qry, string(task.StateRunning)); err != nil {
-		return fmt.Errorf("MarkBundleAsRunning: %v", err)
+	if r, err := db.DB.Exec(qry, string(task.StateRunning), StageFlag_BTaskStaged); err != nil {
+		return fmt.Errorf("MarkStagedBundleAsRunning: %v", err)
 	} else if n, _ := r.RowsAffected(); n > 0 {
-		log.Printf("MarkBundleAsRunning: %d bundle tasks status set to running", n)
+		log.Printf("MarkStagedBundleAsRunning: %d bundle tasks status set to running", n)
 	}
 	return nil
 }

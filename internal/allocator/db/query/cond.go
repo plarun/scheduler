@@ -7,6 +7,7 @@ import (
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db"
+	er "github.com/plarun/scheduler/pkg/error"
 )
 
 // GetStartCondition gets the starting condition of task
@@ -22,9 +23,9 @@ func GetStartCondition(id int64) (string, error) {
 	var cond sql.NullString
 	if err := row.Scan(&cond); err != nil {
 		if err == sql.ErrNoRows {
-			return "", fmt.Errorf("GetStartCondition: task not exist")
+			return "", fmt.Errorf("GetStartCondition: %w", er.NewTaskNotFoundForIdError(id))
 		}
-		return "", fmt.Errorf("GetStartCondition: %w", err)
+		return "", fmt.Errorf("GetStartCondition: %w", er.NewDatabaseError(err.Error()))
 	}
 
 	if !cond.Valid {
@@ -53,7 +54,7 @@ func GetDependentTasksStatus(id int64) ([]*task.TaskStatus, error) {
 		if err == sql.ErrNoRows {
 			return res, nil
 		}
-		return res, fmt.Errorf("GetDependentTasksStatus: %w", err)
+		return res, fmt.Errorf("GetDependentTasksStatus: %w", er.NewDatabaseError(err.Error()))
 	}
 
 	for rows.Next() {

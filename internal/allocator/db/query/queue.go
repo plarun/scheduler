@@ -8,13 +8,14 @@ import (
 
 	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/internal/allocator/db"
+	er "github.com/plarun/scheduler/pkg/error"
 )
 
 const (
-	QueueLockNew      int = 0
-	QueueLockChecking int = 1
-	QueueLockReady    int = 2
-	QueueLockWait     int = 3
+	QueueFlag_New         int = 0
+	QueueFlag_Checking    int = 1
+	QueueFlag_MoveToReady int = 2
+	QueueFlag_MoveToWait  int = 3
 )
 
 // LockForEnqueue locks the staged task for queuing
@@ -23,12 +24,12 @@ func LockForEnqueue() error {
 	db := db.GetDatabase()
 
 	qry := `Update sched_task t Join sched_stage s On t.id=s.task_id
-		Set s.flag=2
-		Where s.flag=1
+		Set s.flag=?
+		Where s.flag=?
 			And t.current_status='staged'`
 
-	if r, err := db.DB.Exec(qry); err != nil {
-		return fmt.Errorf("LockForEnqueue: %w", err)
+	if r, err := db.DB.Exec(qry, StageFlag_CTaskQueuing, StageFlag_CTaskStaged); err != nil {
+		return fmt.Errorf("LockForEnqueue: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("LockForEnqueue: %d tasks are locked for queueing", n)
 	}
@@ -47,10 +48,10 @@ func EnqueueTasks() error {
 		)
 		Select task_id, now(), priority
 		From sched_stage
-		Where is_bundle=0 And flag=2`
+		Where is_bundle=0 And flag=?`
 
-	if r, err := db.DB.Exec(qry); err != nil {
-		return fmt.Errorf("EnqueueTasks: failed to push tasks into queue: %v", err)
+	if r, err := db.DB.Exec(qry, StageFlag_CTaskQueuing); err != nil {
+		return fmt.Errorf("EnqueueTasks: failed to push tasks into queue: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("EnqueueTasks: %d tasks are queued into sched_queue", n)
 	}
@@ -66,7 +67,7 @@ func SetQueueStatus() error {
 		Where t.current_status=?`
 
 	if r, err := db.DB.Exec(qry, string(task.StateQueued), string(task.StateStaged)); err != nil {
-		return fmt.Errorf("SetQueueStatus: %w", err)
+		return fmt.Errorf("SetQueueStatus: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("SetQueueStatus: %d tasks are set to status queued", n)
 	}
@@ -79,11 +80,11 @@ func SetQueuedFlag() error {
 	db := db.GetDatabase()
 
 	qry := `Update sched_stage s Join sched_task t On s.task_id=t.id
-		Set s.flag=3
-		Where s.flag=2 And t.current_status=?`
+		Set s.flag=?
+		Where s.flag=? And t.current_status=?`
 
-	if r, err := db.DB.Exec(qry, string(task.StateQueued)); err != nil {
-		return fmt.Errorf("SetQueuedFlag: %v", err)
+	if r, err := db.DB.Exec(qry, StageFlag_CTaskQueued, StageFlag_CTaskQueuing, string(task.StateQueued)); err != nil {
+		return fmt.Errorf("SetQueuedFlag: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("SetQueuedFlag: %d tasks are flaged as queued", n)
 	}
@@ -106,8 +107,8 @@ func LockForConditionCheck() error {
 			Select task_id 
 			From tasks)`
 
-	if r, err := db.DB.Exec(qry, string(task.StateQueued), QueueLockChecking); err != nil {
-		return fmt.Errorf("LockForConditionCheck: %v", err)
+	if r, err := db.DB.Exec(qry, string(task.StateQueued), QueueFlag_Checking); err != nil {
+		return fmt.Errorf("LockForConditionCheck: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("LockForConditionCheck: %d tasks are locked for condition check", n)
 	}
@@ -123,37 +124,39 @@ func PickQueueLockedTasks() ([]int64, error) {
 
 	res := make([]int64, 0)
 
-	rows, err := db.DB.Query(qry, QueueLockChecking)
+	rows, err := db.DB.Query(qry, QueueFlag_Checking)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return res, nil
 		}
-		return res, fmt.Errorf("PickQueueLockedTasks: %w", err)
+		return res, fmt.Errorf("PickQueueLockedTasks: %w", er.NewDatabaseError(err.Error()))
 	}
 
 	for rows.Next() {
 		var taskId int64
-		rows.Scan(&taskId)
+		if err := rows.Scan(&taskId); err != nil {
+			return res, fmt.Errorf("PickQueueLockedTasks: %w", er.NewDatabaseError(err.Error()))
+		}
 		res = append(res, taskId)
 	}
 	return res, nil
 }
 
-// SetQueueLockFlag sets the given lock flag on queued task
-func SetQueueLockFlag(id, flag int) error {
-	db := db.GetDatabase()
+// SetQueueLockFlag sets the given lock flag on queued task.
+// func SetQueueLockFlag(id, flag int) error {
+// 	db := db.GetDatabase()
 
-	qry := `Update sched_queue
-	Set lock_flag=?
-	Where task_id=?`
+// 	qry := `Update sched_queue
+// 	Set lock_flag=?
+// 	Where task_id=?`
 
-	if r, err := db.DB.Exec(qry, id, flag); err != nil {
-		return fmt.Errorf("SetQueueLockFlag: %v", err)
-	} else if n, _ := r.RowsAffected(); n > 0 {
-		log.Printf("SetQueueLockFlag: %d - task id in sched_queue set to flag %d", id, flag)
-	}
-	return nil
-}
+// 	if r, err := db.DB.Exec(qry, flag, id); err != nil {
+// 		return fmt.Errorf("SetQueueLockFlag: %v", err)
+// 	} else if n, _ := r.RowsAffected(); n > 0 {
+// 		log.Printf("SetQueueLockFlag: %d - task id in sched_queue set to flag %d", id, flag)
+// 	}
+// 	return nil
+// }
 
 func MoveQueueToReady(id int64) error {
 	if err := InsertReadyTask(id); err != nil {
@@ -184,7 +187,7 @@ func DequeueTask(id int64) error {
 	qry := `Delete From sched_queue Where task_id=?`
 
 	if r, err := db.DB.Exec(qry, id); err != nil {
-		return fmt.Errorf("DequeueTask: failed to remove task from queue: %v", err)
+		return fmt.Errorf("DequeueTask: failed to remove task from queue: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("DequeueTask: %d - task id removed from sched_queue", id)
 	}
@@ -195,7 +198,7 @@ func DequeueTask(id int64) error {
 func MoveDependentToQueue(ctx context.Context, id int64) error {
 	tx, err := db.GetDatabase().DB.BeginTx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("MoveDependentToQueue: %v", err)
+		return fmt.Errorf("MoveDependentToQueue: %w", er.NewDatabaseError(err.Error()))
 	}
 
 	if err := moveWaitToQueue(tx, id); err != nil {
@@ -214,7 +217,7 @@ func MoveDependentToQueue(ctx context.Context, id int64) error {
 	}
 
 	if err = tx.Commit(); err != nil {
-		return fmt.Errorf("MoveDependentToQueue: %v", err)
+		return fmt.Errorf("MoveDependentToQueue: %w", er.NewDatabaseError(err.Error()))
 	}
 
 	return nil
@@ -231,7 +234,7 @@ func moveWaitToQueue(tx *sql.Tx, id int64) error {
 			Where cond_task_id=?)`
 
 	if r, err := tx.Exec(qry, id); err != nil {
-		return fmt.Errorf("moveWaitToQueue: %v", err)
+		return fmt.Errorf("moveWaitToQueue: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("moveWaitToQueue: %d tasks are moved to queue from wait", n)
 	}
@@ -248,7 +251,7 @@ func setStatusAfterAwaken(tx *sql.Tx, id int64, state task.State) error {
 			Where cond_task_id=?)`
 
 	if r, err := tx.Exec(qry, string(state), id); err != nil {
-		return fmt.Errorf("setStatusAfterAwaken: %v", err)
+		return fmt.Errorf("setStatusAfterAwaken: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("setStatusAfterAwaken: %d tasks are set to status queued", n)
 	}
@@ -264,7 +267,7 @@ func clearWaitAfterAwaken(tx *sql.Tx, id int64) error {
 	)`
 
 	if r, err := tx.Exec(qry, id); err != nil {
-		return fmt.Errorf("clearWaitAfterAwaken: %v", err)
+		return fmt.Errorf("clearWaitAfterAwaken: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("clearWaitAfterAwaken: %d tasks are cleared from wait", n)
 	}
