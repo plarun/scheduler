@@ -3,6 +3,8 @@ package query
 import (
 	"database/sql"
 	"fmt"
+
+	er "github.com/plarun/scheduler/pkg/error"
 )
 
 // insertTaskRelation inserts a relation between given task id and
@@ -12,7 +14,7 @@ func insertTaskRelation(tx *sql.Tx, id int64, condTasksIds []int64) error {
 
 	for _, condId := range condTasksIds {
 		if _, err := tx.Exec(qry, id, condId); err != nil {
-			return fmt.Errorf("insertTaskRelation: %v", err)
+			return fmt.Errorf("insertTaskRelation: %w", er.NewDatabaseError(err.Error()))
 		}
 	}
 	return nil

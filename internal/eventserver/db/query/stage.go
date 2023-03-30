@@ -5,17 +5,18 @@ import (
 	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
-	mysql "github.com/plarun/scheduler/internal/eventserver/db"
+	"github.com/plarun/scheduler/internal/eventserver/db"
+	er "github.com/plarun/scheduler/pkg/error"
 )
 
 func UnstageTask(id int64) error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Delete From sched_stage
 	Where task_id=?`
 
 	if r, err := db.Exec(qry, id); err != nil {
-		return fmt.Errorf("UnstageTask: %v", err)
+		return fmt.Errorf("UnstageTask: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("UnstageTask: %d - task id removed from sched_stage", id)
 	}
@@ -23,14 +24,14 @@ func UnstageTask(id int64) error {
 }
 
 func UnlockUnstagedTask(id int64) error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_task
 		Set lock_flag=0
 		Where id=?`
 
 	if r, err := db.Exec(qry, id); err != nil {
-		return fmt.Errorf("UnlockUnstagedTask: %w", err)
+		return fmt.Errorf("UnlockUnstagedTask: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("UnlockUnstagedTask: %d - task id is unlocked after unstaged", n)
 	}
@@ -38,7 +39,7 @@ func UnlockUnstagedTask(id int64) error {
 }
 
 func HasStagedSiblings(id int64) (bool, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Select Count(t.id)
 		From sched_task t, sched_stage s
@@ -52,13 +53,13 @@ func HasStagedSiblings(id int64) (bool, error) {
 
 	var n int
 	if err := row.Scan(&n); err != nil {
-		return false, fmt.Errorf("hasStagedSibling: %v", err)
+		return false, fmt.Errorf("hasStagedSibling: %w", er.NewDatabaseError(err.Error()))
 	}
 	return n > 0, nil
 }
 
 func BundleAndSiblingsStatus(id int64) (bool, int64, int64, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Select
 		parent_id, 
@@ -78,7 +79,7 @@ func BundleAndSiblingsStatus(id int64) (bool, int64, int64, error) {
 
 	var parentId, n int64
 	if err := row.Scan(&parentId, &n); err != nil {
-		return false, 0, 0, fmt.Errorf("BundleAndSiblingsStatus: %v", err)
+		return false, 0, 0, fmt.Errorf("BundleAndSiblingsStatus: %w", er.NewDatabaseError(err.Error()))
 	}
 
 	return true, parentId, n, nil

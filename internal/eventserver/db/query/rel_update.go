@@ -12,14 +12,14 @@ import (
 func updateTaskRelation(dbTxn *sql.Tx, id int64, condTasks []string) error {
 	condIds, err := getTaskIdList(dbTxn, condTasks)
 	if err != nil {
-		return fmt.Errorf("updateTaskRelation: %v", err)
+		return fmt.Errorf("updateTaskRelation: %w", err)
 	}
 
 	if err := deleteTaskRelation(dbTxn, id); err != nil {
-		return fmt.Errorf("updateTaskRelation: %v", err)
+		return fmt.Errorf("updateTaskRelation: %w", err)
 	}
 	if err := insertTaskRelation(dbTxn, id, condIds); err != nil {
-		return fmt.Errorf("updateTaskRelation: %v", err)
+		return fmt.Errorf("updateTaskRelation: %w", err)
 	}
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
+	er "github.com/plarun/scheduler/pkg/error"
 )
 
 // UpdateTask updates the task attributes by task name for an existing task
@@ -118,10 +119,8 @@ func updateTaskAttr(tx *sql.Tx, tsk *task.TaskEntity) error {
 
 	columnStr := strings.Join(columns, ",")
 	if len(columns) != 0 {
-		_, err := tx.Exec("update sched_task set "+columnStr+" where name=?;", tsk.Name())
-
-		if err != nil {
-			return fmt.Errorf("updateTaskAttr: %v", err)
+		if _, err := tx.Exec("update sched_task set "+columnStr+" where name=?;", tsk.Name()); err != nil {
+			return fmt.Errorf("updateTaskAttr: %w", er.NewDatabaseError(err.Error()))
 		}
 	}
 	return nil
@@ -137,10 +136,8 @@ func updateRunWindow(tx *sql.Tx, id int64, windowStartTime, windowEndTime string
 
 	qry := "Update sched_task Set start_window=?, end_window=? Where id=?"
 
-	_, err := tx.Exec(qry, nStartWindow, nEndWindow, id)
-
-	if err != nil {
-		return fmt.Errorf("updateRunWindow: %v", err)
+	if _, err := tx.Exec(qry, nStartWindow, nEndWindow, id); err != nil {
+		return fmt.Errorf("updateRunWindow: %w", er.NewDatabaseError(err.Error()))
 	}
 	return nil
 }
@@ -148,10 +145,8 @@ func updateRunWindow(tx *sql.Tx, id int64, windowStartTime, windowEndTime string
 func updateRunFlag(tx *sql.Tx, id int64, flag task.RunType) error {
 	qry := "Update sched_task Set run_flag=? Where id=?"
 
-	_, err := tx.Exec(qry, string(flag), id)
-
-	if err != nil {
-		return fmt.Errorf("updateRunFlag: %v", err)
+	if _, err := tx.Exec(qry, string(flag), id); err != nil {
+		return fmt.Errorf("updateRunFlag: %w", er.NewDatabaseError(err.Error()))
 	}
 	return nil
 }

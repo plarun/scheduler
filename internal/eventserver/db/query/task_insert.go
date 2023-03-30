@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
+	er "github.com/plarun/scheduler/pkg/error"
 )
 
 // InsertTask inserts a new task
@@ -16,7 +17,7 @@ func InsertTask(tx *sql.Tx, tsk *task.TaskEntity) error {
 	// insert the task
 	insertedTaskId, err := insertTask(tx, tsk)
 	if err != nil {
-		return fmt.Errorf("insertTask: %v", err)
+		return fmt.Errorf("insertTask: %w", err)
 	}
 
 	// insert run times
@@ -38,14 +39,13 @@ func InsertTask(tx *sql.Tx, tsk *task.TaskEntity) error {
 		distTasks := f.(*task.Condition).DistinctTasks()
 		dependentTasksId, err := getTaskIdList(tx, distTasks)
 		if err != nil {
-			return fmt.Errorf("insertTask.%v", err)
+			return fmt.Errorf("insertTask: %w", err)
 		}
 
 		if err := insertTaskRelation(tx, insertedTaskId, dependentTasksId); err != nil {
-			return fmt.Errorf("insertTask.%v", err)
+			return fmt.Errorf("insertTask: %w", err)
 		}
 	}
-
 	return nil
 }
 
@@ -104,9 +104,9 @@ func insertTask(tx *sql.Tx, tsk *task.TaskEntity) (int64, error) {
 	}
 
 	if f, ok := tsk.GetFieldParent(); ok {
-		id, err := getTaskId(tx, f.Value())
+		id, err := GetTaskId(f.Value())
 		if err != nil {
-			return insertedTaskId, fmt.Errorf("insertTask: %v", err)
+			return insertedTaskId, fmt.Errorf("insertTask: %w", err)
 		}
 		parent.Int64, parent.Valid = id, ok
 	}
@@ -163,12 +163,12 @@ func insertTask(tx *sql.Tx, tsk *task.TaskEntity) (int64, error) {
 		"IDLE")
 
 	if err != nil {
-		return insertedTaskId, fmt.Errorf("insertTask: %v", err)
+		return insertedTaskId, fmt.Errorf("insertTask: %w", err)
 	}
 
 	insertedTaskId, err = result.LastInsertId()
 	if err != nil {
-		return insertedTaskId, fmt.Errorf("insertTask: %v", err)
+		return insertedTaskId, fmt.Errorf("insertTask: %w", err)
 	}
 	return insertedTaskId, nil
 }
@@ -178,7 +178,7 @@ func insertStartTimes(tx *sql.Tx, id int64, startTimes []string) error {
 
 	for _, stime := range startTimes {
 		if _, err := tx.Exec(qry, id, stime); err != nil {
-			return fmt.Errorf("insertStartTimes: %v", err)
+			return fmt.Errorf("insertStartTimes: %w", er.NewDatabaseError(err.Error()))
 		}
 	}
 	return nil
@@ -189,7 +189,7 @@ func insertStartMins(tx *sql.Tx, id int64, startMins []uint8) error {
 
 	for _, smin := range startMins {
 		if _, err := tx.Exec(qry, id, smin); err != nil {
-			return fmt.Errorf("insertStartMins: %v", err)
+			return fmt.Errorf("insertStartMins: %w", er.NewDatabaseError((err.Error())))
 		}
 	}
 	return nil

@@ -6,26 +6,27 @@ import (
 	"log"
 
 	"github.com/plarun/scheduler/api/types/entity/task"
-	mysql "github.com/plarun/scheduler/internal/eventserver/db"
+	"github.com/plarun/scheduler/internal/eventserver/db"
+	er "github.com/plarun/scheduler/pkg/error"
 	tm "github.com/plarun/scheduler/pkg/time"
 	"github.com/plarun/scheduler/proto"
 )
 
-// getTaskId gets task ID by task name
-func getTaskId(tx *sql.Tx, name string) (int64, error) {
+// GetTaskId gets task ID by task name
+func GetTaskId(name string) (int64, error) {
+	db := db.GetDatabase()
 	var taskId int64 = 0
 
 	qry := "Select id From sched_task Where name=?"
 
-	row := tx.QueryRow(qry, name)
+	row := db.QueryRow(qry, name)
 
 	if err := row.Scan(&taskId); err != nil {
 		if err == sql.ErrNoRows {
-			return taskId, fmt.Errorf("%v task not found", name)
+			return taskId, fmt.Errorf("GetTaskId: %w", er.NewTaskNotFoundForNameError(name))
 		}
-		return taskId, fmt.Errorf("getTaskId: %v", err)
+		return taskId, fmt.Errorf("GetTaskId: %w", er.NewDatabaseError(err.Error()))
 	}
-
 	return taskId, nil
 }
 
@@ -34,13 +35,12 @@ func getTaskIdList(tx *sql.Tx, tasks []string) ([]int64, error) {
 	var ids []int64 = make([]int64, 0)
 
 	for _, name := range tasks {
-		if id, err := getTaskId(tx, name); err != nil {
-			return ids, fmt.Errorf("getTaskIdList: %v", err)
+		if id, err := GetTaskId(name); err != nil {
+			return ids, fmt.Errorf("getTaskIdList: %w", err)
 		} else {
 			ids = append(ids, id)
 		}
 	}
-
 	return ids, nil
 }
 
@@ -54,9 +54,9 @@ func getRunFlag(tx *sql.Tx, name string) (int64, string, error) {
 
 	if err := row.Scan(&id, &runFlag); err != nil {
 		if err == sql.ErrNoRows {
-			return id, runFlag, fmt.Errorf("getRunFlags: task not found for id %v", id)
+			return id, runFlag, fmt.Errorf("getRunFlags: %w", er.NewTaskNotFoundForNameError(name))
 		}
-		return id, runFlag, fmt.Errorf("getRunFlags: %v", err)
+		return id, runFlag, fmt.Errorf("getRunFlags: %w", er.NewDatabaseError(err.Error()))
 	}
 	return id, runFlag, nil
 }
@@ -64,7 +64,7 @@ func getRunFlag(tx *sql.Tx, name string) (int64, string, error) {
 func GetTaskCommand(id int64) (string, string, string, error) {
 	var command, fout, ferr string
 
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Select command, std_out_log, std_err_log
 		From sched_task
@@ -74,7 +74,7 @@ func GetTaskCommand(id int64) (string, string, string, error) {
 
 	if err := row.Scan(&command, &fout, &ferr); err != nil {
 		if err == sql.ErrNoRows {
-			return "", "", "", fmt.Errorf("GetTaskCommand: task not found for id %v", id)
+			return "", "", "", fmt.Errorf("GetTaskCommand: %w", er.NewTaskNotFoundForIdError(id))
 		}
 		return "", "", "", fmt.Errorf("GetTaskCommand: %v", err)
 	}
@@ -82,7 +82,7 @@ func GetTaskCommand(id int64) (string, string, string, error) {
 }
 
 func SetTaskStatus(id int64, state task.State) error {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Update sched_task
 		Set current_status=?
@@ -114,7 +114,7 @@ func SetTaskStatus(id int64, state task.State) error {
 }
 
 func GetTaskDetails(name string) (*proto.TaskDefinition, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Select
 		(Select p.name From sched_task p Where p.id = t.parent_id) As parent,
@@ -232,7 +232,7 @@ func GetTaskDetails(name string) (*proto.TaskDefinition, error) {
 }
 
 func getChildTasks(name string) ([]string, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Select name
 		From sched_task
@@ -263,7 +263,7 @@ func getChildTasks(name string) ([]string, error) {
 }
 
 func GetLatestStatus(name string) (*proto.TaskRunStatus, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	qry := `Select
 		type, name, last_start_time, last_end_time, current_status
@@ -327,7 +327,7 @@ func GetLatestStatus(name string) (*proto.TaskRunStatus, error) {
 }
 
 func GetRuns(name string, n int32, date string) ([]*proto.TaskRunStatus, error) {
-	db := mysql.GetDatabase()
+	db := db.GetDatabase()
 
 	var rows *sql.Rows
 	res := make([]*proto.TaskRunStatus, 0)
