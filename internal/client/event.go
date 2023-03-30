@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/plarun/scheduler/api/types/task"
+	"github.com/plarun/scheduler/api/types/entity/task"
 	"github.com/plarun/scheduler/config"
 	"github.com/plarun/scheduler/internal/client/check"
 	"github.com/plarun/scheduler/internal/client/conn"
