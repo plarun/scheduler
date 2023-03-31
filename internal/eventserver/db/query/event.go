@@ -44,51 +44,15 @@ func eventStateChange(tx *sql.Tx, id int64, event task.SendEvent) error {
 			return er.NewTaskEventError(er.ErrEventStartOnUnstableTask)
 		}
 		// task status upd
-		if err := SetTaskStatus(id, task.StateReady); err != nil {
+		if err := setTaskStatusByEvent(tx, id, event); err != nil {
 			return fmt.Errorf("eventStateChange: %w", err)
 		}
 	} else if event.IsAbort() {
 		// todo
 		return nil
 	} else if event.IsFreeze() || event.IsGreen() || event.IsRed() || event.IsReset() {
-		var state string
-		if event.IsGreen() {
-			state = string(task.StateSuccess)
-		} else if event.IsRed() {
-			state = string(task.StateFailure)
-		} else if event.IsReset() {
-			state = string(task.StateIdle)
-		} else if event.IsFreeze() {
-			state = string(task.StateFrozen)
-		}
-
-		qry := `Update sched_task
-		Set current_status=?, last_end_time=current_time
-		Where id=? And lock_flag=0 And current_status Not In (?, ?, ?, ?, ?, ?, ?)`
-
-		r, err := tx.Exec(qry,
-			state,
-			id,
-			string(task.StateRunning),
-			string(task.StateQueued),
-			string(task.StateReady),
-			string(task.StateStaged),
-			string(task.StateWaiting))
-		if err != nil {
+		if err := setTaskStatusByEvent(tx, id, event); err != nil {
 			return fmt.Errorf("eventStateChange: %w", err)
-		} else if n, _ := r.RowsAffected(); n > 0 {
-			log.Printf("eventStateChange: %d - task id set to status %s", id, string(state))
-		} else {
-			if event.IsGreen() {
-				return er.NewTaskEventError(er.ErrEventGreenOnUnstableTask)
-			} else if event.IsRed() {
-				return er.NewTaskEventError(er.ErrEventRedOnUnstableTask)
-			} else if event.IsReset() {
-				return er.NewTaskEventError(er.ErrEventResetOnUnstableTask)
-			} else if event.IsFreeze() {
-				return er.NewTaskEventError(er.ErrEventFreezeOnUnstableTask)
-			}
-			return nil
 		}
 	} else {
 		// ignore
@@ -140,4 +104,59 @@ func addToStageByEvent(tx *sql.Tx, id int64) (bool, error) {
 	} else {
 		return true, nil
 	}
+}
+
+func setTaskStatusByEvent(tx *sql.Tx, id int64, event task.SendEvent) error {
+	if event.IsGreen() || event.IsRed() || event.IsReset() || event.IsFreeze() {
+		var state string
+		if event.IsGreen() {
+			state = string(task.StateSuccess)
+		} else if event.IsRed() {
+			state = string(task.StateFailure)
+		} else if event.IsReset() {
+			state = string(task.StateIdle)
+		} else if event.IsFreeze() {
+			state = string(task.StateFrozen)
+		}
+
+		qry := `Update sched_task
+		Set current_status=?, last_end_time=current_time
+		Where id=? And lock_flag=0 And current_status Not In (?, ?, ?, ?, ?, ?, ?)`
+
+		r, err := tx.Exec(qry,
+			state,
+			id,
+			string(task.StateRunning),
+			string(task.StateQueued),
+			string(task.StateReady),
+			string(task.StateStaged),
+			string(task.StateWaiting))
+		if err != nil {
+			return fmt.Errorf("setTaskStatusByEvent: %w", err)
+		} else if n, _ := r.RowsAffected(); n > 0 {
+			log.Printf("setTaskStatusByEvent: %d - task id set to status %s", id, string(state))
+		} else {
+			if event.IsGreen() {
+				return er.NewTaskEventError(er.ErrEventGreenOnUnstableTask)
+			} else if event.IsRed() {
+				return er.NewTaskEventError(er.ErrEventRedOnUnstableTask)
+			} else if event.IsReset() {
+				return er.NewTaskEventError(er.ErrEventResetOnUnstableTask)
+			} else if event.IsFreeze() {
+				return er.NewTaskEventError(er.ErrEventFreezeOnUnstableTask)
+			}
+			return nil
+		}
+	} else if event.IsStart() {
+		qry := `Update sched_task
+			Set current_status=?, last_start_time=null, last_end_time=null
+			Where id=?`
+
+		if r, err := tx.Exec(qry, string(task.StateReady), id); err != nil {
+			return fmt.Errorf("setTaskStatusByEvent: %w", er.NewDatabaseError(err.Error()))
+		} else if n, _ := r.RowsAffected(); n > 0 {
+			log.Printf("setTaskStatusByEvent: %d - task id set to status %s", id, string(task.StateReady))
+		}
+	}
+	return nil
 }

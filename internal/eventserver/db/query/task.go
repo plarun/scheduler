@@ -76,7 +76,7 @@ func GetTaskCommand(id int64) (string, string, string, error) {
 		if err == sql.ErrNoRows {
 			return "", "", "", fmt.Errorf("GetTaskCommand: %w", er.NewTaskNotFoundForIdError(id))
 		}
-		return "", "", "", fmt.Errorf("GetTaskCommand: %v", err)
+		return "", "", "", fmt.Errorf("GetTaskCommand: %w", er.NewDatabaseError(err.Error()))
 	}
 	return command, fout, ferr, nil
 }
@@ -99,7 +99,7 @@ func SetTaskStatus(id int64, state task.State) error {
 	}
 
 	if r, err := db.Exec(qry, string(state), id); err != nil {
-		return fmt.Errorf("SetTaskStatus: %v", err)
+		return fmt.Errorf("SetTaskStatus: %w", er.NewDatabaseError(err.Error()))
 	} else if n, _ := r.RowsAffected(); n > 0 {
 		log.Printf("SetTaskStatus: %d - task id set to status %s", id, string(state))
 	}

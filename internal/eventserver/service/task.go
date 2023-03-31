@@ -220,6 +220,7 @@ func ActionTaskEvent(ctx context.Context, name, event string) (*EventResult, err
 	}
 
 	if err := query.SetTaskStatusByEvent(taskId, ev); err != nil {
+		log.Printf("Error - %v", err)
 		for errors.Unwrap(err) != nil {
 			err = errors.Unwrap(err)
 		}
