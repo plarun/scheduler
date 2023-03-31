@@ -121,7 +121,7 @@ func setTaskStatusByEvent(tx *sql.Tx, id int64, event task.SendEvent) error {
 
 		qry := `Update sched_task
 		Set current_status=?, last_end_time=current_time
-		Where id=? And lock_flag=0 And current_status Not In (?, ?, ?, ?, ?, ?, ?)`
+		Where id=? And lock_flag=0 And current_status Not In (?, ?, ?, ?, ?)`
 
 		r, err := tx.Exec(qry,
 			state,
