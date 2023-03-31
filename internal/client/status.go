@@ -65,8 +65,8 @@ func (sc *statusCommand) Exec() error {
 		panic("invalid type")
 	}
 
-	// print task definition
-	printTaskStatus(res.Status, true, "")
+	// print task status
+	printTaskStatusOutput(res.Status)
 
 	if err := conn.Close(); err != nil {
 		return err
@@ -79,9 +79,15 @@ func (sc *statusCommand) Usage() string {
 	return USAGE_CMD_STATUS
 }
 
+func printTaskStatusOutput(st *proto.TaskRunStatus) {
+	fmt.Println()
+	printTaskStatus(st, true, "")
+	fmt.Println()
+}
+
 func printTaskStatus(st *proto.TaskRunStatus, hasHeader bool, prefix string) {
 	if hasHeader {
-		fmt.Printf("\n%-65s %-17s %-17s %-10s\n", "Task Name", "Start Time", "End Time", "Status")
+		fmt.Printf("%-65s %-17s %-17s %-10s\n", "Task Name", "Start Time", "End Time", "Status")
 		fmt.Println("_________________________________________________________________ _________________ _________________ __________")
 	}
 

@@ -87,7 +87,9 @@ func (tc *taskCommand) Usage() string {
 }
 
 func printTaskDefinition(def *proto.TaskDefinition) {
+	fmt.Println()
 	printTask(def, "")
+	fmt.Println()
 }
 
 func printTask(def *proto.TaskDefinition, prefix string) {

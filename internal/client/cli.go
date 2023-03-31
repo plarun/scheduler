@@ -33,10 +33,10 @@ EVENT:
     -e, --event=EVENT   event name should be one of following
                         start - starts the task
                         abort - stops the task
-                        froze - change the status of task to FROZEN
+                        freeze - change the status of task to FROZEN
                         reset - change the status of task to IDLE
-                        chg_succ - change the status of task to SUCCESS
-                        chg_fail - change the status of task to FAILURE`
+                        green - change the status of task to SUCCESS
+                        red - change the status of task to FAILURE`
 
 	// usage message for sub command schd_task
 	USAGE_CMD_TASK string = `

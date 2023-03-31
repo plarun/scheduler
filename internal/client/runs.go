@@ -71,8 +71,8 @@ func (rc *runsCommand) Exec() error {
 		panic("invalid type")
 	}
 
-	// print task definition
-	printTaskRuns(res.Runs)
+	// print task runs
+	printTaskRunsOutput(res.Runs)
 
 	if err := conn.Close(); err != nil {
 		return err
@@ -85,9 +85,15 @@ func (rc *runsCommand) Usage() string {
 	return USAGE_CMD_RUNS
 }
 
+func printTaskRunsOutput(runs []*proto.TaskRunStatus) {
+	fmt.Println()
+	printTaskRuns(runs)
+	fmt.Println()
+}
+
 func printTaskRuns(runs []*proto.TaskRunStatus) {
 	if len(runs) > 0 {
-		fmt.Printf("\n%-65s %-17s %-17s %-10s\n", "Task Name", "Start Time", "End Time", "Status")
+		fmt.Printf("%-65s %-17s %-17s %-10s\n", "Task Name", "Start Time", "End Time", "Status")
 		fmt.Println("_________________________________________________________________ _________________ _________________ __________")
 	}
 
