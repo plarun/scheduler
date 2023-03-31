@@ -57,6 +57,8 @@ func (ec *eventCommand) Exec() error {
 	} else if ec.event == string(task.SendEventFreeze) {
 		event = task.SendEventFreeze
 	} else if ec.event == string(task.SendEventGreen) {
+		event = task.SendEventGreen
+	} else if ec.event == string(task.SendEventRed) {
 		event = task.SendEventRed
 	} else if ec.event == string(task.SendEventReset) {
 		event = task.SendEventReset
