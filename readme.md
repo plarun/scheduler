@@ -43,6 +43,8 @@ Task scheduler can schedule tasks with dependencies for execution. It also allow
 ## Task Definition
 Below are the actions allowed on task
 
+Sample task definition can be found on [Link to sample task def](internal/client/etc/test/def/)
+
 | Key | Value | Desc |
 |:--- |:--- |:--- |
 | `insert_task` | task name | create a new task definition |
