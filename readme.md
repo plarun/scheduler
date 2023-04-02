@@ -2,7 +2,7 @@
 - Tasks can be scheduled with dependencies with other tasks.
 - Allows manual actions on tasks using cli.
 - Multiple tasks can be wrapped under a bundle task.
-- Task can have dependencies, by setting a prerequiste (start condition) - task will only be executed if the condition satisfied.
+- Task can have dependencies, by setting a prerequisite (start condition) - task will only be executed if the condition satisfied.
 - Tasks can be inserted/updated/deleted via specific syntax [task action definition](internal/client/etc/test/def/).
 - Task can be scheduled with batch run or window run or manual run.
 
