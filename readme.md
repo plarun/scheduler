@@ -37,3 +37,49 @@ Task scheduler can schedule tasks with dependencies for execution. It also allow
 ### 5. Worker
 * Tasks which are ready for execution (allocated by `allocator`) will be picked and executed
 * Tasks' run status will be updated to `event server`
+
+---
+
+"command"
+	FIELD_CONDITION    Field = "condition"
+	FIELD_ERR_LOG_FILE Field = "err_log_file"
+	FIELD_LABEL        Field = "label"
+	FIELD_MACHINE      Field = "machine"
+	FIELD_OUT_LOG_FILE Field = "out_log_file"
+	FIELD_PARENT       Field = "parent"
+	FIELD_PRIORITY     Field = "priority"
+	FIELD_PROFILE      Field = "profile"
+	FIELD_TYPE         Field = "type"
+	FIELD_RUN_DAYS     Field = "run_days"
+	FIELD_RUN_WINDOW   Field = "run_window"
+	FIELD_START_MINS   Field = "start_mins"
+	FIELD_START_TIMES  Field = "start_times"
+
+## Task Definition
+Below are the actions allowed on task
+
+| Key | Value | Desc |
+|:--- |:--- |:--- |
+| `insert_task` | task name | create a new task definition |
+| `update_task` | task name | update attributes of existing task definition |
+| `delete_task` | task name | delete an existing task definition |
+
+Below are the attributes allowed on task action
+### 1. `type` attribute
+- Task `type` can be either one of below two
+| Value | Desc |
+|:--- |:--- |
+| `callable` | callable type task is an executable task |
+| `bundle` | bundle type task is a container to keep one of more callable tasks |
+
+| Allowed on action | `insert_task` |
+
+### 2. `command` attribute
+- Task `command` contains the script to be executed or command to be executed.
+- Allowed on actions: `insert_task`, `update_task`
+- Allowed on task type: `callable`
+
+### 3. `condition` attribute
+- Task's start condition is a boolean expression of tasks wrapped with status.
+- Start condition of task will be evaluated when scheduled to run
+- If the evaluated value is true then condition is satisfied so task can run else it has to wait till the condition get satisfied
