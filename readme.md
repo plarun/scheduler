@@ -67,6 +67,7 @@ Below are the actions allowed on task
 Below are the attributes allowed on task action
 ### 1. `type` attribute
 - Task `type` can be either one of below two
+
 | Value | Desc |
 |:--- |:--- |
 | `callable` | callable type task is an executable task |
