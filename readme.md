@@ -23,7 +23,7 @@
 * Handles all the requests from the `client` and `worker` services
 * Routes the task action definition request to `validator` for syntax and conflict checks
 
-### 3. Validator
+### 3. [Validator](internal/validator/docs/readme.md)
 * Creating new task or updating attributes of existing tasks has to be done via a specific task action syntax
 * Validates the syntax and checks for conflicts as a result of implementing the actions mentioned in task action
 
