@@ -97,7 +97,7 @@ Below are the attributes allowed on task action
 | `su(task1) & su(task2)` | task1 and task2 should be in success state |
 | `su(task1) \| fa(task2)` | either task1 in success state or task2 in failure state |
 | `su(task1) & nr(task2)` | task1 in success state and task2 should not be in running state |
-| `su(task1) | (((su(task2) & su(task3) | fa(task4)) | nr(task5)) | nr(task6)) & su(task7)` | nested boolean logic |
+| `su(task1) \| (((su(task2) & su(task3) \| fa(task4)) \| nr(task5)) \| nr(task6)) & su(task7)` | nested boolean logic |
 
 | Allowed action | Allowed task type | Mandatory |
 | --- | --- | --- |
