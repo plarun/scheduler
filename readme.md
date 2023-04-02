@@ -89,7 +89,13 @@ Below are the attributes allowed on task action
 - Start condition of task will be evaluated when scheduled to run
 - If the evaluated value is true then condition is satisfied so task can run else it has to wait till the condition get satisfied
 
-| Example | Explaination |
+- condition is built with one or more clause
+- clause is nothing but task name wrapped with paranthesis with prefix of task state (su/fa/nr). That is `su(task1)` or `fa(task1)` or `nr(task1)`
+- `su` is success, `fa` is failure, `nr` is not running
+- That is the clause `su(task1)` represents that task1 should be in success state
+- Multiple clauses can be joined with either `|` or `&` operator forming a boolean expression
+
+| Example | Desc |
 | --- | --- |
 | `su(task1)` | task1 should be in success state |
 | `fa(task1)` | task1 should be in failure state |
