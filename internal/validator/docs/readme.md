@@ -160,7 +160,7 @@ start_mins: 15,30,45
 | --- | --- | --- |
 | `insert_task`, `update_task` | `callable`, `bundle` | yes if `run_window` used |
 
-### 14. `start_mins` field
+### 14. `start_times` field
 - Used to represent start times where task will be scheduled
 - It should not be used with `start_mins` or `run_window`
 - It is represented as comma separated value of time of format (hh24:mm)
