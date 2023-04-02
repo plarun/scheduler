@@ -1,8 +1,14 @@
-Task scheduler can schedule tasks with dependencies for execution. It also allows manual actions on tasks.
+# Task scheduler
+- Tasks can be scheduled with dependencies with other tasks.
+- Allows manual actions on tasks using cli.
+- Multiple tasks can be wrapped under a bundle task.
+- Task can have dependencies, by setting a prerequiste (start condition) - task will only be executed if the condition satisfied.
+- Tasks can be inserted/updated/deleted via specific syntax [task action definition](internal/client/etc/test/def/).
+- Task can be scheduled with batch run or window run or manual run.
 
 ---
 
-# Scheduler Architecture
+## Scheduler Architecture
 
 ![scheduler arch](/img/sched_arch.png)
 
@@ -11,16 +17,6 @@ Task scheduler can schedule tasks with dependencies for execution. It also allow
 ## Services
 ### 1. [Client](internal/client/docs/readme.md)
 * CLI tool to interact with the `event server`
-* Below are the available commands to action an event or view details about tasks
-
-| Command | Usage | Example |
-|:--- |:--- |:--- |
-| `schd_def` | Validate task definition action file | schd_def -c -f \<filename\> |
-| `schd_def` | Validate and implement task definition action file | schd_def -f \<filename\> |
-| `schd_event` | Send an event on existing task | schd_event -j \<taskname\> -e \<eventname\> |
-| `schd_task` | View definition of existing task | schd_task -j \<taskname\> |
-| `schd_runs` | View run details of existing task | schd_runs -j \<taskname\> -c \<last_n_runs\> -d \<runs_on_specific_date DD\/MM\/YYYY\> |
-| `schd_status` | View latest run status of existing task | schd_status -j \<taskname\> |
 
 ### 2. Event Server
 * App server to listen on services (`client`, `worker`)
