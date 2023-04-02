@@ -73,7 +73,9 @@ Below are the attributes allowed on task action
 | `callable` | callable type task is an executable task |
 | `bundle` | bundle type task is a container to keep one of more callable tasks |
 
-| Allowed on action | `insert_task` |
+| Allowed action | Mandatory |
+| --- | --- |
+| `insert_task` | yes |
 
 ### 2. `command` attribute
 - Task `command` contains the script to be executed or command to be executed.
