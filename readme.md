@@ -18,18 +18,14 @@
 ### 1. [Client](internal/client/docs/readme.md)
 * CLI tool to interact with the `event server`
 
-### 2. Event Server
+### 2. [Event Server](internal/eventserver/docs/readme.md)
 * App server to listen on services (`client`, `worker`)
-* Handles all the requests from the `client` and `worker` services
-* Routes the task action definition request to `validator` for syntax and conflict checks
 
 ### 3. [Validator](internal/validator/docs/readme.md)
-* Creating new task or updating attributes of existing tasks has to be done via a specific task action syntax
-* Validates the syntax and checks for conflicts as a result of implementing the actions mentioned in task action
+* Validates the syntax, data and conflicts of implementing the task action definition
 
-### 4. Allocator
-* Schedules the tasks per in task definition for execution and make the task ready for execution
+### 4. [Allocator](internal/allocator/docs/readme.md)
+* Schedules the tasks for execution and make the task ready for execution
 
-### 5. Worker
-* Tasks which are ready for execution (allocated by `allocator`) will be picked and executed
-* Tasks' run status will be updated to `event server`
+### 5. [Worker](internal/worker/docs/readme.md)
+* Tasks are executed by `worker` and will request `event server` for state update
