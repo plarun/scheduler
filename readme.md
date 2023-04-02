@@ -79,10 +79,26 @@ Below are the attributes allowed on task action
 
 ### 2. `command` attribute
 - Task `command` contains the script to be executed or command to be executed.
-- Allowed on actions: `insert_task`, `update_task`
-- Allowed on task type: `callable`
+
+| Allowed action | Allowed task type | Mandatory |
+| --- | --- | --- |
+| `insert_task`, `update_task` | `callable` | yes |
 
 ### 3. `condition` attribute
 - Task's start condition is a boolean expression of tasks wrapped with status.
 - Start condition of task will be evaluated when scheduled to run
 - If the evaluated value is true then condition is satisfied so task can run else it has to wait till the condition get satisfied
+
+| Example | Explaination |
+| --- | --- |
+| `su(task1)` | task1 should be in success state |
+| `fa(task1)` | task1 should be in failure state |
+| `nr(task1)` | task1 should not be in running state |
+| `su(task1) & su(task2)` | task1 and task2 should be in success state |
+| `su(task1) | fa(task2)` | either task1 in success state or task2 in failure state |
+| `su(task1) & nr(task2)` | task1 in success state and task2 should not be in running state |
+| `su(task1) | (((su(task2) & su(task3) | fa(task4)) | nr(task5)) | nr(task6)) & su(task7)` | nested boolean logic |
+
+| Allowed action | Allowed task type | Mandatory |
+| --- | --- | --- |
+| `insert_task`, `update_task` | `callable` | no |
