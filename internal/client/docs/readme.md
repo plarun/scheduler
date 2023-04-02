@@ -55,7 +55,7 @@ OutLogFile: /opt/work/logs/test_1_task_1.out
 ErrLogFile: /opt/work/logs/test_1_task_1.err
 Label: callable batch task
 RunDays: mo,we,th,fr
-StartTimes: 08:13:47
+StartTimes: 08:13
 Priority: 0
 
 ```
@@ -166,7 +166,7 @@ $ schd_def -f internal/client/etc/test/def/def1.txt
 ## Task Definition
 Below are the actions allowed on task
 
-Sample task definition can be found on [Link to sample task def](internal/client/etc/test/def/)
+[Link to sample task definition files](internal/client/etc/test/def/)
 
 | Key | Value | Desc |
 |:--- |:--- |:--- |

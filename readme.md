@@ -9,7 +9,7 @@ Task scheduler can schedule tasks with dependencies for execution. It also allow
 ---
 
 ## Services
-### 1. Client
+### 1. [Client](internal/client/docs/readme.md)
 * CLI tool to interact with the `event server`
 * Below are the available commands to action an event or view details about tasks
 
