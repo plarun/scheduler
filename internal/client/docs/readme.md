@@ -1,53 +1,80 @@
 # Scheduler Client
 
 - Client allows the user to interact with event server.
-- It provides multiple cli commands for the user to interact with jobs.
+- It provides multiple cli commands for the user to interact with tasks.
 
 ---
 
 ## CLI commands
 
 ### 1. schd_event
-- schd_event command allows the user to send an event on existing job for some actions
-- it takes two arguments
-- arg 1 is job name
-- arg 2 is one of the below events
-- a. start - it starts the job if its not already running. job shouldn't be "FROZEN"
-- b. abort - it stops the job if its already running
-- c. frost - it changes job status to "FROZEN"
-- d. reset - it resets the job status to "IDLE" - default state
-- e. chg_succ - it changes the status of job to "SUCCESS"
-- f. chg_fail - it changes the status of job to "FAILED"
+```txt
+Usage:
+    schd_event EVENT TASK
 
-### 2. schd_job
-- sched_job shows definition of job
-- it takes one argument
-- arg 1 is job name
+Send an event to task.
+
+TASK:
+    -j, --task=string   task name
+EVENT:
+    -e, --event=EVENT   event name should be one of following
+                        start - starts the task
+                        abort - stops the task
+                        freeze - change the status of task to FROZEN
+                        reset - change the status of task to IDLE
+                        green - change the status of task to SUCCESS
+                        red - change the status of task to FAILURE
+```
+
+### 2. schd_task
+```txt
+Usage:
+    schd_task TASK
+
+Print task definition.
+
+TASK:
+    -j, --task=string   task name
+```
 
 ### 3. schd_status
-- sched_status shows the current status of job
-- it takes one argument
-- arg 1 is job name
+```txt
+Usage:
+    schd_status TASK_NAME
+
+Display current run and status of the task.
+
+TASK:
+    -j, --task=string   task name
+```
 
 ### 4. schd_runs
-- sched_runs shows the recent run details of job
-- it takes one argument
-- arg 1 is job name
-- flag -n <number> : shows nth run of the job
-- flag -d <date> : shows only runs of specified date
-- by default it shows all available runs
+```txt
+Usage:
+    schd_runs [OPTION]... TASK
+
+Display previous runs and status of the task.
+
+OPTION:
+    -c, --count=NUM     number of last runs
+    -d, --date=strings  only runs of given date if any
+TASK:
+    -j, --task=string    task name
+```
 
 ### 5. schd_def
-- sched_def checks the syntax and job definition in the file
-- it takes one argument
-- arg 1 is file name
-- flag -c : only checks the syntax and validates the definition
-- by default it checks the syntax and validates the definition then process the actions
+```txt
+Usage:
+    schd_def [OPTION] FILE
 
-### 6. schd_dep
-- sched_dep shows the dependencies of the job
-- it takes one argument
-- arg 1 is job name
+Check and process the task actions in the file.
+
+OPTION:
+    -c, --only-check    dont process the file
+FILE:
+    -f, --file          input file containing task definition
+                        and action for one or more tasks
+```
 
 ---
 
